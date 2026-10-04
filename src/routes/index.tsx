@@ -112,7 +112,7 @@ function Hero() {
   return (
     <section className="relative overflow-hidden">
       <Flower src={flowerA} className="-right-24 -top-10 w-[340px] rotate-[200deg]" />
-      <Flower src={flowerA} className="-left-28 bottom-0 w-[300px] rotate-12" />
+      <Flower src={flowerA} className="-left-32 -bottom-24 w-[240px] rotate-12" />
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 pb-28 pt-10 lg:grid-cols-[1.1fr_1fr] lg:px-10 lg:pt-16">
         <div className="relative z-10 space-y-9">
           <div className="flex items-center gap-4">
