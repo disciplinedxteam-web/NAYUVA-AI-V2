@@ -54,9 +54,7 @@ export function CareGraphic({ kind, large = false }: { kind: GraphicKind; large?
     <div className="update-connector"><span /><span /><span /></div>
     <div className="update-summary"><span className="summary-title">Structured update</span>{["Feeding", "Sleep & comfort"].map((s,i) => <div key={s} className={`summary-field field-${i}`}><span>{s}</span><span className="summary-line" /><svg viewBox="0 0 16 16"><path d="M3 8l3 3 7-7" /></svg></div>)}</div>
   </div>;
-  const steps = kind === "home" ? ["Care plan", "Home care", "Team connected"]
-    : kind === "updates" ? ["Caregiver update", "Structured summary", "Ready for review"]
-    : kind === "followup" ? ["Day 3 · Weight check", "Day 7 · Feeding review", "Week 2 · Paediatric visit"]
+  const steps = kind === "followup" ? ["Day 3 · Weight check", "Day 7 · Feeding review", "Week 2 · Paediatric visit"]
     : kind === "record" ? ["Care plan", "Home update", "Clinical note"]
     : kind === "efficiency" ? ["Conversation", "Structured note", "Clinician review"]
     : kind === "support" ? ["Family", "Connected care", "Care team"]

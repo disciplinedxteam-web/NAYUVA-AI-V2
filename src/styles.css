@@ -67,6 +67,14 @@
   --impact-outcome: oklch(0.965 0.025 5 / 0.94);
   --graphic-surface: oklch(1 0 0 / 0.7);
   --shadow-card-hover: 0 16px 30px -18px oklch(0.42 0.09 2 / 0.28);
+  --orb-working: oklch(0.64 0.13 5);
+  --orb-searching: oklch(0.65 0.105 175);
+  --orb-lighthouse: oklch(0.74 0.135 75);
+  --orb-reasoning: oklch(0.66 0.105 290);
+  --orb-ink: oklch(0.29 0.045 280);
+  --orb-highlight: oklch(1 0 0 / 0.38);
+  --orb-glass: oklch(1 0 0 / 0.65);
+  --shadow-header: 0 8px 24px -15px oklch(0.42 0.09 2 / 0.22);
 }
 
 @layer base {
@@ -112,14 +120,23 @@
 }
 
 .page-shell { overflow-x: clip; }
-.hero-layout { min-height: 540px; }
+.header-space { height: 84px; }
+.site-header { position: fixed; z-index: 50; top: 0; left: 50%; transform: translateX(-50%); width: min(100%, 1280px); display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 20px 40px; border: 1px solid transparent; transition: width 500ms ease, top 500ms ease, padding 500ms ease, background 500ms ease, box-shadow 500ms ease, border-radius 500ms ease; }
+.site-header[data-scrolled="true"] { top: 12px; width: min(calc(100% - 40px), 1040px); padding: 12px 24px; border-color: var(--border); border-radius: 8px; background: var(--card); backdrop-filter: blur(20px); box-shadow: var(--shadow-header); }
+.header-links { display: flex; gap: 36px; font-size: 14px; font-weight: 500; color: var(--muted-foreground); }
+.header-links a:hover { color: var(--primary); }
+.hero-layout { min-height: clamp(650px, calc(100svh - 84px), 850px); padding-top: 35px; padding-bottom: 75px; }
+.hero-copy > * + * { margin-top: 26px; }
+.hero-copy > p:nth-of-type(2) { margin-top: 18px; }
+.hero-copy > div:last-child { margin-top: 30px; }
+.hero-baby { max-width: 510px; }
 .hero-copy { max-width: 610px; }
-.section-band { scroll-margin-top: 30px; }
+.section-band { scroll-margin-top: 100px; }
 .flower-edge { z-index: 0; width: 220px; opacity: 0.7; }
 .flower-left { left: -110px; }
 .flower-right { right: -110px; animation-delay: -4s; }
-.hero-flower-left { top: 48%; width: 200px; left: -115px; }
-.hero-flower-right { top: 15%; width: 240px; right: -130px; }
+.hero-flower-left { top: 52%; width: 285px; left: -205px; animation: hero-bloom 8s ease-in-out infinite; }
+.hero-flower-right { top: 18%; width: 320px; right: -205px; animation: hero-bloom 9s ease-in-out infinite reverse; }
 .solution-flower { top: 50%; }
 .product-flower { top: 42%; width: 250px; right: -135px; }
 .impact-flower { top: 38%; }
