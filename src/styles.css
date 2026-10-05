@@ -60,6 +60,13 @@
   --ring: oklch(0.55 0.1 2 / 0.5);
   --gradient-rose: linear-gradient(135deg, oklch(0.6 0.1 2), oklch(0.45 0.09 360));
   --shadow-soft: 0 30px 60px -30px oklch(0.55 0.1 2 / 0.35);
+  --impact-feature: oklch(0.94 0.036 8 / 0.92);
+  --impact-visibility: oklch(0.985 0.015 345 / 0.94);
+  --impact-followup: oklch(0.96 0.03 20 / 0.94);
+  --impact-efficiency: oklch(0.95 0.033 350 / 0.94);
+  --impact-outcome: oklch(0.965 0.025 5 / 0.94);
+  --graphic-surface: oklch(1 0 0 / 0.7);
+  --shadow-card-hover: 0 16px 30px -18px oklch(0.42 0.09 2 / 0.28);
 }
 
 @layer base {
@@ -102,4 +109,84 @@
 }
 @utility animate-sway {
   animation: sway 9s ease-in-out infinite;
+}
+
+.page-shell { overflow-x: clip; }
+.hero-layout { min-height: 540px; }
+.hero-copy { max-width: 610px; }
+.section-band { scroll-margin-top: 30px; }
+.flower-edge { z-index: 0; width: 220px; opacity: 0.7; }
+.flower-left { left: -110px; }
+.flower-right { right: -110px; animation-delay: -4s; }
+.hero-flower-left { top: 48%; width: 200px; left: -115px; }
+.hero-flower-right { top: 15%; width: 240px; right: -130px; }
+.solution-flower { top: 50%; }
+.product-flower { top: 42%; width: 250px; right: -135px; }
+.impact-flower { top: 38%; }
+.team-flower { top: 30%; }
+.cta-flower { top: 25%; }
+.section-band > div { position: relative; z-index: 1; }
+.care-card { border: 1px solid var(--border); transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease; }
+.care-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-card-hover); border-color: var(--ring); }
+.care-card h3 { color: var(--foreground); }
+.care-graphic { height: 148px; position: relative; color: var(--primary-deep); }
+.graphic-list { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+.graphic-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: var(--graphic-surface); font-size: 11px; font-weight: 500; }
+.graphic-check { display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; background: var(--blush); border-radius: 50%; color: var(--primary); }
+.graphic-check svg { width: 16px; height: 16px; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.graphic-row-tail { margin-left: auto; width: 18px; height: 3px; border-radius: 2px; background: var(--border); }
+.graphic-step { animation: care-cycle 6s ease-in-out infinite; }
+.step-1 { animation-delay: -4s; }
+.step-2 { animation-delay: -2s; }
+.graphic-topline { display: flex; align-items: center; justify-content: space-between; font-size: 11px; padding: 8px 0 14px; }
+.graphic-status { color: var(--primary); display: flex; align-items: center; gap: 6px; }
+.graphic-status::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--primary); animation: care-cycle 3s ease-in-out infinite; }
+.care-chart { width: 100%; height: 108px; overflow: visible; }
+.chart-grid { stroke: var(--border); stroke-width: 0.7; }
+.chart-line { stroke: var(--primary); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 450; animation: chart-reveal 7s ease-in-out infinite; }
+.chart-dot { fill: var(--primary); }
+.chart-halo { fill: var(--blush); }
+.graphic-record { padding-left: 20px; }
+.graphic-record::before { content: ""; position: absolute; left: 0; top: 10px; bottom: 10px; width: 1px; background: var(--border); }
+.graphic-record .graphic-row::before { content: ""; position: absolute; left: -24px; width: 7px; height: 7px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px var(--background); }
+.graphic-record .graphic-row { position: relative; }
+.journey-graphic { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.journey-track { position: absolute; left: 12%; right: 12%; top: 49%; height: 1px; background: var(--ring); }
+.journey-stop { position: relative; display: flex; flex-direction: column; align-items: center; gap: 12px; font-size: 11px; font-weight: 500; text-align: center; flex: 1; }
+.journey-symbol { width: 50px; height: 50px; display: grid; place-items: center; background: var(--graphic-surface); border: 1px solid var(--border); border-radius: 50%; }
+.journey-symbol svg { width: 27px; height: 27px; stroke: var(--primary); stroke-width: 1.3; stroke-linecap: round; stroke-linejoin: round; }
+.journey-large { height: 270px; }
+.journey-large .journey-symbol { width: 76px; height: 76px; }
+.journey-large .journey-symbol svg { width: 36px; height: 36px; }
+.journey-large .journey-stop { font-size: 12px; }
+.impact-feature { background: var(--impact-feature); display: flex; flex-direction: column; justify-content: center; }
+.impact-visibility { background: var(--impact-visibility); }
+.impact-followup { background: var(--impact-followup); }
+.impact-efficiency { background: var(--impact-efficiency); }
+.impact-outcome { background: var(--impact-outcome); display: block; }
+@keyframes care-cycle { 0%, 100% { opacity: 0.65; transform: translateY(0); } 35%, 60% { opacity: 1; transform: translateY(-2px); } }
+@keyframes chart-reveal { 0% { stroke-dashoffset: 450; } 45%, 85% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: -450; } }
+@media (max-width: 1023px) {
+  .hero-layout { min-height: 0; }
+  .hero-layout > div:last-child img { max-width: 320px; }
+  .hero-flower-right { top: 50%; }
+}
+@media (max-width: 639px) {
+  .flower-edge { width: 140px; opacity: 0.5; }
+  .flower-left { left: -112px; }
+  .flower-right { right: -110px; }
+  .hero-copy h1 { font-size: 36px; }
+  .hero-copy > p { font-size: 15px; }
+  .hero-copy > p:nth-of-type(2) { font-size: 13px; }
+  .hero-layout { gap: 24px; padding-bottom: 24px; }
+  .hero-layout > div:last-child img { max-width: 260px; }
+  .journey-large { height: 200px; }
+  .journey-large .journey-symbol { width: 54px; height: 54px; }
+  .care-card { min-width: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-sway, .graphic-step, .chart-line, .graphic-status::before { animation: none; }
+  .care-card, .care-card * { transition: none; }
+  .care-card:hover { transform: none; }
 }
