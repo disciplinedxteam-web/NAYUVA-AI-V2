@@ -20,7 +20,7 @@ export function CareGraphic({ kind, large = false }: { kind: GraphicKind; large?
     </div>
   );
 
-  if (kind === "continuity" || kind === "support") return (
+  if (kind === "home" || kind === "continuity" || kind === "support") return (
     <div className={`care-graphic journey-graphic ${large ? "journey-large" : ""}`} aria-hidden="true">
       <div className="journey-track" />
       {steps.map((step,i) => <div key={step} className={`journey-stop graphic-step step-${i}`}>

@@ -3,11 +3,6 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
-  HeartHandshake,
-  ClipboardList,
-  Eye,
-  CalendarCheck,
-  Layers,
   MessageCircleHeart,
   CalendarClock,
   FileText,
@@ -168,9 +163,6 @@ function SectionHead({
     </div>
   );
 }
-
-const ringIcon =
-  "relative flex size-12 items-center justify-center rounded-full border border-primary/25 text-primary before:absolute before:-inset-2 before:rounded-full before:border before:border-primary/10";
 
 function Solution() {
   return (
