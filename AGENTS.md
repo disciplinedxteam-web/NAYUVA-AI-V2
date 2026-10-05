@@ -11,3 +11,5 @@
 
 - Keep shared care illustrations in a browser-safe reusable component so solution and impact cards use the same accessible, reduced-motion-aware visual system.
 - Keep decorative blooms at unclipped section side edges, with horizontal clipping only on the page shell, so flowers do not split at section boundaries.
+- Keep product character demonstrations in a standalone browser-safe SVG component with semantic accent tokens and reduced-motion fallbacks; this avoids a missing external animation dependency.
+- Keep scroll behavior and the language menu in a shared header component; translations remain disabled until actual translated content is supplied.
