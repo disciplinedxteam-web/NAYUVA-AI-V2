@@ -15,7 +15,7 @@ export function ProductOrb({ state, name }: { state: ProductState; name: string 
         </g>
       </>}
       {state === "searching" && <>
-        <g className="search-targets">{[[80,88],[305,80],[319,210]].map(([x,y],i) => <g key={x} className={`search-target target-${i}`}><rect x={x-18} y={y-19} width="36" height="38" rx="7" /><path d={`M${x-8} ${y-6}h16M${x-8} ${y+2}h10M${x-8} ${y+10}h13`} /></g>)}</g>
+        <g className="search-targets">{([[80,88],[305,80],[319,210]] as const).map(([x,y],i) => <g key={x} className={`search-target target-${i}`}><rect x={x-18} y={y-19} width="36" height="38" rx="7" /><path d={`M${x-8} ${y-6}h16M${x-8} ${y+2}h10M${x-8} ${y+10}h13`} /></g>)}</g>
         <g className="orb-search"><circle cx="195" cy="158" r="65" className="orb-body" /><ellipse cx="173" cy="130" rx="27" ry="18" className="orb-shine" /><g className="orb-eyes"><path d="M171 151v9M208 151v9" /></g><path d="M177 177q12 9 24 0" className="orb-face" />
           <g className="search-glass"><circle cx="248" cy="170" r="25" className="lens" /><path d="M265 189l25 26" className="lens-handle" /><path d="M236 162q3-8 12-8" className="lens-glint" /></g>
         </g>
