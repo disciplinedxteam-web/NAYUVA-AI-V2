@@ -15,6 +15,12 @@ import flowerB from "@/assets/flower-pink-left.png";
 import flowerLavender from "@/assets/flower-lavender.png";
 import flowerYellow from "@/assets/flower-yellow.png";
 import { CareGraphic } from "@/components/care-graphic";
+import { SiteHeader } from "@/components/site-header";
+import { ProductOrb, type ProductState } from "@/components/product-orb";
+import raksha from "@/assets/raksha-portrait.png.asset.json";
+import rajeev from "@/assets/rajeev-portrait.png.asset.json";
+import charmi from "@/assets/charmi-portrait.png.asset.json";
+import varun from "@/assets/varun-portrait.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -60,31 +66,7 @@ function Logo() {
   );
 }
 
-function Nav() {
-  const links = ["Solution", "Products", "Impact", "Team"];
-  return (
-    <header className="relative z-30 mx-auto flex max-w-7xl items-center justify-between px-6 py-5 lg:px-10">
-      <Logo />
-      <nav className="hidden items-center gap-10 md:flex">
-        {links.map((l) => (
-          <a
-            key={l}
-            href={`#${l.toLowerCase()}`}
-            className="text-sm font-medium text-foreground/70 transition-colors hover:text-primary"
-          >
-            {l}
-          </a>
-        ))}
-      </nav>
-      <a
-        href="#cta"
-        className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition hover:bg-primary-deep"
-      >
-        Get Started <ArrowRight className="size-4" />
-      </a>
-    </header>
-  );
-}
+function Nav() { return <SiteHeader logo={<Logo />} />; }
 
 function CTAs() {
   return (
@@ -111,8 +93,8 @@ function Hero() {
     <section className="hero-section relative">
       <Flower src={flowerA} className="flower-edge flower-right hero-flower-right" />
       <Flower src={flowerB} className="flower-edge flower-left hero-flower-left" />
-      <div className="mx-auto grid max-w-7xl items-center hero-layout gap-8 px-6 pb-12 pt-5 lg:grid-cols-[1.1fr_1fr] lg:px-10 lg:pt-6">
-        <div className="hero-copy relative z-10 space-y-5">
+      <div className="mx-auto grid max-w-7xl items-center hero-layout gap-10 px-6 lg:grid-cols-[1.1fr_1fr] lg:px-10">
+        <div className="hero-copy relative z-10">
           <div className="flex items-center gap-4">
             <span className="h-px w-10 bg-primary/60" />
             <span className="eyebrow">Newborn post-discharge care</span>
@@ -136,7 +118,7 @@ function Hero() {
           <img
             src={baby.url}
             alt="A newborn swaddled in pink, cradled in caring hands"
-            className="relative w-full max-w-[440px] mix-blend-multiply"
+            className="hero-baby relative w-full mix-blend-multiply"
           />
         </div>
       </div>
@@ -205,7 +187,7 @@ const products = [
     Icon: MessageCircleHeart,
     body: "A multilingual voice and text assistant that keeps caregivers engaged with their care plan and captures home updates.",
     bullets: ["Voice and text, in the family's language", "Keeps the care plan close at home", "Captures home updates for the team"],
-    preview: ["“Baby fed well today, 7 feeds.”", "Update shared with care team"],
+    state: "working",
   },
   {
     name: "MILAN",
@@ -213,7 +195,7 @@ const products = [
     Icon: CalendarClock,
     body: "Keeps appointments, reminders and follow-up communication connected to the care team's plan.",
     bullets: ["Appointment scheduling and reminders", "Follow-up communication in one place", "Aligned with the care team's plan"],
-    preview: ["Follow-up · Thu, 10:30", "Reminder sent to caregiver"],
+    state: "searching",
   },
   {
     name: "LEKHA",
@@ -221,7 +203,7 @@ const products = [
     Icon: FileText,
     body: "Converts clinical conversations and appointment outcomes into structured documentation with less manual effort.",
     bullets: ["Conversations to structured notes", "Appointment outcomes captured", "Less manual documentation effort"],
-    preview: ["Visit summary drafted", "Ready for clinician review"],
+    state: "lighthouse",
   },
   {
     name: "SUTRA",
@@ -229,7 +211,7 @@ const products = [
     Icon: RouteIcon,
     body: "Connects care plans, Health Cards, appointments and clinical notes into one continuous record.",
     bullets: ["Care plans and Health Cards", "Appointments and clinical notes", "One continuous record over time"],
-    preview: ["Journey · Day 1 → Week 6", "12 connected entries"],
+    state: "reasoning",
   },
 ];
 
@@ -267,19 +249,8 @@ function Products() {
                     ))}
                   </ul>
                 </div>
-                <div className="flex flex-1 justify-center">
-                  <div className="glass relative aspect-[4/3] w-full overflow-hidden rounded-3xl md:max-w-sm">
-
-                    <div className="absolute inset-0 flex flex-col justify-center gap-3 p-8">
-                      <span className="text-6xl font-extrabold tracking-[0.1em] text-primary/15">{p.name}</span>
-                      {p.preview.map((t, j) => (
-                        <div key={t} className="flex items-center gap-3 rounded-xl border border-primary/10 bg-background/80 px-4 py-3 text-sm">
-                          <span className={`size-2 rounded-full ${j ? "bg-primary/40" : "bg-primary"}`} />
-                          {t}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                <div className="min-w-0 flex-1">
+                  <ProductOrb name={p.name} state={p.state as ProductState} />
                 </div>
               </div>
               {i < products.length - 1 && <div className="h-px bg-primary/15" />}
@@ -308,12 +279,12 @@ function Impact() {
             <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">More consistent care between discharge and follow-up.</p>
           </div>
           <div className="care-card impact-visibility rounded-2xl p-6">
-            <CareGraphic kind="visibility" />
+            <CareGraphic kind="impact-visibility" />
             <h3 className="mt-5 text-lg font-semibold">Visibility</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Better visibility into what happens between clinical visits.</p>
           </div>
           <div className="care-card impact-followup rounded-2xl p-6">
-            <CareGraphic kind="followup" />
+            <CareGraphic kind="impact-followup" />
             <h3 className="mt-5 text-lg font-semibold">Follow-up</h3>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">More connected coordination of appointments and next steps.</p>
           </div>
@@ -335,10 +306,10 @@ function Impact() {
 }
 
 const team = [
-  { name: "Raksha H", role: "UI/UX Designer", initials: "RH" },
-  { name: "Rajeev S", role: "Technical Leader", initials: "RS" },
-  { name: "Dr Charmi S", role: "Clinical Head", initials: "CS" },
-  { name: "Varun Viyas", role: "Backend Developer", initials: "VV" },
+  { name: "Raksha H", role: "UI/UX Designer", photo: raksha },
+  { name: "Rajeev Shukla", role: "Technical Leader", photo: rajeev },
+  { name: "Dr Charmi Shah", role: "Clinical Head", photo: charmi },
+  { name: "Varun Viyas", role: "Backend Developer", photo: varun },
 ];
 
 function Team() {
@@ -346,18 +317,7 @@ function Team() {
     <section id="team" className="section-band relative py-14 md:py-20">
       <Flower src={flowerLavender} className="flower-edge flower-right team-flower" />
       <div className="mx-auto max-w-6xl px-6">
-        <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
-          <div className="max-w-2xl">
-            <span className="mb-4 block text-lg font-medium tracking-[0.5em] text-primary">O U R &nbsp;T E A M</span>
-            <h2 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
-              Building the connection between discharge and home.
-            </h2>
-          </div>
-          <p className="max-w-sm leading-relaxed text-muted-foreground">
-            We're building technology that helps newborn care continue beyond the hospital — keeping
-            families connected to their care teams when continuity matters most.
-          </p>
-        </div>
+        <SectionHead eyebrow="Our Team" title="Building the connection between discharge and home." body="We're building technology that helps newborn care continue beyond the hospital — keeping families connected to their care teams when continuity matters most." />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {team.map((m, i) => (
             <div key={m.name} className="glass group relative flex flex-col items-center overflow-hidden rounded-3xl p-8 text-center transition duration-300 hover:-translate-y-1">
@@ -367,7 +327,7 @@ function Team() {
               />
               <div className="relative flex size-32 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-blush transition duration-500 group-hover:scale-105 group-hover:border-primary">
 
-                <span className="relative text-3xl font-bold tracking-wider text-primary-deep">{m.initials}</span>
+                <img src={m.photo.url} alt={m.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />
               </div>
               <h3 className="relative mt-6 text-lg font-semibold">{m.name}</h3>
               <p className="relative text-sm text-muted-foreground">{m.role}</p>
