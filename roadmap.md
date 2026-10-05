@@ -3,5 +3,11 @@
 - [x] Replace flowers with animated reference blooms at side edges only.
 - [x] Unify solution typography and improve animated solution graphics.
 - [x] Refresh impact cards with readable pink colors and animated graphics.
-- [ ] Add team portraits — waiting for four portrait uploads (only flower template received).
+- [ ] Add supplied portraits and center the team heading.
+- [ ] Add scroll-animated header and language picker; remove header CTA.
+- [ ] Rebalance hero spacing and enlarge moving hero flowers without text overlap.
+- [ ] Improve solution animations and restore follow-up/list and record/timeline visuals.
+- [ ] Give every impact card a distinct continuous animation.
+- [ ] Replace product previews with working, searching, lighthouse and reasoning demos.
+- [ ] Verify the updated page, language control and animations.
 - [x] Verify laptop and narrow-screen presentation; routing test passed and no preview runtime errors.
