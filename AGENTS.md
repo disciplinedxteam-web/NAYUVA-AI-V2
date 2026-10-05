@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep shared care illustrations in a browser-safe reusable component so solution and impact cards use the same accessible, reduced-motion-aware visual system.
+- Keep decorative blooms at unclipped section side edges, with horizontal clipping only on the page shell, so flowers do not split at section boundaries.
