@@ -13,3 +13,7 @@
 - Keep decorative blooms at unclipped section side edges, with horizontal clipping only on the page shell, so flowers do not split at section boundaries.
 - Keep product character demonstrations in a standalone browser-safe SVG component with semantic accent tokens and reduced-motion fallbacks; this avoids a missing external animation dependency.
 - Keep scroll behavior and the language menu in a shared header component; translations remain disabled until actual translated content is supplied.
+- Demo access uses server-issued HttpOnly session capabilities stored as hashes with role and expiration; public demos never authorize real patient data.
+- All demo clinical tables are RLS-locked and accessed only by validated server functions scoped to the demo workspace and caregiver relationship, because URL roles must not grant permissions.
+- Keep care configuration and deterministic workflow rules in a shared domain module, and product AI providers behind one future validated integration boundary; clinical decisions remain human-entered.
+- Dashboard product views share one browser-safe shell and focused care form/capture components, with separate role URLs so the website and two workflows stay consistent.

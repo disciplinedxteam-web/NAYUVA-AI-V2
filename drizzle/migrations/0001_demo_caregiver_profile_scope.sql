@@ -1,0 +1,1 @@
+ALTER TABLE public.demo_sessions ADD COLUMN caregiver_profile_id uuid REFERENCES public.care_profiles(id) ON DELETE SET NULL;

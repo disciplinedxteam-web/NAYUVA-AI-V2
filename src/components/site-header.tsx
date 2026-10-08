@@ -5,14 +5,24 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 
 export function SiteHeader({ logo }: { logo: ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   useEffect(() => {
-    const update = () => setScrolled(window.scrollY > 36);
+    let previous = window.scrollY;
+    const update = () => {
+      const current = window.scrollY;
+      setScrolled(current > 36);
+      if (Math.abs(current - previous) > 4) {
+        setHidden(current > 100 && current > previous);
+        previous = current;
+      }
+      if (current <= 100) { setHidden(false); previous = current; }
+    };
     update();
     window.addEventListener("scroll", update, { passive: true });
     return () => window.removeEventListener("scroll", update);
   }, []);
   return <div className="header-space">
-    <header className="site-header" data-scrolled={scrolled}>
+    <header className="site-header" data-scrolled={scrolled} data-hidden={hidden} inert={hidden}>
       {logo}
       <nav aria-label="Main navigation" className="header-links">
         {["Solution", "Products", "Impact", "Team"].map(link => <a key={link} href={`#${link.toLowerCase()}`}>{link}</a>)}
