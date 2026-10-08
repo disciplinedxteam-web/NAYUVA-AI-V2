@@ -1,4 +1,7 @@
 # Homepage refinements
+- [ ] Build persistent connected demo Care Team and Caregiver workflows, multi-step care plans, updates, appointments, documentation, journey and settings.
+- [ ] Adjust portrait framing, persistent borders, hover treatment, scroll-direction header and half-visible hero flowers.
+- [ ] Test workflow rules and verify both dashboards and homepage.
 - [x] Tighten hero and inter-section spacing; preserve continuous background.
 - [x] Replace flowers with animated reference blooms at side edges only.
 - [x] Unify solution typography and improve animated solution graphics.
