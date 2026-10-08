@@ -14,7 +14,234 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      care_appointments: {
+        Row: {
+          baby_id: string
+          created_at: string
+          id: string
+          location: Json
+          reason: string
+          reschedule: Json | null
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          baby_id: string
+          created_at?: string
+          id?: string
+          location?: Json
+          reason: string
+          reschedule?: Json | null
+          starts_at: string
+          status?: string
+        }
+        Update: {
+          baby_id?: string
+          created_at?: string
+          id?: string
+          location?: Json
+          reason?: string
+          reschedule?: Json | null
+          starts_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_appointments_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_events: {
+        Row: {
+          baby_id: string
+          caregiver_visible: boolean
+          created_at: string
+          id: string
+          kind: string
+          summary: string
+        }
+        Insert: {
+          baby_id: string
+          caregiver_visible?: boolean
+          created_at?: string
+          id?: string
+          kind: string
+          summary: string
+        }
+        Update: {
+          baby_id?: string
+          caregiver_visible?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_events_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_facility: {
+        Row: {
+          settings: Json
+          workspace: string
+        }
+        Insert: {
+          settings?: Json
+          workspace: string
+        }
+        Update: {
+          settings?: Json
+          workspace?: string
+        }
+        Relationships: []
+      }
+      care_profiles: {
+        Row: {
+          baby_name: string
+          caregiver_name: string
+          created_at: string
+          id: string
+          plan: Json
+          workspace: string
+        }
+        Insert: {
+          baby_name: string
+          caregiver_name: string
+          created_at?: string
+          id?: string
+          plan: Json
+          workspace?: string
+        }
+        Update: {
+          baby_name?: string
+          caregiver_name?: string
+          created_at?: string
+          id?: string
+          plan?: Json
+          workspace?: string
+        }
+        Relationships: []
+      }
+      clinical_notes: {
+        Row: {
+          additional_note: string
+          appointment_id: string
+          baby_id: string
+          created_at: string
+          decision: string
+          follow_up: string
+          id: string
+          observations: string
+        }
+        Insert: {
+          additional_note?: string
+          appointment_id: string
+          baby_id: string
+          created_at?: string
+          decision: string
+          follow_up?: string
+          id?: string
+          observations: string
+        }
+        Update: {
+          additional_note?: string
+          appointment_id?: string
+          baby_id?: string
+          created_at?: string
+          decision?: string
+          follow_up?: string
+          id?: string
+          observations?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_notes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "care_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_notes_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demo_sessions: {
+        Row: {
+          expires_at: string
+          role: string
+          token_hash: string
+        }
+        Insert: {
+          expires_at: string
+          role: string
+          token_hash: string
+        }
+        Update: {
+          expires_at?: string
+          role?: string
+          token_hash?: string
+        }
+        Relationships: []
+      }
+      health_cards: {
+        Row: {
+          baby_id: string
+          category: string
+          created_at: string
+          id: string
+          observation: string
+          priority: string
+          quote: string
+          review_note: string
+          reviewed: boolean
+        }
+        Insert: {
+          baby_id: string
+          category: string
+          created_at?: string
+          id?: string
+          observation: string
+          priority: string
+          quote: string
+          review_note?: string
+          reviewed?: boolean
+        }
+        Update: {
+          baby_id?: string
+          category?: string
+          created_at?: string
+          id?: string
+          observation?: string
+          priority?: string
+          quote?: string
+          review_note?: string
+          reviewed?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "health_cards_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

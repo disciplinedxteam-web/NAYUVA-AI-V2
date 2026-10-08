@@ -1,5 +1,13 @@
 {
   "version": "7",
   "dialect": "postgresql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791435320236,
+      "tag": "0000_nayuva_demo_care_platform",
+      "breakpoints": true
+    }
+  ]
 }
