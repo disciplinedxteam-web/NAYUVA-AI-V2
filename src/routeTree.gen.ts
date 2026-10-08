@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CareTeamSectionRouteImport } from './routes/care-team.$section'
+import { Route as CaregiverSectionRouteImport } from './routes/caregiver.$section'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CareTeamSectionRoute = CareTeamSectionRouteImport.update({
+  id: '/care-team/$section',
+  path: '/care-team/$section',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaregiverSectionRoute = CaregiverSectionRouteImport.update({
+  id: '/caregiver/$section',
+  path: '/caregiver/$section',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/care-team/$section': typeof CareTeamSectionRoute
+  '/caregiver/$section': typeof CaregiverSectionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/care-team/$section': typeof CareTeamSectionRoute
+  '/caregiver/$section': typeof CaregiverSectionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/care-team/$section': typeof CareTeamSectionRoute
+  '/caregiver/$section': typeof CaregiverSectionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/care-team/$section' | '/caregiver/$section'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/care-team/$section' | '/caregiver/$section'
+  id: '__root__' | '/' | '/care-team/$section' | '/caregiver/$section'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CareTeamSectionRoute: typeof CareTeamSectionRoute
+  CaregiverSectionRoute: typeof CaregiverSectionRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/care-team/$section': {
+      id: '/care-team/$section'
+      path: '/care-team/$section'
+      fullPath: '/care-team/$section'
+      preLoaderRoute: typeof CareTeamSectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/caregiver/$section': {
+      id: '/caregiver/$section'
+      path: '/caregiver/$section'
+      fullPath: '/caregiver/$section'
+      preLoaderRoute: typeof CaregiverSectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CareTeamSectionRoute: CareTeamSectionRoute,
+  CaregiverSectionRoute: CaregiverSectionRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

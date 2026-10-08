@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -71,19 +72,19 @@ function Nav() { return <SiteHeader logo={<Logo />} />; }
 function CTAs() {
   return (
     <div className="flex flex-wrap items-center gap-8">
-      <a
-        href="#cta"
+      <Button asChild
         className="inline-flex items-center gap-3 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:bg-primary-deep"
       >
-        Continue as Care Team <ArrowRight className="size-4" />
-      </a>
-      <a
-        href="#cta"
+        <Link to="/care-team/$section" params={{section:'updates'}}>Continue as Care Team <ArrowRight className="size-4" /></Link>
+      </Button>
+      <Button asChild variant="link"
         className="group inline-flex items-center gap-3 border-b border-primary/50 pb-1 text-sm font-semibold text-primary transition hover:border-primary"
       >
+        <Link to="/caregiver/$section" params={{section:'svara'}}>
         Continue as Caregiver
         <ArrowRight className="size-4 transition group-hover:translate-x-1" />
-      </a>
+        </Link>
+      </Button>
     </div>
   );
 }
@@ -319,15 +320,11 @@ function Team() {
       <div className="mx-auto max-w-6xl px-6">
         <SectionHead eyebrow="Our Team" title="Building the connection between discharge and home." body="We're building technology that helps newborn care continue beyond the hospital — keeping families connected to their care teams when continuity matters most." />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {team.map((m, i) => (
-            <div key={m.name} className="glass group relative flex flex-col items-center overflow-hidden rounded-3xl p-8 text-center transition duration-300 hover:-translate-y-1">
-              <div
-                className="absolute inset-x-0 bottom-0 h-1/2 origin-bottom scale-y-0 rounded-t-full bg-gradient-to-t from-primary/20 to-transparent transition-transform duration-500 group-hover:scale-y-100"
-                style={{ transitionDelay: `${i * 50}ms` }}
-              />
-              <div className="relative flex size-32 items-center justify-center overflow-hidden rounded-full border-4 border-background bg-blush transition duration-500 group-hover:scale-105 group-hover:border-primary">
+          {team.map((m) => (
+            <div key={m.name} className="glass team-member group relative flex flex-col items-center rounded-3xl p-8 text-center">
+              <div className="team-portrait relative flex size-32 items-center justify-center overflow-hidden rounded-full border-4 border-primary bg-background">
 
-                <img src={m.photo.url} alt={m.name} width={256} height={256} loading="lazy" className="h-full w-full object-cover" />
+                <img src={m.photo.url} alt={m.name} width={256} height={256} loading="lazy" className="h-full w-full object-contain" />
               </div>
               <h3 className="relative mt-6 text-lg font-semibold">{m.name}</h3>
               <p className="relative text-sm text-muted-foreground">{m.role}</p>
