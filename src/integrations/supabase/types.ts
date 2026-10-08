@@ -182,21 +182,32 @@ export type Database = {
       }
       demo_sessions: {
         Row: {
+          caregiver_profile_id: string | null
           expires_at: string
           role: string
           token_hash: string
         }
         Insert: {
+          caregiver_profile_id?: string | null
           expires_at: string
           role: string
           token_hash: string
         }
         Update: {
+          caregiver_profile_id?: string | null
           expires_at?: string
           role?: string
           token_hash?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "demo_sessions_caregiver_profile_id_fkey"
+            columns: ["caregiver_profile_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       health_cards: {
         Row: {

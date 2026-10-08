@@ -15,6 +15,7 @@ export function SiteHeader({ logo }: { logo: ReactNode }) {
         setHidden(current > 100 && current > previous);
         previous = current;
       }
+      if (current <= 100) { setHidden(false); previous = current; }
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
