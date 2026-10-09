@@ -17,3 +17,7 @@
 - All demo clinical tables are RLS-locked and accessed only by validated server functions scoped to the demo workspace and caregiver relationship, because URL roles must not grant permissions.
 - Keep care configuration and deterministic workflow rules in a shared domain module, and product AI providers behind one future validated integration boundary; clinical decisions remain human-entered.
 - Dashboard product views share one browser-safe shell and focused care form/capture components, with separate role URLs so the website and two workflows stay consistent.
+
+- Derive scheduled check-in slots in the shared care domain and enforce them again on server submission; a unique baby/slot index prevents simultaneous duplicate submissions.
+- Preserve caregiver demo capabilities on navigation; only the public synthetic-profile entry may issue a selected caregiver session.
+- Render medical assistant characters from one browser-safe SVG component with optional working state and reduced-motion styles.
