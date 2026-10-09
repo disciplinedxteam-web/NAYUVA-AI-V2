@@ -1,3 +1,7 @@
+# Dashboard integration update
+- [ ] Simplify shell, enlarge assistant characters, add role Home screens and workflow category tabs.
+- [ ] Move caregiver selection to entry and enforce scheduled check-ins with linked saved cards.
+- [ ] Verify rules, browser workflows and publish readiness.
 # Homepage refinements
 - [ ] Build persistent connected demo Care Team and Caregiver workflows, multi-step care plans, updates, appointments, documentation, journey and settings.
 - [ ] Adjust portrait framing, persistent borders, hover treatment, scroll-direction header and half-visible hero flowers.

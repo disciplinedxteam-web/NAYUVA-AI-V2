@@ -1,0 +1,2 @@
+ALTER TABLE public.health_cards ADD COLUMN IF NOT EXISTS plan_snapshot jsonb, ADD COLUMN IF NOT EXISTS caregiver_name text, ADD COLUMN IF NOT EXISTS scheduled_for timestamptz;
+CREATE UNIQUE INDEX IF NOT EXISTS health_cards_scheduled_slot ON public.health_cards(baby_id, scheduled_for) WHERE scheduled_for IS NOT NULL;

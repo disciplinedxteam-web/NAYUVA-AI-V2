@@ -212,36 +212,45 @@ export type Database = {
       health_cards: {
         Row: {
           baby_id: string
+          caregiver_name: string | null
           category: string
           created_at: string
           id: string
           observation: string
+          plan_snapshot: Json | null
           priority: string
           quote: string
           review_note: string
           reviewed: boolean
+          scheduled_for: string | null
         }
         Insert: {
           baby_id: string
+          caregiver_name?: string | null
           category: string
           created_at?: string
           id?: string
           observation: string
+          plan_snapshot?: Json | null
           priority: string
           quote: string
           review_note?: string
           reviewed?: boolean
+          scheduled_for?: string | null
         }
         Update: {
           baby_id?: string
+          caregiver_name?: string | null
           category?: string
           created_at?: string
           id?: string
           observation?: string
+          plan_snapshot?: Json | null
           priority?: string
           quote?: string
           review_note?: string
           reviewed?: boolean
+          scheduled_for?: string | null
         }
         Relationships: [
           {

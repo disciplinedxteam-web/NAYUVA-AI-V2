@@ -4,10 +4,27 @@ export const reasons = ['Routine newborn follow-up','Feeding review','Weight rev
 export const planSchema = z.object({babyName:z.string().trim().min(1).max(100),dob:z.string().min(1),sex:z.enum(['Male','Female','Other']),birthWeight:z.coerce.number().positive().max(10),gestationalAge:z.enum(['Term','Preterm','Post-term']),deliveryType:z.enum(['Vaginal','C-section','Assisted']),caregiverName:z.string().trim().min(1).max(100),relationship:z.enum(['Mother','Father','Guardian','Other']),mobile:z.string().regex(/^\d{7,15}$/,'Enter 7–15 digits'),language:z.string().min(1).max(50),specialCare:z.enum(['Yes','No']),specialReasons:z.array(z.string().max(100)).max(10),conditions:z.array(z.string().max(100)).max(10),takingMedication:z.enum(['Yes','No']),medications:z.array(z.object({name:z.string().min(1).max(100),frequency:z.string().min(1).max(100),instructions:z.string().max(500)})).max(20),categories:z.array(z.enum(categories)).min(1),frequency:z.enum(['Daily','Twice daily','Every 2 days','Weekly','Custom']),customInterval:z.coerce.number().int().min(1).max(365),checkinTime:z.string().regex(/^\d{2}:\d{2}$/),followupDate:z.string(),followupTime:z.string(),followupReason:z.string().max(100)}).superRefine((p,c)=>{if(p.specialCare==='Yes' && !p.specialReasons.length)c.addIssue({code:'custom',message:'Select a reason for special care',path:['specialReasons']});if(p.takingMedication==='Yes' && !p.medications.length)c.addIssue({code:'custom',message:'Add medication details',path:['medications']});if(Boolean(p.followupDate)!==Boolean(p.followupTime))c.addIssue({code:'custom',message:'Provide both follow-up date and time',path:['followupDate']});});
 export type CarePlan=z.infer<typeof planSchema>;
 export const emptyPlan:CarePlan={babyName:'',dob:'',sex:'Male',birthWeight:3,gestationalAge:'Term',deliveryType:'Vaginal',caregiverName:'',relationship:'Mother',mobile:'',language:'English',specialCare:'No',specialReasons:[],conditions:['None'],takingMedication:'No',medications:[],categories:[],frequency:'Daily',customInterval:1,checkinTime:'18:00',followupDate:'',followupTime:'',followupReason:reasons[0]??'Routine newborn follow-up'};
-export function workflowPriority(observation:string){return observation==='Not recorded'?'Review Needed':observation==='Reduced'?'Review Needed':observation==='Clinician attention requested'?'Priority Review':'Routine';}
+export function workflowPriority(observation:string){return observation==='Clinician attention requested'?'Priority Review':observation==='Caregiver reported'?'Routine':'Review Needed';}
 export function interpretStatement(quote:string){return /less|reduced|fewer|missed/i.test(quote)?'Reduced':'Caregiver reported';}
 export function permittedCategory(approved:string[],category:string){return approved.includes(category);}
 export function scheduleHours(frequency:string,custom=1){return frequency==='Twice daily'?12:frequency==='Every 2 days'?48:frequency==='Weekly'?168:frequency==='Custom'?custom*24:24;}
 export function indiaTimestamp(date:string,time:string){const result=new Date(`${date}T${time}:00+05:30`);if(Number.isNaN(result.getTime()))throw new Error('Choose a valid date and time');return result.toISOString();}
 export const roleSchema=z.enum(['care-team','caregiver']);
 export type DemoRole=z.infer<typeof roleSchema>;
+
+/** Scheduled slots are anchored to care-plan creation and India time, not unrestricted arrival time. */
+export function nextCheckin(plan: Pick<CarePlan,'frequency'|'customInterval'|'checkinTime'>, createdAt:string, lastSubmitted?:string, now=Date.now()) {
+ const day=new Date(createdAt).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+ let first=new Date(indiaTimestamp(day,plan.checkinTime)).getTime();
+ const interval=scheduleHours(plan.frequency,plan.customInterval)*3600000;
+ if(first<new Date(createdAt).getTime()) first+=interval;
+ const last=lastSubmitted?new Date(lastSubmitted).getTime():null;
+ const next=last===null?first:first+(Math.floor(Math.max(0,last-first)/interval)+1)*interval;
+ return {scheduledFor:new Date(next).toISOString(),due:now>=next};
+}
+/** Replaceable literal topic matching. No clinical conclusions are inferred. */
+export function classifyStatement(quote:string,approved:string[]) {
+ const terms:Record<string,RegExp>={Feeding:/feed|fed|drank|drink|milk|latch/i,Vomiting:/vomit|throw up/i,Urination:/urin|wet diaper|pee/i,Stool:/stool|poop/i,Temperature:/temperature|fever/i,'Medication adherence':/medication|medicine|dose/i,Sleep:/sleep|slept|awake/i,Jaundice:/jaundice|yellow/i};
+ const matches=approved.filter(c=>terms[c]?.test(quote));
+ return {category:matches.length===1?matches[0]??'':'',observation:matches.length===1?interpretStatement(quote):'Not recorded'};
+}

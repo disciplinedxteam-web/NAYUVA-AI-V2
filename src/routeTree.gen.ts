@@ -10,12 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CaregiverEntryRouteImport } from './routes/caregiver-entry'
 import { Route as CareTeamSectionRouteImport } from './routes/care-team.$section'
 import { Route as CaregiverSectionRouteImport } from './routes/caregiver.$section'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CaregiverEntryRoute = CaregiverEntryRouteImport.update({
+  id: '/caregiver-entry',
+  path: '/caregiver-entry',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CareTeamSectionRoute = CareTeamSectionRouteImport.update({
@@ -31,30 +37,40 @@ const CaregiverSectionRoute = CaregiverSectionRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/care-team/$section' | '/caregiver/$section'
+  fullPaths:
+    '/' | '/caregiver-entry' | '/care-team/$section' | '/caregiver/$section'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/care-team/$section' | '/caregiver/$section'
-  id: '__root__' | '/' | '/care-team/$section' | '/caregiver/$section'
+  to: '/' | '/caregiver-entry' | '/care-team/$section' | '/caregiver/$section'
+  id:
+    | '__root__'
+    | '/'
+    | '/caregiver-entry'
+    | '/care-team/$section'
+    | '/caregiver/$section'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CaregiverEntryRoute: typeof CaregiverEntryRoute
   CareTeamSectionRoute: typeof CareTeamSectionRoute
   CaregiverSectionRoute: typeof CaregiverSectionRoute
 }
@@ -66,6 +82,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/caregiver-entry': {
+      id: '/caregiver-entry'
+      path: '/caregiver-entry'
+      fullPath: '/caregiver-entry'
+      preLoaderRoute: typeof CaregiverEntryRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/care-team/$section': {
@@ -87,6 +110,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CaregiverEntryRoute: CaregiverEntryRoute,
   CareTeamSectionRoute: CareTeamSectionRoute,
   CaregiverSectionRoute: CaregiverSectionRoute,
 }
