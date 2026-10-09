@@ -75,12 +75,12 @@ function CTAs() {
       <Button asChild
         className="inline-flex items-center gap-3 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:bg-primary-deep"
       >
-        <Link to="/care-team/$section" params={{section:'updates'}}>Continue as Care Team <ArrowRight className="size-4" /></Link>
+        <Link to="/care-team/$section" params={{section:'home'}}>Continue as Care Team <ArrowRight className="size-4" /></Link>
       </Button>
       <Button asChild variant="link"
         className="group inline-flex items-center gap-3 border-b border-primary/50 pb-1 text-sm font-semibold text-primary transition hover:border-primary"
       >
-        <Link to="/caregiver/$section" params={{section:'svara'}}>
+        <Link to="/caregiver-entry">
         Continue as Caregiver
         <ArrowRight className="size-4 transition group-hover:translate-x-1" />
         </Link>
