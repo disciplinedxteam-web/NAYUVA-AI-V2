@@ -21,3 +21,4 @@
 - Derive scheduled check-in slots in the shared care domain and enforce them again on server submission; a unique baby/slot index prevents simultaneous duplicate submissions.
 - Preserve caregiver demo capabilities on navigation; only the public synthetic-profile entry may issue a selected caregiver session.
 - Render medical assistant characters from one browser-safe SVG component with optional working state and reduced-motion styles.
+- Svara voice sessions use the Sarvam Web SDK through the server proxy /api/sarvam/, which requires a caregiver demo session and forces the user identifier to that caregiver's profile, so the API key and identity never come from the browser.
