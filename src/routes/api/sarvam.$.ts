@@ -27,13 +27,13 @@ export const Route = createFileRoute('/api/sarvam/$')({
         if (!session || session.role !== 'caregiver' || !session.caregiver_profile_id)
           return Response.json({ error: 'Unauthorized' }, { status: 401 });
         const url = new URL(request.url);
-        // The session identifier must be the authorized caregiver profile, never a client-chosen value.
-        if (url.searchParams.get('user_identifier') !== session.caregiver_profile_id)
-          return Response.json({ error: 'Profile mismatch' }, { status: 403 });
         const key = process.env['SARVAM_API_KEY'];
         if (!key) return Response.json({ error: 'Voice agent not configured' }, { status: 500 });
         const upstream = new URL(`https://apps.sarvam.ai/api/app-runtime/orgs/${ORG}/workspaces/${WORKSPACE}/apps/${APP}/url`);
-        for (const p of ['interaction_type', 'version', 'user_identifier', 'user_identifier_type'])
+        // Identity is always the authorized caregiver profile from the server session, never client input.
+        upstream.searchParams.set('user_identifier', session.caregiver_profile_id);
+        upstream.searchParams.set('user_identifier_type', 'custom');
+        for (const p of ['interaction_type', 'version'])
           { const v = url.searchParams.get(p); if (v) upstream.searchParams.set(p, v); }
         const res = await fetch(upstream, { headers: { 'X-API-Key': key } });
         const body = await res.text();
