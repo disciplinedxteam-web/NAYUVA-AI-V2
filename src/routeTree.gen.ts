@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CaregiverEntryRouteImport } from './routes/caregiver-entry'
 import { Route as CareTeamSectionRouteImport } from './routes/care-team.$section'
 import { Route as CaregiverSectionRouteImport } from './routes/caregiver.$section'
+import { Route as ApiSarvamSplatRouteImport } from './routes/api/sarvam.$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const CaregiverSectionRoute = CaregiverSectionRouteImport.update({
   path: '/caregiver/$section',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSarvamSplatRoute = ApiSarvamSplatRouteImport.update({
+  id: '/api/sarvam/$',
+  path: '/api/sarvam/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
+  '/api/sarvam/$': typeof ApiSarvamSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
+  '/api/sarvam/$': typeof ApiSarvamSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,19 +61,30 @@ export interface FileRoutesById {
   '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
+  '/api/sarvam/$': typeof ApiSarvamSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/caregiver-entry' | '/care-team/$section' | '/caregiver/$section'
+    | '/'
+    | '/caregiver-entry'
+    | '/care-team/$section'
+    | '/caregiver/$section'
+    | '/api/sarvam/$'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/caregiver-entry' | '/care-team/$section' | '/caregiver/$section'
+  to:
+    | '/'
+    | '/caregiver-entry'
+    | '/care-team/$section'
+    | '/caregiver/$section'
+    | '/api/sarvam/$'
   id:
     | '__root__'
     | '/'
     | '/caregiver-entry'
     | '/care-team/$section'
     | '/caregiver/$section'
+    | '/api/sarvam/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -73,6 +92,7 @@ export interface RootRouteChildren {
   CaregiverEntryRoute: typeof CaregiverEntryRoute
   CareTeamSectionRoute: typeof CareTeamSectionRoute
   CaregiverSectionRoute: typeof CaregiverSectionRoute
+  ApiSarvamSplatRoute: typeof ApiSarvamSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -105,6 +125,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CaregiverSectionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/sarvam/$': {
+      id: '/api/sarvam/$'
+      path: '/api/sarvam/$'
+      fullPath: '/api/sarvam/$'
+      preLoaderRoute: typeof ApiSarvamSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -113,6 +140,7 @@ const rootRouteChildren: RootRouteChildren = {
   CaregiverEntryRoute: CaregiverEntryRoute,
   CareTeamSectionRoute: CareTeamSectionRoute,
   CaregiverSectionRoute: CaregiverSectionRoute,
+  ApiSarvamSplatRoute: ApiSarvamSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
