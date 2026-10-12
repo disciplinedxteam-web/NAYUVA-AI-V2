@@ -390,11 +390,36 @@
 .site-header[data-hidden="true"] { opacity: 0; transform: translate(-50%, -120%); pointer-events: none; }
 .hero-flower-left { width: 250px; left: -118px; top: 67%; }
 .hero-flower-right { width: 270px; right: -130px; top: 8%; }
-.team-member { transition: transform 300ms ease, box-shadow 300ms ease; }
-.team-member:hover { transform: translateY(-5px); box-shadow: var(--shadow-card-hover); }
-.team-portrait { transition: box-shadow 300ms ease, transform 300ms ease; }
-.team-member:hover .team-portrait { transform: translateY(-3px); box-shadow: 0 0 0 6px var(--blush); }
-.team-portrait img { object-fit: cover; object-position: 50% 18%; }
+.team-member {
+  min-height: 290px;
+  background: linear-gradient(160deg, var(--card), color-mix(in oklab, var(--card) 60%, transparent));
+  border-color: color-mix(in oklab, var(--primary) 18%, transparent);
+  box-shadow: 0 18px 45px -32px color-mix(in oklab, var(--primary-deep) 32%, transparent);
+  transition: transform 300ms ease, box-shadow 300ms ease, border-color 300ms ease;
+}
+.team-member::before {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(145deg, color-mix(in oklab, var(--primary-foreground) 44%, transparent), transparent 45%);
+  content: "";
+  pointer-events: none;
+}
+.team-member:hover { transform: translateY(-5px); border-color: color-mix(in oklab, var(--primary) 34%, transparent); box-shadow: var(--shadow-card-hover); }
+.team-portrait {
+  isolation: isolate;
+  border: 3px solid var(--primary);
+  background: var(--background);
+  box-shadow: 0 0 0 7px color-mix(in oklab, var(--blush) 82%, transparent), 0 12px 28px -18px var(--primary-deep);
+  transition: box-shadow 300ms ease, transform 300ms ease;
+}
+.team-member:hover .team-portrait { transform: translateY(-3px); box-shadow: 0 0 0 8px var(--blush), 0 16px 30px -16px var(--primary-deep); }
+.team-portrait img { position: absolute; max-width: none; height: auto; transform-origin: center top; }
+.team-portrait[data-framing="raksha"] img { width: 89%; top: 6%; }
+.team-portrait[data-framing="rajeev"] img { width: 88%; top: 5%; }
+.team-portrait[data-framing="charmi"] img { width: 78%; top: 6%; }
+.team-portrait[data-framing="varun"] img { width: 142%; top: -1%; }
+.team-divider { position: relative; margin-top: 22px; width: 28px; height: 2px; border-radius: 999px; background: var(--primary); opacity: .55; }
 .dashboard-shell { min-height: 100svh; position: relative; display: grid; grid-template-columns: 250px minmax(0,1fr); }
 .dashboard-sidebar { z-index: 20; position: sticky; top: 0; height: 100svh; background: var(--dashboard-sidebar); border-right: 1px solid var(--border); backdrop-filter: blur(16px); padding: 30px 18px 22px; display: flex; flex-direction: column; }
 .dashboard-brand { display: flex; align-items: center; gap: 10px; padding: 0 10px; color: var(--primary); font-weight: 700; font-size: 18px; white-space: nowrap; }

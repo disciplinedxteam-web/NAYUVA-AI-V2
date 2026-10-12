@@ -308,10 +308,10 @@ function Impact() {
 }
 
 const team = [
-  { name: "Raksha H", role: "UI/UX Designer", photo: raksha },
-  { name: "Rajeev Shukla", role: "Technical Leader", photo: rajeev },
-  { name: "Dr Charmi Shah", role: "Clinical Head", photo: charmi },
-  { name: "Varun Viyas", role: "Backend Developer", photo: varun },
+  { name: "Raksha H", role: "UI/UX Designer", photo: raksha, framing: "raksha" },
+  { name: "Rajeev Shukla", role: "Technical Leader", photo: rajeev, framing: "rajeev" },
+  { name: "Dr Charmi Shah", role: "Clinical Head", photo: charmi, framing: "charmi" },
+  { name: "Varun Viyas", role: "Backend Developer", photo: varun, framing: "varun" },
 ];
 
 function Team() {
@@ -322,13 +322,13 @@ function Team() {
         <SectionHead eyebrow="Our Team" title="Building the connection between discharge and home." body="We're building technology that helps newborn care continue beyond the hospital — keeping families connected to their care teams when continuity matters most." />
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {team.map((m) => (
-            <div key={m.name} className="glass team-member group relative flex flex-col items-center rounded-3xl p-8 text-center">
-              <div className="team-portrait relative flex size-32 items-center justify-center overflow-hidden rounded-full border-4 border-primary bg-background">
-
-                <img src={m.photo.url} alt={m.name} width={256} height={256} loading="lazy" className="h-full w-full object-contain" />
+            <div key={m.name} className="glass team-member group relative flex flex-col items-center rounded-lg px-6 py-8 text-center">
+              <div className="team-portrait relative flex size-36 items-center justify-center overflow-hidden rounded-full" data-framing={m.framing}>
+                <img src={m.photo.url} alt={m.name} width={256} height={256} loading="lazy" />
               </div>
-              <h3 className="relative mt-6 text-lg font-semibold">{m.name}</h3>
-              <p className="relative text-sm text-muted-foreground">{m.role}</p>
+              <span className="team-divider" aria-hidden />
+              <h3 className="relative mt-5 text-lg font-semibold">{m.name}</h3>
+              <p className="relative mt-1 text-sm text-muted-foreground">{m.role}</p>
             </div>
           ))}
         </div>
