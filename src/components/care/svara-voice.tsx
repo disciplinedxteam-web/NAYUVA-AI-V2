@@ -5,6 +5,16 @@ import { Button } from '@/components/ui/button';
 type Line = { role: 'user' | 'bot'; content: string };
 type Agent = { stop: () => Promise<void> };
 
+/** Sarvam transcript payloads may be strings or nested objects; always reduce to plain text so React never renders an object. */
+export function transcriptText(v: unknown, depth = 0): string {
+  if (v == null || depth > 4) return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'number' || typeof v === 'boolean') return String(v);
+  if (Array.isArray(v)) return v.map((x) => transcriptText(x, depth + 1)).filter(Boolean).join(' ');
+  if (typeof v === 'object') { const o = v as Record<string, unknown>; for (const k of ['text', 'transcript', 'content', 'en_text', 'message']) { const t = transcriptText(o[k], depth + 1); if (t) return t; } }
+  return '';
+}
+
 /** Live Svara voice session via the Sarvam Web SDK. The key stays on the server proxy (/api/sarvam/). */
 export function SvaraVoice({ profileId, context, onTranscript, onEnded }: { profileId: string; context: Record<string, string>; onTranscript: (lines: Line[]) => void; onEnded: () => void }) {
   const [state, setState] = useState('IDLE');
@@ -28,8 +38,8 @@ export function SvaraVoice({ profileId, context, onTranscript, onEnded }: { prof
           agent_variables: context,
         },
         audioInterface: new BrowserAudioInterface(),
-        transcriptCallback: async (m: { role: unknown; content: string }) => { setLines((l) => [...l, { role: m.role === Role.USER ? 'user' : 'bot', content: m.content }]); },
-        stateCallback: async (s: unknown) => { setState(String(s)); },
+        transcriptCallback: async (m: { role?: unknown; content?: unknown }) => { try { const content = transcriptText(m?.content ?? m).trim().slice(0, 6000); if (!content) return; const role: Line['role'] = m?.role === Role.USER || m?.role === 'user' ? 'user' : 'bot'; setLines((l) => { const last = l[l.length - 1]; if (last && last.role === role && last.content === content) return l; return [...l, { role, content }]; }); } catch { /* ignore malformed transcript event */ } },
+        stateCallback: async (s: unknown) => { setState(typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'); },
         endCallback: async () => { setState('IDLE'); agent.current = null; onEnded(); },
       } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
       agent.current = a;
