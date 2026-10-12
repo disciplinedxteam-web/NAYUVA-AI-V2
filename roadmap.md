@@ -7,6 +7,7 @@
 - [ ] Move caregiver selection to entry and enforce scheduled check-ins with linked saved cards.
 - [ ] Verify rules, browser workflows and publish readiness.
 # Homepage refinements
+- [x] Align all four team portraits at matching visual scale and refine team cards; verified desktop and mobile.
 - [ ] Build persistent connected demo Care Team and Caregiver workflows, multi-step care plans, updates, appointments, documentation, journey and settings.
 - [ ] Adjust portrait framing, persistent borders, hover treatment, scroll-direction header and half-visible hero flowers.
 - [ ] Test workflow rules and verify both dashboards and homepage.
