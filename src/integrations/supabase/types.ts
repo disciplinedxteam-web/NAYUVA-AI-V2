@@ -237,45 +237,72 @@ export type Database = {
       checkin_sessions: {
         Row: {
           agent_version: string | null
+          attempt_id: string | null
           baby_id: string
+          call_status: string | null
           caregiver_name: string
           channel: string
           completed_at: string | null
+          consent_at: string | null
           created_at: string
+          destination_phone: string | null
+          failure_code: string | null
           id: string
+          plan_snapshot: Json
           plan_version: number
           question_bank_version: number | null
           question_ids: Json
+          scheduled_for: string | null
           started_at: string | null
           status: string
+          summary: Json | null
+          transcript: Json
         }
         Insert: {
           agent_version?: string | null
+          attempt_id?: string | null
           baby_id: string
+          call_status?: string | null
           caregiver_name: string
           channel?: string
           completed_at?: string | null
+          consent_at?: string | null
           created_at?: string
+          destination_phone?: string | null
+          failure_code?: string | null
           id?: string
+          plan_snapshot?: Json
           plan_version: number
           question_bank_version?: number | null
           question_ids?: Json
+          scheduled_for?: string | null
           started_at?: string | null
           status?: string
+          summary?: Json | null
+          transcript?: Json
         }
         Update: {
           agent_version?: string | null
+          attempt_id?: string | null
           baby_id?: string
+          call_status?: string | null
           caregiver_name?: string
           channel?: string
           completed_at?: string | null
+          consent_at?: string | null
           created_at?: string
+          destination_phone?: string | null
+          failure_code?: string | null
           id?: string
+          plan_snapshot?: Json
           plan_version?: number
           question_bank_version?: number | null
           question_ids?: Json
+          scheduled_for?: string | null
           started_at?: string | null
           status?: string
+          summary?: Json | null
+          transcript?: Json
         }
         Relationships: [
           {
