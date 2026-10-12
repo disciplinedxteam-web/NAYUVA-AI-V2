@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Mic, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -16,7 +16,7 @@ export function transcriptText(v: unknown, depth = 0): string {
 }
 
 /** Live Svara voice session via the Sarvam Web SDK. The key stays on the server proxy (/api/sarvam/). */
-export function SvaraVoice({ profileId, context, onTranscript, onEnded }: { profileId: string; context: Record<string, string>; onTranscript: (lines: Line[]) => void; onEnded: () => void }) {
+function SvaraVoiceInner({ profileId, context, onTranscript, onEnded }: { profileId: string; context: Record<string, string>; onTranscript: (lines: Line[]) => void; onEnded: () => void }) {
   const [state, setState] = useState('IDLE');
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState('');
@@ -57,4 +57,21 @@ export function SvaraVoice({ profileId, context, onTranscript, onEnded }: { prof
     {lines.length > 0 && <div data-no-translate className="mt-3 space-y-2 text-sm">{lines.map((l, i) => <p key={i}><strong>{l.role === 'bot' ? 'Svara' : 'You'}:</strong> {l.content}</p>)}</div>}
     {error && <p className="text-sm text-muted-foreground mt-3" role="status">{error}</p>}
   </div>;
+}
+
+class VoiceBoundary extends Component<{ children: ReactNode; onReset: () => void }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(e: unknown) { console.error('Svara voice error', e); }
+  render() {
+    if (!this.state.failed) return this.props.children;
+    return <div className="transcription" role="status"><p className="text-sm">The voice conversation was interrupted. Your saved transcript is kept — you can restart or continue by typing below.</p>
+      <Button type="button" className="mt-3" onClick={() => { this.setState({ failed: false }); this.props.onReset(); }}><Mic />Restart voice check-in</Button></div>;
+  }
+}
+
+/** Isolated so a voice/stream error can never take down the dashboard. */
+export function SvaraVoice(props: Parameters<typeof SvaraVoiceInner>[0]) {
+  const [key, setKey] = useState(0);
+  return <VoiceBoundary onReset={() => setKey((k) => k + 1)}><SvaraVoiceInner key={key} {...props} /></VoiceBoundary>;
 }
