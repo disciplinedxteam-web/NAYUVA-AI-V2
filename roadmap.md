@@ -1,4 +1,8 @@
 # Dashboard integration update
+- [ ] Refine both dashboard layouts, scheduler time window, Sutra and Lekha compact workspaces, sidebar and Home.
+- [ ] Connect authorized Svara website and outbound call sessions, provider status/transcripts and persisted review cards.
+- [ ] Provide site-wide eleven-language translation and caregiver emergency menu.
+- [ ] Verify real workflows and report provider or clinical-approval blockers accurately.
 - [ ] Simplify shell, enlarge assistant characters, add role Home screens and workflow category tabs.
 - [ ] Move caregiver selection to entry and enforce scheduled check-ins with linked saved cards.
 - [ ] Verify rules, browser workflows and publish readiness.

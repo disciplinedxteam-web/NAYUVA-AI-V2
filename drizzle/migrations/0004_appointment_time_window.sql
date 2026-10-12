@@ -1,0 +1,3 @@
+ALTER TABLE public.care_appointments ADD COLUMN IF NOT EXISTS ends_at timestamptz;
+CREATE OR REPLACE FUNCTION public.validate_appointment_window() RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$ BEGIN IF NEW.ends_at IS NOT NULL AND NEW.ends_at <= NEW.starts_at THEN RAISE EXCEPTION 'End time must be after start time'; END IF; RETURN NEW; END; $$;
+CREATE TRIGGER appointment_window_valid BEFORE INSERT OR UPDATE ON public.care_appointments FOR EACH ROW EXECUTE FUNCTION public.validate_appointment_window();

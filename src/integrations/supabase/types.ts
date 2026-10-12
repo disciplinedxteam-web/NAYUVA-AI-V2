@@ -48,6 +48,7 @@ export type Database = {
         Row: {
           baby_id: string
           created_at: string
+          ends_at: string | null
           id: string
           location: Json
           reason: string
@@ -58,6 +59,7 @@ export type Database = {
         Insert: {
           baby_id: string
           created_at?: string
+          ends_at?: string | null
           id?: string
           location?: Json
           reason: string
@@ -68,6 +70,7 @@ export type Database = {
         Update: {
           baby_id?: string
           created_at?: string
+          ends_at?: string | null
           id?: string
           location?: Json
           reason?: string
@@ -234,45 +237,72 @@ export type Database = {
       checkin_sessions: {
         Row: {
           agent_version: string | null
+          attempt_id: string | null
           baby_id: string
+          call_status: string | null
           caregiver_name: string
           channel: string
           completed_at: string | null
+          consent_at: string | null
           created_at: string
+          destination_phone: string | null
+          failure_code: string | null
           id: string
+          plan_snapshot: Json
           plan_version: number
           question_bank_version: number | null
           question_ids: Json
+          scheduled_for: string | null
           started_at: string | null
           status: string
+          summary: Json | null
+          transcript: Json
         }
         Insert: {
           agent_version?: string | null
+          attempt_id?: string | null
           baby_id: string
+          call_status?: string | null
           caregiver_name: string
           channel?: string
           completed_at?: string | null
+          consent_at?: string | null
           created_at?: string
+          destination_phone?: string | null
+          failure_code?: string | null
           id?: string
+          plan_snapshot?: Json
           plan_version: number
           question_bank_version?: number | null
           question_ids?: Json
+          scheduled_for?: string | null
           started_at?: string | null
           status?: string
+          summary?: Json | null
+          transcript?: Json
         }
         Update: {
           agent_version?: string | null
+          attempt_id?: string | null
           baby_id?: string
+          call_status?: string | null
           caregiver_name?: string
           channel?: string
           completed_at?: string | null
+          consent_at?: string | null
           created_at?: string
+          destination_phone?: string | null
+          failure_code?: string | null
           id?: string
+          plan_snapshot?: Json
           plan_version?: number
           question_bank_version?: number | null
           question_ids?: Json
+          scheduled_for?: string | null
           started_at?: string | null
           status?: string
+          summary?: Json | null
+          transcript?: Json
         }
         Relationships: [
           {
@@ -435,7 +465,9 @@ export type Database = {
           review_note: string
           reviewed: boolean
           scheduled_for: string | null
+          scoring_result: Json | null
           session_id: string | null
+          summary_text: string | null
           summary_version: number
           workflow_status: string
         }
@@ -452,7 +484,9 @@ export type Database = {
           review_note?: string
           reviewed?: boolean
           scheduled_for?: string | null
+          scoring_result?: Json | null
           session_id?: string | null
+          summary_text?: string | null
           summary_version?: number
           workflow_status?: string
         }
@@ -469,7 +503,9 @@ export type Database = {
           review_note?: string
           reviewed?: boolean
           scheduled_for?: string | null
+          scoring_result?: Json | null
           session_id?: string | null
+          summary_text?: string | null
           summary_version?: number
           workflow_status?: string
         }
@@ -642,7 +678,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      confirm_svara_card: {
+        Args: { p_baby: string; p_session: string; p_summary: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
