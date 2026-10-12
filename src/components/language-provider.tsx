@@ -22,7 +22,7 @@ export function LanguageProvider({children}:{children:ReactNode}) {
     let active=true; setError('');
     if(language==='en'){setDictionary({});return;}
     const load=localeFiles[`../lib/locales/${language}.json`];
-    if(!load){setError('This translation is not available yet.');return;}
+    if(!load){setDictionary({});setError('This translation is not available yet.');return;}
     void load().then(d=>{if(active)setDictionary(d);}).catch(()=>{if(active)setError('Translation could not be loaded.');});
     return ()=>{active=false;};
   },[language]);
