@@ -96,10 +96,10 @@ export function Mascot({ name, state = 'idle', size = 168, className = '' }: { n
   );
 }
 
-export function SpeechHeader({ name, state, title, text }: { name: MascotName; state?: MascotState; title: string; text: string }) {
+export function SpeechHeader({ name, state, title, text }: { name: MascotName; state?: MascotState | undefined; title: string; text: string }) {
   return (
     <div className="speech-header">
-      <Mascot name={name} state={state} size={150} />
+      <Mascot name={name} state={state ?? 'idle'} size={150} />
       <div className="speech-cloud" role="note"><strong>{title}</strong><p>{text}</p></div>
     </div>
   );
