@@ -417,8 +417,8 @@
 .team-portrait img { position: absolute; max-width: none; height: auto; transform-origin: center top; }
 .team-portrait[data-framing="raksha"] img { width: 89%; top: 6%; }
 .team-portrait[data-framing="rajeev"] img { width: 88%; top: 5%; }
-.team-portrait[data-framing="charmi"] img { width: 78%; top: 6%; }
-.team-portrait[data-framing="varun"] img { width: 142%; top: -1%; }
+.team-portrait[data-framing="charmi"] img { width: 120%; top: 4%; }
+.team-portrait[data-framing="varun"] img { width: 142%; top: -12%; }
 .team-divider { position: relative; margin-top: 22px; width: 28px; height: 2px; border-radius: 999px; background: var(--primary); opacity: .55; }
 .dashboard-shell { min-height: 100svh; position: relative; display: grid; grid-template-columns: 250px minmax(0,1fr); }
 .dashboard-sidebar { z-index: 20; position: sticky; top: 0; height: 100svh; background: var(--dashboard-sidebar); border-right: 1px solid var(--border); backdrop-filter: blur(16px); padding: 30px 18px 22px; display: flex; flex-direction: column; }
