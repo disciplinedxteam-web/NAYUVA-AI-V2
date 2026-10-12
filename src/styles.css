@@ -747,3 +747,4 @@
 .profile-menu a, .profile-menu button { display: flex; width: 100%; gap: 10px; align-items: center; padding: 9px 10px; border-radius: 10px; font-size: 13px; background: transparent; border: 0; cursor: pointer; }
 .profile-menu a:hover, .profile-menu button:hover { background: var(--secondary); }
 .profile-menu svg { width: 16px; height: 16px; color: var(--primary); }
+.ws-panel .search-field { display:flex; align-items:center; gap:8px; } .ws-panel .search-field .ws-input { flex:1; }
