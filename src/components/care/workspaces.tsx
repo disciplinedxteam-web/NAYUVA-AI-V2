@@ -203,7 +203,7 @@ export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   const strip = useRef<HTMLDivElement>(null); const speech = useSpeech(setDraft);
   const items: JourneyItem[] = useMemo(() => !baby ? [] : [
     ...data.events.filter(e => e.baby_id === baby.id).map(e => ({ id: 'e' + e.id, when: e.created_at, kind: e.kind, title: e.kind, body: e.summary, tag: 'Journey' })),
-    ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, body: `${c.observation} — “${c.quote}”`, tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
+    ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, body: `${c.summary_text||c.observation} — “${c.quote}”`, tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
     ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', body: `${n.observations} · ${n.decision}`, tag: 'Lekha' })) : []),
   ].sort((a, b) => a.when.localeCompare(b.when)), [data, baby, role]);
   useEffect(() => { strip.current?.scrollTo({ left: strip.current.scrollWidth }); setSelected([]); setMsgs([]); }, [babyId]);
