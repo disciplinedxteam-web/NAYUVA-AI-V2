@@ -465,7 +465,9 @@ export type Database = {
           review_note: string
           reviewed: boolean
           scheduled_for: string | null
+          scoring_result: Json | null
           session_id: string | null
+          summary_text: string | null
           summary_version: number
           workflow_status: string
         }
@@ -482,7 +484,9 @@ export type Database = {
           review_note?: string
           reviewed?: boolean
           scheduled_for?: string | null
+          scoring_result?: Json | null
           session_id?: string | null
+          summary_text?: string | null
           summary_version?: number
           workflow_status?: string
         }
@@ -499,7 +503,9 @@ export type Database = {
           review_note?: string
           reviewed?: boolean
           scheduled_for?: string | null
+          scoring_result?: Json | null
           session_id?: string | null
+          summary_text?: string | null
           summary_version?: number
           workflow_status?: string
         }
@@ -672,7 +678,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      confirm_svara_card: {
+        Args: { p_baby: string; p_session: string; p_summary: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never

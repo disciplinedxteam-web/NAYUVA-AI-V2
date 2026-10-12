@@ -43,6 +43,13 @@
       "when": 1791802596176,
       "tag": "0005_svara_session_capture",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791802750180,
+      "tag": "0006_svara_card_summary",
+      "breakpoints": true
     }
   ]
 }
