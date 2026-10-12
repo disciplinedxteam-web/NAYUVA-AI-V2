@@ -6,6 +6,7 @@ import { WorkspaceHeading } from './workspace-heading';
 import { askSutra, createAppointment, getCareData, saveClinicalNote, updateAppointment } from '@/lib/care.functions';
 import { reasons, type DemoRole } from '@/lib/care-domain';
 import { detectChecklist, lekhaChecklist } from '@/lib/lekha-checklist';
+import { useLanguage } from '@/components/language-provider';
 
 type Data = Awaited<ReturnType<typeof getCareData>>;
 type Appointment = Data['appointments'][number];
@@ -25,13 +26,14 @@ function EmptyState({ children }: { children: React.ReactNode }) { return <div c
 /* Speech capture shared by Lekha and Sutra */
 type Rec = { lang: string; continuous: boolean; interimResults: boolean; onresult: ((e: { results: ArrayLike<{ 0: { transcript: string } }> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null; start: () => void; stop: () => void };
 function useSpeech(onText: (t: string) => void) {
+  const {language}=useLanguage();
   const [listening, setListening] = useState(false); const [error, setError] = useState(''); const rec = useRef<Rec | null>(null);
   useEffect(() => () => rec.current?.stop(), []);
   function toggle() {
     if (listening) { rec.current?.stop(); setListening(false); return; }
     const w = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
     const C = w.SpeechRecognition ?? w.webkitSpeechRecognition; if (!C) { setError('Voice input is unavailable in this browser — please type.'); return; }
-    const r = new C(); r.lang = 'en-IN'; r.continuous = true; r.interimResults = true;
+    const r = new C(); r.lang = language==='en'?'en-IN':`${language==='or'?'or':language}-IN`; r.continuous = true; r.interimResults = true;
     r.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += (e.results[i]?.[0].transcript ?? '') + ' '; onText(t.trim()); };
     r.onend = () => setListening(false); r.onerror = () => { setListening(false); setError('Microphone access failed — please type.'); };
     rec.current = r; try { r.start(); setListening(true); setError(''); } catch { setError('Voice input unavailable — please type.'); }
@@ -72,7 +74,7 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
               <Button type="submit" disabled={busy}>Send</Button><Button type="button" variant="ghost" onClick={() => setRequest(null)}>Cancel</Button>
             </form> : <div className="nv-card-actions">
               {!isPast(a) && role === 'caregiver' && <><Button disabled={busy || a.status === 'Confirmed'} onClick={() => void run(() => change({ data: { id: a.id, status: 'Confirmed' } }), 'Appointment confirmed.')}>Confirm</Button><Button variant="outline" onClick={() => setRequest(a.id)}>Reschedule</Button></>}
-              {!isPast(a) && role === 'care-team' && <><Button disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Completed' } }), 'Marked as done. It is now waiting in Lekha.')}><Check />Mark done</Button><Button variant="ghost" disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Cancelled' } }), 'Appointment cancelled.')}>Cancel</Button></>}
+              {!closed.includes(a.status) && role === 'care-team' && <><Button disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Completed' } }), 'Marked as done. It is now waiting in Lekha.')}><Check />Mark done</Button><Button variant="ghost" disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Cancelled' } }), 'Appointment cancelled.')}>Cancel</Button></>}
               {role === 'care-team' && a.status === 'Completed' && <Button variant="outline" onClick={onDocument}><FileText />{documented ? 'View in Lekha' : 'Document in Lekha'}</Button>}
               {l['mapsLink']?.startsWith('https://') && <Button asChild variant="ghost"><a href={l['mapsLink']} target="_blank" rel="noreferrer"><MapPin />Map</a></Button>}
             </div>}
@@ -92,6 +94,7 @@ export function ProfileSearch({ babies, value, onSelect }: { babies: Data['babie
   </div>;
 }
 function Scheduler({ data, busy, run, onDone }: { data: Data; busy: boolean; run: Run; onDone: () => void }) {
+  const {language}=useLanguage();
   const create = useServerFn(createAppointment); const settings = data.settings as Record<string, string>;
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const [month, setMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
@@ -104,7 +107,7 @@ function Scheduler({ data, busy, run, onDone }: { data: Data; busy: boolean; run
   return <form className="ws-split scheduler-compact" onSubmit={e => { e.preventDefault(); if (!baby || !date || !time || !endTime || endTime <= time) return; void run(async () => { await create({ data: { babyId: baby.id, date: iso(date), time, endTime, reason, location: { facilityName: settings['facilityName'] ?? '', address: settings['address'] ?? '', mapsLink } } }); onDone(); }, 'Appointment scheduled and shared with the caregiver.'); }}>
     <section className="ws-panel">
       <div className="ws-panel-title"><CalendarDays /><div>Date & time<small>India Standard Time</small></div></div>
-      <div className="cal-head"><Button type="button" variant="ghost" size="icon" aria-label="Previous month" disabled={month <= new Date(today.getFullYear(), today.getMonth(), 1)} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}><ChevronLeft /></Button><strong>{month.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</strong><Button type="button" variant="ghost" size="icon" aria-label="Next month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}><ChevronRight /></Button></div>
+      <div className="cal-head"><Button type="button" variant="ghost" size="icon" aria-label="Previous month" disabled={month <= new Date(today.getFullYear(), today.getMonth(), 1)} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}><ChevronLeft /></Button><strong>{month.toLocaleDateString(`${language}-IN`, { month: 'long', year: 'numeric' })}</strong><Button type="button" variant="ghost" size="icon" aria-label="Next month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}><ChevronRight /></Button></div>
       <div className="cal-grid">{['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <span key={d}>{d}</span>)}{days.map((d, i) => d ? <Button variant="ghost" type="button" key={i} disabled={d < today} aria-label={iso(d)} aria-pressed={!!date && d.getTime() === date.getTime()} onClick={() => setDate(d)}>{d.getDate()}</Button> : <i key={i} />)}</div>
       <div className="time-fields"><label><span className="ws-label">Start time</span><input className="ws-input" type="time" required value={time} onChange={e => setTime(e.target.value)} /></label><label><span className="ws-label">End time</span><input className="ws-input" type="time" required min={time} value={endTime} onChange={e => setEndTime(e.target.value)} /></label></div>
       {endTime && time && endTime <= time && <p role="alert" className="text-destructive text-sm">End time must be after start time.</p>}

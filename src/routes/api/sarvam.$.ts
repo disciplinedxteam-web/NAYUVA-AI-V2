@@ -27,6 +27,10 @@ export const Route = createFileRoute('/api/sarvam/$')({
         if (!session || session.role !== 'caregiver' || !session.caregiver_profile_id)
           return Response.json({ error: 'Unauthorized' }, { status: 401 });
         const url = new URL(request.url);
+        const checkinId = url.pathname.split('/')[3];
+        if (!checkinId || !/^[0-9a-f-]{36}$/i.test(checkinId)) return Response.json({error:'Start your scheduled check-in first.'},{status:403});
+        const {data:checkin}=await db.from('checkin_sessions').select('id,baby_id,status,scheduled_for').eq('id',checkinId).eq('baby_id',session.caregiver_profile_id).single();
+        if(!checkin || !['in_progress','incomplete'].includes(checkin.status) || !checkin.scheduled_for || new Date(checkin.scheduled_for).getTime()>Date.now())return Response.json({error:'This scheduled check-in is unavailable.'},{status:403});
         const key = process.env['SARVAM_API_KEY'];
         if (!key) return Response.json({ error: 'Voice agent not configured' }, { status: 500 });
         const upstream = new URL(`https://apps.sarvam.ai/api/app-runtime/orgs/${ORG}/workspaces/${WORKSPACE}/apps/${APP}/url`);
@@ -37,7 +41,7 @@ export const Route = createFileRoute('/api/sarvam/$')({
           { const v = url.searchParams.get(p); if (v) upstream.searchParams.set(p, v); }
         const res = await fetch(upstream, { headers: { 'X-API-Key': key } });
         const body = await res.text();
-        if (!res.ok) console.error('[sarvam] signed url failed', res.status, body.slice(0, 300));
+        if (!res.ok) console.error('[sarvam] signed url failed', res.status);
         return new Response(body, { status: res.status, headers: { 'content-type': 'application/json' } });
       },
     },

@@ -20,7 +20,7 @@ export function SvaraVoice({ profileId, context, onTranscript, onEnded }: { prof
       const { ConversationAgent, BrowserAudioInterface, InteractionType, Role } = await import('sarvam-conv-ai-sdk/browser');
       const a = new ConversationAgent({
         apiKey: '',
-        baseUrl: `${window.location.origin}/api/sarvam/`,
+        baseUrl: `${window.location.origin}/api/sarvam/${context.check_in_id}/`,
         config: {
           user_identifier_type: 'custom', user_identifier: profileId,
           org_id: '01a06c4c-1ad9-769a-9b30-14878bafef8a', workspace_id: '01a06c4c-1ae1-7d6f-a195-f7c92c3f2058', app_id: 'Conversatio-1e149739-300e',
