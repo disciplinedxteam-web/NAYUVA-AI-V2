@@ -18,6 +18,7 @@ import flowerYellow from "@/assets/flower-yellow.png";
 import { CareGraphic } from "@/components/care-graphic";
 import { SiteHeader } from "@/components/site-header";
 import { ProductOrb, type ProductState } from "@/components/product-orb";
+import { Mascot } from "@/components/care/mascot";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
 import rajeev from "@/assets/rajeev-portrait.png.asset.json";
 import charmi from "@/assets/charmi-portrait.png.asset.json";
@@ -251,7 +252,7 @@ function Products() {
                   </ul>
                 </div>
                 <div className="min-w-0 flex-1">
-                  <ProductOrb name={p.name} state={p.state as ProductState} />
+                  {p.name === "SVARA" ? <ProductOrb name={p.name} state={p.state as ProductState} /> : <div className="flex justify-center"><Mascot name={p.name.toLowerCase() as "milan" | "lekha" | "sutra"} state={p.name === "LEKHA" ? "done" : "working"} size={260} /></div>}
                 </div>
               </div>
               {i < products.length - 1 && <div className="h-px bg-primary/15" />}
