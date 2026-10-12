@@ -48,6 +48,7 @@ export type Database = {
         Row: {
           baby_id: string
           created_at: string
+          ends_at: string | null
           id: string
           location: Json
           reason: string
@@ -58,6 +59,7 @@ export type Database = {
         Insert: {
           baby_id: string
           created_at?: string
+          ends_at?: string | null
           id?: string
           location?: Json
           reason: string
@@ -68,6 +70,7 @@ export type Database = {
         Update: {
           baby_id?: string
           created_at?: string
+          ends_at?: string | null
           id?: string
           location?: Json
           reason?: string
