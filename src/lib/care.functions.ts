@@ -59,9 +59,5 @@ export const summarizeSvaraSession=createServerFn({method:'POST'}).inputValidato
 });
 export const confirmSvaraSession=createServerFn({method:'POST'}).inputValidator(z.object({sessionId:z.string().uuid(),summary:z.string().trim().min(1).max(5000)})).handler(async({data})=>{
  const auth=await authorized('caregiver');const {data:s,error}=await auth.db.from('checkin_sessions').select('*').eq('id',data.sessionId).eq('baby_id',auth.caregiverProfileId??'').single();check(error);if(!s)throw new Error('Check-in unavailable.');
- const {data:previous}=await auth.db.from('health_cards').select('id').eq('session_id',s.id).maybeSingle();if(previous)return {ok:true,cardId:previous.id};
- if(!s.summary)throw new Error('Prepare and review your summary first.');const {transcriptSchema,pendingSvaraPriority}=await import('./svara-session-domain');const transcript=transcriptSchema.parse(s.transcript);const original=transcript.filter(l=>l.role==='user').map(l=>l.content).join('\n');if(!original)throw new Error('No caregiver responses recorded.');const scoring=pendingSvaraPriority();
- const {data:card,error:cError}=await auth.db.from('health_cards').insert({baby_id:s.baby_id,session_id:s.id,category:'Caregiver concerns',quote:original,observation:'Not recorded',priority:scoring.priority,workflow_status:scoring.workflowStatus,caregiver_name:s.caregiver_name,plan_snapshot:s.plan_snapshot,scheduled_for:s.scheduled_for,summary_version:1}).select('id').single();check(cError);if(!card)throw new Error('Health Card could not be saved.');
- check((await auth.db.from('checkin_sessions').update({summary:{...(s.summary as Record<string,Json>),summary:data.summary,caregiverConfirmed:true},status:'submitted',completed_at:new Date().toISOString()}).eq('id',s.id)).error);
- check((await auth.db.from('care_events').insert({baby_id:s.baby_id,kind:'Home Update',summary:data.summary})).error);return {ok:true,cardId:card.id};
+ const {data:cardId,error:saveError}=await auth.db.rpc('confirm_svara_card',{p_session:s.id,p_baby:s.baby_id,p_summary:data.summary});check(saveError);return {ok:true,cardId};
 });
