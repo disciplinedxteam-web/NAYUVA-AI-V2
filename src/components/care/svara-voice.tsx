@@ -60,10 +60,10 @@ function SvaraVoiceInner({ profileId, context, onTranscript, onEnded }: { profil
 }
 
 class VoiceBoundary extends Component<{ children: ReactNode; onReset: () => void }, { failed: boolean }> {
-  state = { failed: false };
+  override state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
-  componentDidCatch(e: unknown) { console.error('Svara voice error', e); }
-  render() {
+  override componentDidCatch(e: unknown) { console.error('Svara voice error', e); }
+  override render() {
     if (!this.state.failed) return this.props.children;
     return <div className="transcription" role="status"><p className="text-sm">The voice conversation was interrupted. Your saved transcript is kept — you can restart or continue by typing below.</p>
       <Button type="button" className="mt-3" onClick={() => { this.setState({ failed: false }); this.props.onReset(); }}><Mic />Restart voice check-in</Button></div>;

@@ -9,9 +9,9 @@ type Line={role:'user'|'bot';content:string};
 type Session=Awaited<ReturnType<typeof prepareSvaraSession>>;
 export function SvaraWorkspace({due,onSaved}:{due:boolean;onSaved:()=>void}){
  const prepare=useServerFn(prepareSvaraSession),persist=useServerFn(saveSvaraTranscript),phoneSave=useServerFn(saveSvaraPhone),summarize=useServerFn(summarizeSvaraSession),confirm=useServerFn(confirmSvaraSession),callStatusFn=useServerFn(getSvaraCallStatus);
+ const [session,setSession]=useState<Session|null>(null),[channel,setChannel]=useState<'website_voice'|'phone'|null>(null),[phone,setPhone]=useState(''),[consent,setConsent]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[summary,setSummary]=useState(''),[review,setReview]=useState(false),[submitted,setSubmitted]=useState(false),[concern,setConcern]=useState(''),[finished,setFinished]=useState(false);
  const [call,setCall]=useState<string|null>(null);
  useEffect(()=>{if(!session||!call||!['initiating','call_placed','in_progress'].includes(call))return;const t=setInterval(()=>{void callStatusFn({data:{sessionId:session.sessionId}}).then(r=>{if(r.status==='submitted'){setSubmitted(true);onSaved();return;}setCall(r.callStatus);}).catch(()=>{});},5000);return()=>clearInterval(t);},[session,call,callStatusFn,onSaved]);
- const [session,setSession]=useState<Session|null>(null),[channel,setChannel]=useState<'website_voice'|'phone'|null>(null),[phone,setPhone]=useState(''),[consent,setConsent]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[summary,setSummary]=useState(''),[review,setReview]=useState(false),[submitted,setSubmitted]=useState(false),[concern,setConcern]=useState(''),[finished,setFinished]=useState(false);
  const lines=useRef<Line[]>([]);const idRef=useRef('');
  const onTranscript=useCallback((value:Line[])=>{lines.current=value;},[]);
  const onEnded=useCallback(()=>{setFinished(true);if(idRef.current&&lines.current.length)void persist({data:{sessionId:idRef.current,lines:lines.current,interrupted:true}}).catch(()=>setError('Transcript could not be saved. Please try again.'));},[persist]);
