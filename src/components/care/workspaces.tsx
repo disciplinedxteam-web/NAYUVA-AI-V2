@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowLeft, ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Volume2, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WorkspaceHeading } from './workspace-heading';
-import { askSutra, createAppointment, getCareData, saveClinicalNote, updateAppointment } from '@/lib/care.functions';
+import { askSutra, createAppointment, getCareData, saveClinicalNote, updateAppointment, transcribeSpeech, speakText, structureLekhaNote } from '@/lib/care.functions';
 import { reasons, type DemoRole } from '@/lib/care-domain';
 import { detectChecklist, lekhaChecklist } from '@/lib/lekha-checklist';
 import { useLanguage } from '@/components/language-provider';
@@ -23,22 +23,29 @@ export function Toggle({ options, value, onChange }: { options: { key: string; l
 }
 function EmptyState({ children }: { children: React.ReactNode }) { return <div className="care-empty"><p>{children}</p></div>; }
 
-/* Speech capture shared by Lekha and Sutra */
-type Rec = { lang: string; continuous: boolean; interimResults: boolean; onresult: ((e: { results: ArrayLike<{ 0: { transcript: string } }> }) => void) | null; onend: (() => void) | null; onerror: (() => void) | null; start: () => void; stop: () => void };
-function useSpeech(onText: (t: string) => void) {
-  const {language}=useLanguage();
-  const [listening, setListening] = useState(false); const [error, setError] = useState(''); const rec = useRef<Rec | null>(null);
-  useEffect(() => () => rec.current?.stop(), []);
-  function toggle() {
+/* Speech capture shared by Lekha and Sutra: browser records, Sarvam STT recognises on the server. */
+function useSpeech(onText: (t: string) => void, current = '') {
+  const transcribe = useServerFn(transcribeSpeech);
+  const [listening, setListening] = useState(false); const [processing, setProcessing] = useState(false); const [error, setError] = useState('');
+  const rec = useRef<MediaRecorder | null>(null); const base = useRef('');
+  useEffect(() => () => { rec.current?.stream.getTracks().forEach(t => t.stop()); }, []);
+  async function toggle() {
     if (listening) { rec.current?.stop(); setListening(false); return; }
-    const w = window as unknown as { SpeechRecognition?: new () => Rec; webkitSpeechRecognition?: new () => Rec };
-    const C = w.SpeechRecognition ?? w.webkitSpeechRecognition; if (!C) { setError('Voice input is unavailable in this browser — please type.'); return; }
-    const r = new C(); r.lang = language==='en'?'en-IN':`${language==='or'?'or':language}-IN`; r.continuous = true; r.interimResults = true;
-    r.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += (e.results[i]?.[0].transcript ?? '') + ' '; onText(t.trim()); };
-    r.onend = () => setListening(false); r.onerror = () => { setListening(false); setError('Microphone access failed — please type.'); };
-    rec.current = r; try { r.start(); setListening(true); setError(''); } catch { setError('Voice input unavailable — please type.'); }
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') { setError('Voice input is unavailable in this browser — please type.'); return; }
+    let stream: MediaStream; try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch { setError('Microphone permission was denied — please type.'); return; }
+    const r = new MediaRecorder(stream); const chunks: Blob[] = []; base.current = current;
+    r.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+    r.onstop = async () => {
+      stream.getTracks().forEach(t => t.stop()); const blob = new Blob(chunks, { type: r.mimeType || 'audio/webm' });
+      if (blob.size < 2000) { setError('No speech was captured. Please try again.'); return; }
+      setProcessing(true);
+      try { const buf = new Uint8Array(await blob.arrayBuffer()); let bin = ''; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+        const res = await transcribe({ data: { audio: btoa(bin), mime: blob.type, language: 'unknown' } }); onText((base.current ? base.current + ' ' : '') + res.transcript); }
+      catch (e) { setError(e instanceof Error ? e.message : 'Speech could not be recognised.'); } finally { setProcessing(false); }
+    };
+    rec.current = r; r.start(); setListening(true); setError('');
   }
-  return { listening, error, toggle };
+  return { listening, processing, error, toggle: () => void toggle() };
 }
 
 /* ---------------- Milan ---------------- */
@@ -152,7 +159,7 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
   const save = useServerFn(saveClinicalNote); const baby = data.babies.find(b => b.id === appt.baby_id);
   const [msgs, setMsgs] = useState<Msg[]>([]); const [draft, setDraft] = useState(''); const [files, setFiles] = useState<File[]>([]); const [review, setReview] = useState(false);
   const [f, setF] = useState({ observations: '', decision: '', followUp: '', additionalNote: '' });
-  const speech = useSpeech(setDraft); const fileRef = useRef<HTMLInputElement>(null);
+  const speech = useSpeech(setDraft, draft); const organise = useServerFn(structureLekhaNote); const [organising, setOrganising] = useState(false); const [aiNote, setAiNote] = useState(''); const fileRef = useRef<HTMLInputElement>(null);
   const said = msgs.filter(m => m.role === 'user').map(m => m.content).join('\n');
   const covered = detectChecklist(said + ' ' + draft, files.length);
   function send() { const t = draft.trim(); if (!t) return; if (speech.listening) speech.toggle(); const now = detectChecklist(said + ' ' + t, files.length); const missing = lekhaChecklist.filter(i => !now.has(i.key) && i.key !== 'files').slice(0, 2).map(i => i.title.toLowerCase()); setMsgs(m => [...m, { role: 'user', content: t }, { role: 'assistant', content: `Noted. ${now.size}/${lekhaChecklist.length} checklist topics covered.${missing.length ? ` If relevant, you could add ${missing.join(' and ')}.` : ' Everything is covered — prepare the card when ready.'}` }]); setDraft(''); }
@@ -177,11 +184,11 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
             
             {msgs.map((m, i) => <div key={i} className={`chat-bubble ${m.role === 'user' ? 'me' : 'bot'}`}>{m.content}</div>)}
           </div>
-          <div className="chat-input"><Button type="button" size="icon" variant={speech.listening ? 'default' : 'outline'} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button><textarea rows={2} value={draft} placeholder={speech.listening ? 'Listening…' : 'Type or speak your notes…'} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} /><Button type="button" size="icon" variant="ghost" aria-label="Attach files" onClick={() => fileRef.current?.click()}><Paperclip /></Button><Button type="button" size="icon" aria-label="Send" onClick={send} disabled={!draft.trim()}><Send /></Button></div>
+          <div className="chat-input"><Button type="button" size="icon" variant={speech.listening ? 'default' : 'outline'} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button><textarea rows={2} value={draft} placeholder={speech.listening ? 'Recording… tap stop when done' : speech.processing ? 'Recognising speech…' : 'Type or speak your notes…'} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} /><Button type="button" size="icon" variant="ghost" aria-label="Attach files" onClick={() => fileRef.current?.click()}><Paperclip /></Button><Button type="button" size="icon" aria-label="Send" onClick={send} disabled={!draft.trim()}><Send /></Button></div>
           {speech.error && <p className="text-xs text-muted-foreground">{speech.error}</p>}
-          <Button type="button" disabled={!said} onClick={() => { setF({ observations: said, decision: '', followUp: '', additionalNote: files.length ? `Attached: ${files.map(x => x.name).join(', ')}` : '' }); setReview(true); }}>Prepare health card<ArrowRight /></Button>
+          <Button type="button" disabled={!said || organising} onClick={() => { const attached = files.length ? `Attached: ${files.map(x => x.name).join(', ')}` : ''; setOrganising(true); setAiNote(''); void organise({ data: { appointmentId: appt.id, note: said, checklist: lekhaChecklist.map(i => ({ key: i.key, title: i.title })) } }).then(d => { setF({ observations: d.observations, decision: d.decision, followUp: d.followUp, additionalNote: [d.additionalNote, attached].filter(Boolean).join('\n') }); setAiNote(['AI draft from your note — review every field before saving.', ...d.clarifications.map(c => `Clarify: ${c}`)].join('\n')); }).catch(e => { setF({ observations: said, decision: '', followUp: '', additionalNote: attached }); setAiNote(`${e instanceof Error ? e.message : 'Lekha could not organise the note.'} Your original note was placed in the fields.`); }).finally(() => { setOrganising(false); setReview(true); }); }}>{organising ? 'Lekha is organising…' : 'Prepare health card'}<ArrowRight /></Button>
         </> : <form className="documentation-review" onSubmit={e => { e.preventDefault(); void run(async () => { await save({ data: { appointmentId: appt.id, ...f } }); onClose(); }, 'Appointment Health Card saved to Sutra.'); }}>
-          <h2>Review documentation</h2>
+          <h2>Review documentation</h2>{aiNote && <p className="nv-sub whitespace-pre-line" role="status">{aiNote}</p>}<details><summary className="nv-sub">Original note</summary><p className="text-sm whitespace-pre-line">{said}</p></details>
           {([['observations', 'Findings & assessment', true], ['decision', 'Treatment & advice', true], ['followUp', 'Next steps & follow-up', false], ['additionalNote', 'Care team note', false]] as const).map(([k, l, req]) => <label key={k}><span className="ws-label">{l}</span><textarea className="ws-input" rows={2} required={req} value={f[k]} onChange={e => setF({ ...f, [k]: e.target.value })} /></label>)}
           <div className="flex gap-2 mt-auto"><Button type="button" variant="ghost" onClick={() => setReview(false)}><ArrowLeft />Back</Button><Button type="submit" className="flex-1" disabled={busy}>Save to care journey</Button></div>
         </form>}
@@ -200,7 +207,9 @@ export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   const ask = useServerFn(askSutra);
   const [babyId, setBabyId] = useState(data.babies[0]?.id ?? ''); const baby = data.babies.find(b => b.id === babyId) ?? data.babies[0];
   const [selected, setSelected] = useState<string[]>([]); const [msgs, setMsgs] = useState<Msg[]>([]); const [draft, setDraft] = useState(''); const [thinking, setThinking] = useState(false); const [err, setErr] = useState('');
-  const strip = useRef<HTMLDivElement>(null); const speech = useSpeech(setDraft);
+  const strip = useRef<HTMLDivElement>(null); const speech = useSpeech(setDraft, draft); const speak = useServerFn(speakText); const audio = useRef<HTMLAudioElement | null>(null); const cache = useRef(new Map<number, string>()); const [playing, setPlaying] = useState<number | null>(null);
+  useEffect(() => () => audio.current?.pause(), []);
+  async function play(i: number, text: string) { audio.current?.pause(); if (playing === i) { setPlaying(null); return; } setErr(''); try { let src = cache.current.get(i); if (!src) { src = 'data:audio/wav;base64,' + (await speak({ data: { text, language: 'en-IN' } })).audio; cache.current.set(i, src); } const a = new Audio(src); audio.current = a; a.onended = () => setPlaying(null); setPlaying(i); await a.play(); } catch (e) { setPlaying(null); setErr(e instanceof Error ? e.message : 'Audio unavailable.'); } }
   const items: JourneyItem[] = useMemo(() => !baby ? [] : [
     ...data.events.filter(e => e.baby_id === baby.id).map(e => ({ id: 'e' + e.id, when: e.created_at, kind: e.kind, title: e.kind, body: e.summary, tag: 'Journey' })),
     ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, body: `${c.summary_text||c.observation} — “${c.quote}”`, tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
@@ -219,11 +228,11 @@ export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
     <WorkspaceHeading title="Sutra" description="Answers grounded in your care journey." />
     <section className="ws-panel sutra-chat">
       {role === 'care-team' ? <ProfileSearch babies={data.babies} value={baby.id} onSelect={id => { if (!thinking) setBabyId(id); }} /> : <p className="nv-sub">{baby.baby_name} · {baby.caregiver_name}</p>}
-      {!!msgs.length && <div className="chat-log">{msgs.map((m, i) => <div key={i} className={`chat-bubble ${m.role === 'user' ? 'me' : 'bot'}`}>{m.content}</div>)}</div>}
+      {!!msgs.length && <div className="chat-log">{msgs.map((m, i) => <div key={i} className={`chat-bubble ${m.role === 'user' ? 'me' : 'bot'}`}>{m.content}{m.role === 'assistant' && <Button type="button" size="sm" variant="ghost" onClick={() => void play(i, m.content)}>{playing === i ? <Square /> : <Volume2 />}{playing === i ? 'Stop' : 'Listen'}</Button>}</div>)}</div>}
       {thinking && <p role="status" className="nv-sub">Looking through the journey…</p>}
       {err && <p className="text-sm text-destructive" role="alert">{err}</p>}
       {!!selected.length && <div className="chat-tags">{items.filter(i => selected.includes(i.id)).map(i => <span key={i.id}>{i.title}<Button variant="ghost" size="icon" type="button" aria-label={`Untag ${i.title}`} onClick={() => setSelected(s => s.filter(x => x !== i.id))}><X size={12} /></Button></span>)}</div>}
-      <div className="chat-input"><Button type="button" size="icon" variant={speech.listening ? 'default' : 'outline'} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button><textarea rows={1} value={draft} placeholder="Ask about the care journey…" onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }} /><Button type="button" size="icon" aria-label="Send" disabled={!draft.trim() || thinking} onClick={() => void send()}><Send /></Button></div>
+      <div className="chat-input"><Button type="button" size="icon" variant={speech.listening ? 'default' : 'outline'} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button><textarea rows={1} value={draft} placeholder={speech.listening ? 'Recording… tap stop when done' : speech.processing ? 'Recognising speech…' : 'Ask about the care journey…'} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }} /><Button type="button" size="icon" aria-label="Send" disabled={!draft.trim() || thinking} onClick={() => void send()}><Send /></Button></div>
       {speech.error && <p className="text-xs text-muted-foreground">{speech.error}</p>}
     </section>
     <div className="journey-heading"><h2>Care journey</h2><div><Button size="icon" variant="ghost" aria-label="Earlier entries" onClick={() => scroll(-1)}><ChevronLeft /></Button><Button size="icon" variant="ghost" aria-label="Later entries" onClick={() => scroll(1)}><ChevronRight /></Button></div></div>
