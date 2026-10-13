@@ -865,3 +865,22 @@
 .svara-compact{display:grid;gap:14px;max-width:1000px}.svara-options{display:grid;grid-template-columns:1fr 1fr;gap:16px}.svara-options>button{height:auto;white-space:normal;justify-content:flex-start;padding:20px;text-align:left;border-radius:18px;background:rgba(255,255,255,.42)}.svara-options>button>span{flex:1;display:grid;gap:6px}.svara-options small{font-weight:400;color:var(--muted-foreground)}.svara-options>button>svg{flex-shrink:0}.svara-compact .transcription{background:transparent;padding:0;border:0}.svara-compact .submission-success{padding:32px}.section-toolbar{padding:12px;border:1px solid rgba(255,255,255,.75);border-radius:18px;background:rgba(255,255,255,.34);backdrop-filter:blur(18px)}
 @media(max-width:700px){.svara-options{grid-template-columns:1fr}}
 .dashboard-sidebar nav{margin-top:40px;margin-bottom:0;padding:0;gap:6px}.profile-menu-wrap{margin-top:auto}.journey-strip>.nv-card{display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;white-space:normal;height:auto;min-width:280px;text-align:left}.plan-workspace>form{border-radius:16px;padding:22px;background:var(--glass-surface);border:1px solid var(--border);backdrop-filter:blur(18px)}.plan-steps{border-radius:14px;background:var(--glass-surface);padding:16px;gap:10px}.health-card blockquote{font-size:14px;line-height:1.6;max-height:130px;overflow:hidden}.health-card .observation-line{line-height:1.6}.ws-panel,.nv-card{border-radius:14px}.dashboard-content .workspace-heading{margin-bottom:22px}
+/* Structured topic cards (Svara / Lekha) */
+.topic-cards { display: grid; gap: 8px; }
+.topic-cards-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.topic-cards-head small { color: var(--muted-foreground); font-size: 12px; }
+.topic-priority { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--workflow-review-surface); color: var(--workflow-attention); }
+.topic-priority.p-priority { background: var(--workflow-priority-surface); color: var(--workflow-priority); }
+.topic-priority.p-routine { background: var(--workflow-routine-surface); color: var(--workflow-routine); }
+.topic-cards ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.topic-row { display: grid; grid-template-columns: minmax(90px, 34%) 1fr; gap: 2px 12px; padding: 8px 12px; border-radius: 12px; border-left: 3px solid var(--workflow-routine); background: var(--dashboard-surface); font-size: 13px; }
+.topic-row.s-concern { border-left-color: var(--workflow-priority); background: var(--workflow-priority-surface); }
+.topic-row.s-not { border-left-color: var(--border); opacity: .75; }
+.topic-row strong { font-weight: 600; }
+.topic-row q { grid-column: 1 / -1; font-size: 12px; color: var(--muted-foreground); font-style: italic; }
+.live-chat { display: flex; flex-direction: column; gap: 8px; max-height: 360px; overflow-y: auto; margin-top: 12px; padding: 4px; }
+.live-chat .chat-bubble { max-width: 80%; }
+.live-chat .chat-bubble.me { align-self: flex-end; }
+.live-chat .chat-bubble.bot { align-self: flex-start; }
+.live-chat .chat-bubble.partial { opacity: .7; }
+.approve-tick { display: flex; gap: 10px; align-items: flex-start; margin: 16px 0; font-size: 14px; }
