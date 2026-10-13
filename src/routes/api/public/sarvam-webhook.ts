@@ -54,15 +54,16 @@ export const Route = createFileRoute('/api/public/sarvam-webhook')({
           status: status === 'completed' && hasCaregiver ? s.status : 'incomplete',
         }).eq('id', s.id);
 
-        if (status !== 'completed' || !hasCaregiver) return Response.json({ ok: true, card: false });
-        // Health Card holds the caregiver's own words; no AI risk scoring — it goes to clinician review.
-        const fav = p.final_agent_variables ?? {};
-        const agentSummary = typeof fav['call_summary'] === 'string' && fav['call_summary'] !== s.id ? String(fav['call_summary']) : '';
+        if (status !== 'completed' || !hasCaregiver) return Response.json({ ok: true, draft: false });
+        // Draft only: the caregiver must review and confirm before anything reaches the care team.
         const caregiverWords = lines.filter((l) => l.role === 'user').map((l) => l.content).join(' / ');
-        const summary = (agentSummary && agentSummary.length < 2000 && !agentSummary.startsWith('{') ? `${agentSummary}\n\nCaregiver said: ${caregiverWords}` : `Phone check-in. Caregiver said: ${caregiverWords}`).slice(0, 5000);
-        const { error } = await db.rpc('confirm_svara_card', { p_session: s.id, p_baby: s.baby_id, p_summary: summary });
-        if (error) { console.error('confirm_svara_card failed', error.message); return new Response('Save failed', { status: 500 }); }
-        return Response.json({ ok: true, card: true });
+        let draft: Record<string, unknown> = { summary: `Phone check-in. Caregiver said: ${caregiverWords}`.slice(0, 5000), observations: [], missingInformation: [], source: 'caregiver_words' };
+        try {
+          const { draftSvaraSummary } = await import('@/lib/care.functions');
+          draft = { ...(await draftSvaraSummary(lines, s.plan_snapshot)), source: 'sarvam_llm' };
+        } catch (e) { console.error('svara draft fallback', e instanceof Error ? e.message : 'unknown'); }
+        await db.from('checkin_sessions').update({ status: 'awaiting_confirmation', summary: { ...summaryJson, ...draft } as Json }).eq('id', s.id).neq('status', 'submitted');
+        return Response.json({ ok: true, draft: true });
       },
     },
   },
