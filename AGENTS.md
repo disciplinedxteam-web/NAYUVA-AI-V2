@@ -28,3 +28,5 @@
 - Milan, Lekha and Sutra workspaces live in one shared workspace module using the unified card style and the SVG Mascot component, so cards and character states stay consistent across roles.
 - Lekha's checklist ticks come from deterministic keyword detection in a shared module, never an AI judgement, so clinicians can predict and trust it.
 - Sutra's assistant runs server-side and answers only from the authorized baby's persisted journey (clinical notes only for care team), so it cannot leak or invent records.
+- Svara and Lekha summaries are structured topic cards (shared `care-card` module) stored as JSON text with an AI-suggested Priority/Review/Routine category that never defaults to Routine, so both products render and triage identically.
+- Sarvam agent tools call `/api/public/sarvam-questions` and `/api/public/sarvam-observations`, keyed by the live check-in id (optional `SVARA_TOOL_KEY` header), so personalisation comes from the baby's Care Plan and history, not the agent prompt.

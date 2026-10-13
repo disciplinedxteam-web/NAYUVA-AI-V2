@@ -1,3 +1,5 @@
+import { TopicCards } from './topic-cards';
+import { cardText, parseCard, type CareCard } from '@/lib/care-card';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { ArrowLeft, ArrowRight, Volume2, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
@@ -147,7 +149,7 @@ export function LekhaWorkspace({ data, busy, run }: { data: Data; busy: boolean;
         <div className="nv-card-top"><span className="nv-tag"><HeartPulse />Appointment Health Card</span><span className={`nv-pill ${n ? 'ok' : ''}`}>{n ? 'Documented' : 'Awaiting'}</span></div>
         <h3>{a.reason}</h3><p className="nv-sub">{n ? `Documented ${fmt(n.created_at)}` : `Seen ${fmt(a.starts_at)}`}</p>
         <div className="nv-row"><User /><div><strong>{b?.baby_name}</strong><small>Caregiver · {b?.caregiver_name}</small></div></div>
-        {n ? <><div className="nv-row"><Stethoscope /><div><strong>Findings</strong><small>{n.observations}</small></div></div><div className="nv-row"><Sparkles /><div><strong>Follow-up</strong><small>{n.follow_up || 'None recorded'}</small></div></div></>
+        {n ? <><TopicCards text={n.observations} compact /><div className="nv-row"><Sparkles /><div><strong>Follow-up</strong><small>{n.follow_up || 'None recorded'}</small></div></div></>
           : <div className="nv-row"><MapPin /><div><strong>{loc(a)['facilityName'] || 'Location not set'}</strong><small>{loc(a)['address'] || '—'}</small></div></div>}
         <div className="nv-card-actions">{!n && <Button onClick={() => setOpenId(a.id)}><FileText />Create documentation</Button>}</div>
       </article>; })}</div>}
@@ -158,11 +160,11 @@ type Msg = { role: 'user' | 'assistant'; content: string };
 function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Appointment; busy: boolean; run: Run; onClose: () => void }) {
   const save = useServerFn(saveClinicalNote); const baby = data.babies.find(b => b.id === appt.baby_id);
   const [msgs, setMsgs] = useState<Msg[]>([]); const [draft, setDraft] = useState(''); const [files, setFiles] = useState<File[]>([]); const [review, setReview] = useState(false);
-  const [f, setF] = useState({ observations: '', decision: '', followUp: '', additionalNote: '' });
+  const [card, setCard] = useState<CareCard | null>(null); const [approved, setApproved] = useState(false);
   const speech = useSpeech(setDraft, draft); const organise = useServerFn(structureLekhaNote); const [organising, setOrganising] = useState(false); const [aiNote, setAiNote] = useState(''); const fileRef = useRef<HTMLInputElement>(null);
   const said = msgs.filter(m => m.role === 'user').map(m => m.content).join('\n');
   const covered = detectChecklist(said + ' ' + draft, files.length);
-  function send() { const t = draft.trim(); if (!t) return; if (speech.listening) speech.toggle(); const now = detectChecklist(said + ' ' + t, files.length); const missing = lekhaChecklist.filter(i => !now.has(i.key) && i.key !== 'files').slice(0, 2).map(i => i.title.toLowerCase()); setMsgs(m => [...m, { role: 'user', content: t }, { role: 'assistant', content: `Noted. ${now.size}/${lekhaChecklist.length} checklist topics covered.${missing.length ? ` If relevant, you could add ${missing.join(' and ')}.` : ' Everything is covered — prepare the card when ready.'}` }]); setDraft(''); }
+  function send() { const t = draft.trim(); if (!t) return; if (speech.listening) speech.toggle(); setMsgs(m => [...m, { role: 'user', content: t }]); setDraft(''); }
   return <>
     <WorkspaceHeading title="Lekha" description="Clinician-reviewed appointment documentation." /><div className="flex items-center justify-between mb-3"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button><span className="nv-pill">{review ? 'Review' : 'In progress'}</span></div>
     <div className="lekha-compact">
@@ -186,11 +188,12 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
           </div>
           <div className="chat-input"><Button type="button" size="icon" variant={speech.listening ? 'default' : 'outline'} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button><textarea rows={2} value={draft} placeholder={speech.listening ? 'Recording… tap stop when done' : speech.processing ? 'Recognising speech…' : 'Type or speak your notes…'} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} /><Button type="button" size="icon" variant="ghost" aria-label="Attach files" onClick={() => fileRef.current?.click()}><Paperclip /></Button><Button type="button" size="icon" aria-label="Send" onClick={send} disabled={!draft.trim()}><Send /></Button></div>
           {speech.error && <p className="text-xs text-muted-foreground">{speech.error}</p>}
-          <Button type="button" disabled={!said || organising} onClick={() => { const attached = files.length ? `Attached: ${files.map(x => x.name).join(', ')}` : ''; setOrganising(true); setAiNote(''); void organise({ data: { appointmentId: appt.id, note: said, checklist: lekhaChecklist.map(i => ({ key: i.key, title: i.title })) } }).then(d => { setF({ observations: d.observations, decision: d.decision, followUp: d.followUp, additionalNote: [d.additionalNote, attached].filter(Boolean).join('\n') }); setAiNote(['AI draft from your note — review every field before saving.', ...d.clarifications.map(c => `Clarify: ${c}`)].join('\n')); }).catch(e => { setF({ observations: said, decision: '', followUp: '', additionalNote: attached }); setAiNote(`${e instanceof Error ? e.message : 'Lekha could not organise the note.'} Your original note was placed in the fields.`); }).finally(() => { setOrganising(false); setReview(true); }); }}>{organising ? 'Lekha is organising…' : 'Prepare health card'}<ArrowRight /></Button>
-        </> : <form className="documentation-review" onSubmit={e => { e.preventDefault(); void run(async () => { await save({ data: { appointmentId: appt.id, ...f } }); onClose(); }, 'Appointment Health Card saved to Sutra.'); }}>
-          <h2>Review documentation</h2>{aiNote && <p className="nv-sub whitespace-pre-line" role="status">{aiNote}</p>}<details><summary className="nv-sub">Original note</summary><p className="text-sm whitespace-pre-line">{said}</p></details>
-          {([['observations', 'Findings & assessment', true], ['decision', 'Treatment & advice', true], ['followUp', 'Next steps & follow-up', false], ['additionalNote', 'Care team note', false]] as const).map(([k, l, req]) => <label key={k}><span className="ws-label">{l}</span><textarea className="ws-input" rows={2} required={req} value={f[k]} onChange={e => setF({ ...f, [k]: e.target.value })} /></label>)}
-          <div className="flex gap-2 mt-auto"><Button type="button" variant="ghost" onClick={() => setReview(false)}><ArrowLeft />Back</Button><Button type="submit" className="flex-1" disabled={busy}>Save to care journey</Button></div>
+          <Button type="button" disabled={!said || organising} onClick={() => { setOrganising(true); setAiNote(''); void organise({ data: { appointmentId: appt.id, note: said + (files.length ? `\nAttached: ${files.map(x => x.name).join(', ')}` : ''), checklist: lekhaChecklist.map(i => ({ key: i.key, title: i.title })) } }).then(d => { setCard(d); setApproved(false); setReview(true); }).catch(e => setAiNote(e instanceof Error ? e.message : 'Lekha could not organise the note.')).finally(() => setOrganising(false)); }}>{organising ? 'Lekha is summarising…' : 'Done — create card'}<ArrowRight /></Button>
+          {aiNote && <p className="text-xs text-muted-foreground" role="status">{aiNote}</p>}
+        </> : <form className="documentation-review" onSubmit={e => { e.preventDefault(); if (!card) return; void run(async () => { await save({ data: { appointmentId: appt.id, observations: JSON.stringify(card), decision: cardText(card), followUp: card.topics.find(t => /follow/i.test(t.title))?.finding ?? '', additionalNote: files.map(x => x.name).join(', ') } }); onClose(); }, 'Appointment Health Card saved to Sutra.'); }}>
+          <h2>Appointment Health Card</h2><TopicCards card={card} />
+          <label className="approve-tick"><input type="checkbox" checked={approved} onChange={e => setApproved(e.target.checked)} />Yes, this card is correct.</label>
+          <div className="flex gap-2 mt-auto"><Button type="button" variant="ghost" onClick={() => setReview(false)}><ArrowLeft />Back</Button><Button type="submit" className="flex-1" disabled={busy || !approved}>Save to care journey</Button></div>
         </form>}
       </section>
       <section className="checklist-horizontal">
@@ -212,8 +215,8 @@ export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   async function play(i: number, text: string) { audio.current?.pause(); if (playing === i) { setPlaying(null); return; } setErr(''); try { let src = cache.current.get(i); if (!src) { src = 'data:audio/wav;base64,' + (await speak({ data: { text, language: 'en-IN' } })).audio; cache.current.set(i, src); } const a = new Audio(src); audio.current = a; a.onended = () => setPlaying(null); setPlaying(i); await a.play(); } catch (e) { setPlaying(null); setErr(e instanceof Error ? e.message : 'Audio unavailable.'); } }
   const items: JourneyItem[] = useMemo(() => !baby ? [] : [
     ...data.events.filter(e => e.baby_id === baby.id).map(e => ({ id: 'e' + e.id, when: e.created_at, kind: e.kind, title: e.kind, body: e.summary, tag: 'Journey' })),
-    ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, body: `${c.summary_text||c.observation} — “${c.quote}”`, tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
-    ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', body: `${n.observations} · ${n.decision}`, tag: 'Lekha' })) : []),
+    ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, body: (() => { const k = parseCard(c.summary_text); return k ? cardText(k) : `${c.summary_text||c.observation} — “${c.quote}”`; })(), tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
+    ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', body: parseCard(n.observations) ? n.decision : `${n.observations} · ${n.decision}`, tag: 'Lekha' })) : []),
   ].sort((a, b) => a.when.localeCompare(b.when)), [data, baby, role]);
   useEffect(() => { strip.current?.scrollTo({ left: strip.current.scrollWidth }); setSelected([]); setMsgs([]); }, [babyId]);
   const scroll = (d: number) => strip.current?.scrollBy({ left: d * 300, behavior: 'smooth' });

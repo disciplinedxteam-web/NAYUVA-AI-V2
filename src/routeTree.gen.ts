@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CaregiverEntryRouteImport } from './routes/caregiver-entry'
 import { Route as CareTeamSectionRouteImport } from './routes/care-team.$section'
 import { Route as CaregiverSectionRouteImport } from './routes/caregiver.$section'
+import { Route as ApiPublicSarvamObservationsRouteImport } from './routes/api/public/sarvam-observations'
+import { Route as ApiPublicSarvamQuestionsRouteImport } from './routes/api/public/sarvam-questions'
 import { Route as ApiPublicSarvamWebhookRouteImport } from './routes/api/public/sarvam-webhook'
 import { Route as ApiSarvamSplatRouteImport } from './routes/api/sarvam.$'
 
@@ -36,6 +38,18 @@ const CaregiverSectionRoute = CaregiverSectionRouteImport.update({
   path: '/caregiver/$section',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSarvamObservationsRoute =
+  ApiPublicSarvamObservationsRouteImport.update({
+    id: '/api/public/sarvam-observations',
+    path: '/api/public/sarvam-observations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicSarvamQuestionsRoute =
+  ApiPublicSarvamQuestionsRouteImport.update({
+    id: '/api/public/sarvam-questions',
+    path: '/api/public/sarvam-questions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicSarvamWebhookRoute = ApiPublicSarvamWebhookRouteImport.update({
   id: '/api/public/sarvam-webhook',
   path: '/api/public/sarvam-webhook',
@@ -52,6 +66,8 @@ export interface FileRoutesByFullPath {
   '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
+  '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
+  '/api/public/sarvam-questions': typeof ApiPublicSarvamQuestionsRoute
   '/api/public/sarvam-webhook': typeof ApiPublicSarvamWebhookRoute
   '/api/sarvam/$': typeof ApiSarvamSplatRoute
 }
@@ -60,6 +76,8 @@ export interface FileRoutesByTo {
   '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
+  '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
+  '/api/public/sarvam-questions': typeof ApiPublicSarvamQuestionsRoute
   '/api/public/sarvam-webhook': typeof ApiPublicSarvamWebhookRoute
   '/api/sarvam/$': typeof ApiSarvamSplatRoute
 }
@@ -69,6 +87,8 @@ export interface FileRoutesById {
   '/caregiver-entry': typeof CaregiverEntryRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
+  '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
+  '/api/public/sarvam-questions': typeof ApiPublicSarvamQuestionsRoute
   '/api/public/sarvam-webhook': typeof ApiPublicSarvamWebhookRoute
   '/api/sarvam/$': typeof ApiSarvamSplatRoute
 }
@@ -79,6 +99,8 @@ export interface FileRouteTypes {
     | '/caregiver-entry'
     | '/care-team/$section'
     | '/caregiver/$section'
+    | '/api/public/sarvam-observations'
+    | '/api/public/sarvam-questions'
     | '/api/public/sarvam-webhook'
     | '/api/sarvam/$'
   fileRoutesByTo: FileRoutesByTo
@@ -87,6 +109,8 @@ export interface FileRouteTypes {
     | '/caregiver-entry'
     | '/care-team/$section'
     | '/caregiver/$section'
+    | '/api/public/sarvam-observations'
+    | '/api/public/sarvam-questions'
     | '/api/public/sarvam-webhook'
     | '/api/sarvam/$'
   id:
@@ -95,6 +119,8 @@ export interface FileRouteTypes {
     | '/caregiver-entry'
     | '/care-team/$section'
     | '/caregiver/$section'
+    | '/api/public/sarvam-observations'
+    | '/api/public/sarvam-questions'
     | '/api/public/sarvam-webhook'
     | '/api/sarvam/$'
   fileRoutesById: FileRoutesById
@@ -104,6 +130,8 @@ export interface RootRouteChildren {
   CaregiverEntryRoute: typeof CaregiverEntryRoute
   CareTeamSectionRoute: typeof CareTeamSectionRoute
   CaregiverSectionRoute: typeof CaregiverSectionRoute
+  ApiPublicSarvamObservationsRoute: typeof ApiPublicSarvamObservationsRoute
+  ApiPublicSarvamQuestionsRoute: typeof ApiPublicSarvamQuestionsRoute
   ApiPublicSarvamWebhookRoute: typeof ApiPublicSarvamWebhookRoute
   ApiSarvamSplatRoute: typeof ApiSarvamSplatRoute
 }
@@ -138,6 +166,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CaregiverSectionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/sarvam-observations': {
+      id: '/api/public/sarvam-observations'
+      path: '/api/public/sarvam-observations'
+      fullPath: '/api/public/sarvam-observations'
+      preLoaderRoute: typeof ApiPublicSarvamObservationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/sarvam-questions': {
+      id: '/api/public/sarvam-questions'
+      path: '/api/public/sarvam-questions'
+      fullPath: '/api/public/sarvam-questions'
+      preLoaderRoute: typeof ApiPublicSarvamQuestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/sarvam-webhook': {
       id: '/api/public/sarvam-webhook'
       path: '/api/public/sarvam-webhook'
@@ -160,6 +202,8 @@ const rootRouteChildren: RootRouteChildren = {
   CaregiverEntryRoute: CaregiverEntryRoute,
   CareTeamSectionRoute: CareTeamSectionRoute,
   CaregiverSectionRoute: CaregiverSectionRoute,
+  ApiPublicSarvamObservationsRoute: ApiPublicSarvamObservationsRoute,
+  ApiPublicSarvamQuestionsRoute: ApiPublicSarvamQuestionsRoute,
   ApiPublicSarvamWebhookRoute: ApiPublicSarvamWebhookRoute,
   ApiSarvamSplatRoute: ApiSarvamSplatRoute,
 }
