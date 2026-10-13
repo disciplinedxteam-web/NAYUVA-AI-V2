@@ -1,4 +1,6 @@
 <!-- LOVABLE:BEGIN -->
+- Sarvam model APIs (STT/LLM/TTS) go through src/lib/sarvam.server.ts with SARVAM_MODELS_API_KEY; outbound calls use X-API-Key on apps.sarvam.ai — the two keys/headers differ.
+- Svara phone results are saved as drafts; only caregiver confirmation creates a Health Card.
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
