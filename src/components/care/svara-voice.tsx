@@ -21,11 +21,14 @@ function SvaraVoiceInner({ profileId, context, onTranscript, onEnded }: { profil
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState('');
   const agent = useRef<Agent | null>(null);
+  const botLive = useRef(false);
+  const logRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [lines]);
   useEffect(() => () => { void agent.current?.stop(); }, []);
   useEffect(() => { if(lines.length)onTranscript(lines); }, [lines, onTranscript]);
 
   async function start() {
-    setError(''); setLines([]); setState('CONNECTING');
+    setError(''); setLines([]); botLive.current = false; setState('CONNECTING');
     try {
       const { ConversationAgent, BrowserAudioInterface, InteractionType, Role } = await import('sarvam-conv-ai-sdk/browser');
       const a = new ConversationAgent({
@@ -38,7 +41,8 @@ function SvaraVoiceInner({ profileId, context, onTranscript, onEnded }: { profil
           agent_variables: context,
         },
         audioInterface: new BrowserAudioInterface(),
-        transcriptCallback: async (m: { role?: unknown; content?: unknown }) => { try { const content = transcriptText(m?.content ?? m).trim().slice(0, 6000); if (!content) return; const role: Line['role'] = m?.role === Role.USER || m?.role === 'user' ? 'user' : 'bot'; setLines((l) => { const last = l[l.length - 1]; if (last && last.role === role && last.content === content) return l; return [...l, { role, content }]; }); } catch { /* ignore malformed transcript event */ } },
+        textCallback: async (m: { type?: unknown; text?: unknown; content?: unknown }) => { try { const t = transcriptText(m?.text ?? m?.content ?? m); if (!t) return; const chunk = String(m?.type ?? '').toLowerCase().includes('chunk'); setLines((l) => { const last = l[l.length - 1]; if (botLive.current && last?.role === 'bot') { const content = (chunk ? last.content + t : t).slice(0, 6000); return [...l.slice(0, -1), { role: 'bot', content }]; } botLive.current = true; return [...l, { role: 'bot', content: t.slice(0, 6000) }]; }); } catch { /* ignore malformed text event */ } },
+        transcriptCallback: async (m: { role?: unknown; content?: unknown }) => { try { const content = transcriptText(m?.content ?? m).trim().slice(0, 6000); if (!content) return; const role: Line['role'] = m?.role === Role.USER || m?.role === 'user' ? 'user' : 'bot'; setLines((l) => { const last = l[l.length - 1]; if (role === 'bot' && botLive.current && last?.role === 'bot') { botLive.current = false; return [...l.slice(0, -1), { role, content }]; } botLive.current = false; if (last && last.role === role && last.content === content) return l; return [...l, { role, content }]; }); } catch { /* ignore malformed transcript event */ } },
         stateCallback: async (s: unknown) => { setState(typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'); },
         endCallback: async () => { setState('IDLE'); agent.current = null; onEnded(); },
       } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
@@ -54,7 +58,7 @@ function SvaraVoiceInner({ profileId, context, onTranscript, onEnded }: { profil
   return <div className="transcription">
     <div className="flex items-center justify-between gap-4"><span className="eyebrow">{live ? `Svara · ${state.toLowerCase()}` : 'Talk to Svara'}</span>
       <Button type="button" variant={live ? 'outline' : 'default'} onClick={() => { if (live) { void agent.current?.stop(); setState('IDLE'); onEnded(); } else void start(); }}>{live ? <Square /> : <Mic />}{live ? 'End conversation' : 'Start voice check-in'}</Button></div>
-    {lines.length > 0 && <div data-no-translate className="mt-3 space-y-2 text-sm">{lines.map((l, i) => <p key={i}><strong>{l.role === 'bot' ? 'Svara' : 'You'}:</strong> {l.content}</p>)}</div>}
+    {(live || lines.length > 0) && <div ref={logRef} data-no-translate className="live-chat" aria-live="polite">{lines.length ? lines.map((l, i) => <div key={i} className={`chat-bubble ${l.role === 'user' ? 'me' : 'bot'}`}>{l.content}</div>) : <p className="nv-sub">Listening… the conversation will appear here as you speak.</p>}</div>}
     {error && <p className="text-sm text-muted-foreground mt-3" role="status">{error}</p>}
   </div>;
 }
