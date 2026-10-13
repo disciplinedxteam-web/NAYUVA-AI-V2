@@ -41,7 +41,7 @@ export type ChatMsg = { role: 'system' | 'user' | 'assistant'; content: string }
 export async function sarvamChat(messages: ChatMsg[], opts: { maxTokens?: number } = {}) {
   const json = await call('/v1/chat/completions', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: process.env['SARVAM_LLM_MODEL'] || 'sarvam-m', messages, temperature: 0.2, max_tokens: opts.maxTokens ?? 1200 }),
+    body: JSON.stringify({ model: process.env['SARVAM_LLM_MODEL'] || 'sarvam-105b', messages, temperature: 0.2, max_tokens: Math.max(4000, opts.maxTokens ?? 0) }),
   }, 60000);
   const choices = json['choices'] as { message?: { content?: string } }[] | undefined;
   const content = (choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
@@ -69,7 +69,7 @@ export const TTS_LANGUAGES = ['en-IN', 'hi-IN', 'bn-IN', 'gu-IN', 'kn-IN', 'ml-I
 export async function sarvamSpeak(text: string, language: string) {
   const json = await call('/text-to-speech', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: text.slice(0, 1500), target_language_code: language, model: 'bulbul:v2', speaker: 'anushka' }),
+    body: JSON.stringify({ text: text.slice(0, 1500), target_language_code: language, model: 'bulbul:v3', speaker: 'priya' }),
   });
   const audio = (json['audios'] as string[] | undefined)?.[0];
   if (!audio) throw new SarvamError('No audio was produced.', 'empty');
