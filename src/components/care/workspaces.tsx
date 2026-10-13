@@ -1,5 +1,5 @@
 import { TopicCards } from './topic-cards';
-import { cardText, type CareCard } from '@/lib/care-card';
+import { cardText, parseCard, type CareCard } from '@/lib/care-card';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { ArrowLeft, ArrowRight, Volume2, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
@@ -215,8 +215,8 @@ export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   async function play(i: number, text: string) { audio.current?.pause(); if (playing === i) { setPlaying(null); return; } setErr(''); try { let src = cache.current.get(i); if (!src) { src = 'data:audio/wav;base64,' + (await speak({ data: { text, language: 'en-IN' } })).audio; cache.current.set(i, src); } const a = new Audio(src); audio.current = a; a.onended = () => setPlaying(null); setPlaying(i); await a.play(); } catch (e) { setPlaying(null); setErr(e instanceof Error ? e.message : 'Audio unavailable.'); } }
   const items: JourneyItem[] = useMemo(() => !baby ? [] : [
     ...data.events.filter(e => e.baby_id === baby.id).map(e => ({ id: 'e' + e.id, when: e.created_at, kind: e.kind, title: e.kind, body: e.summary, tag: 'Journey' })),
-    ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, body: `${c.summary_text||c.observation} — “${c.quote}”`, tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
-    ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', body: `${n.observations} · ${n.decision}`, tag: 'Lekha' })) : []),
+    ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, body: (() => { const k = parseCard(c.summary_text); return k ? cardText(k) : `${c.summary_text||c.observation} — “${c.quote}”`; })(), tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
+    ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', body: parseCard(n.observations) ? n.decision : `${n.observations} · ${n.decision}`, tag: 'Lekha' })) : []),
   ].sort((a, b) => a.when.localeCompare(b.when)), [data, baby, role]);
   useEffect(() => { strip.current?.scrollTo({ left: strip.current.scrollWidth }); setSelected([]); setMsgs([]); }, [babyId]);
   const scroll = (d: number) => strip.current?.scrollBy({ left: d * 300, behavior: 'smooth' });
