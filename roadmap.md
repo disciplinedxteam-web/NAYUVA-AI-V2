@@ -22,4 +22,8 @@
 - [x] Give every impact card a distinct continuous animation.
 - [x] Replace product previews with working, searching, lighthouse and reasoning demos.
 - [x] Verify the updated page, language control and animations; build and routing test pass.
-- [x] Verify laptop and narrow-screen presentation; routing test passed and no preview runtime errors.
+- [x] Verify laptop and narrow-screen presentation; routing test passed and no preview runtime errors.# Svara/Lekha structured cards
+- [x] Live chat transcript for Svara on the website.
+- [x] Personalised question and answer links for the Sarvam agent.
+- [x] Topic-card summaries with Priority/Review/Routine; single approval tick for caregiver and Lekha.
+- [ ] Paste the two links into Sarvam's tools and run a real call (needs the user in Sarvam).
