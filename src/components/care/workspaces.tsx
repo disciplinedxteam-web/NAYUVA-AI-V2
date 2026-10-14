@@ -206,7 +206,7 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
 }
 
 /* ---------------- Sutra ---------------- */
-type JourneyItem = { id: string; when: string; kind: string; title: string; body: string; tag: string };
+type JourneyItem = { id: string; when: string; kind: string; title: string; body: string; tag: string; card?: CareCard | null };
 export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   const ask = useServerFn(askSutra);
   const [babyId, setBabyId] = useState(data.babies[0]?.id ?? ''); const baby = data.babies.find(b => b.id === babyId) ?? data.babies[0];

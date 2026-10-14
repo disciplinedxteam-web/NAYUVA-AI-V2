@@ -1011,3 +1011,7 @@
 .svara-live-orb.is-speaking { transform: scale(1.08); }
 .svara-end { border-radius: 99px; padding-inline: 22px; }
 @media (prefers-reduced-motion: reduce) { .svara-hero-orb, .live-turn, .svara-tray, .svara-live-badge i, .live-caret, .live-turn.user p.is-typing span { animation: none !important; } }
+.journey-ticket { flex: 0 0 min(560px, 86vw); padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 20px; transition: transform .25s; text-align: left; }
+.journey-ticket:hover { transform: translateY(-3px); }
+.journey-ticket.selected .ticket-main { outline: 2px solid var(--primary); outline-offset: -2px; }
+.journey-ticket .care-ticket { max-width: none; }
