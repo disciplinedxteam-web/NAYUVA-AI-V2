@@ -41,7 +41,7 @@ export type ChatMsg = { role: 'system' | 'user' | 'assistant'; content: string }
 export async function sarvamChat(messages: ChatMsg[], opts: { maxTokens?: number } = {}) {
   const json = await call('/v1/chat/completions', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: process.env['SARVAM_LLM_MODEL'] || 'sarvam-105b', messages, temperature: 0.2, max_tokens: Math.max(4000, opts.maxTokens ?? 0) }),
+    body: JSON.stringify({ model: process.env['SARVAM_LLM_MODEL'] || 'sarvam-105b-conversations', messages, temperature: 0.2, max_tokens: Math.max(4000, opts.maxTokens ?? 0) }),
   }, 60000);
   const choices = json['choices'] as { message?: { content?: string } }[] | undefined;
   const content = (choices?.[0]?.message?.content ?? '').replace(/<think>[\s\S]*?<\/think>/g, '').trim();
