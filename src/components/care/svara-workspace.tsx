@@ -1,33 +1,144 @@
-import { useCallback,useEffect,useRef,useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { Mic,Phone,ArrowRight,Check,Clock } from 'lucide-react';
+import { useNavigate } from '@tanstack/react-router';
+import { Mic, Phone, ArrowRight, Check, Clock, ChevronDown, Loader2, PhoneCall } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SvaraVoice } from './svara-voice';
-import { prepareSvaraSession,saveSvaraTranscript,saveSvaraPhone,summarizeSvaraSession,confirmSvaraSession,getSvaraCallStatus } from '@/lib/care.functions';
-import { TopicCards } from './topic-cards';
-type Line={role:'user'|'bot';content:string};
-type Session=Awaited<ReturnType<typeof prepareSvaraSession>>;
-export function SvaraWorkspace({due,onSaved}:{due:boolean;onSaved:()=>void}){
- const prepare=useServerFn(prepareSvaraSession),persist=useServerFn(saveSvaraTranscript),phoneSave=useServerFn(saveSvaraPhone),summarize=useServerFn(summarizeSvaraSession),confirm=useServerFn(confirmSvaraSession),callStatusFn=useServerFn(getSvaraCallStatus);
- const [session,setSession]=useState<Session|null>(null),[channel,setChannel]=useState<'website_voice'|'phone'|null>(null),[phone,setPhone]=useState(''),[consent,setConsent]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState(''),[summary,setSummary]=useState(''),[review,setReview]=useState(false),[submitted,setSubmitted]=useState(false),[approved,setApproved]=useState(false),[finished,setFinished]=useState(false);
- const [call,setCall]=useState<string|null>(null);
- useEffect(()=>{if(!session||!call||!['initiating','call_placed','in_progress'].includes(call))return;const t=setInterval(()=>{void callStatusFn({data:{sessionId:session.sessionId}}).then(r=>{if(r.status==='submitted'){setSubmitted(true);onSaved();return;}if(r.status==='awaiting_confirmation'&&r.draft){lines.current=r.transcript;setSummary(r.draft);setCall(null);setChannel('website_voice');setReview(true);return;}setCall(r.callStatus);}).catch(()=>{});},5000);return()=>clearInterval(t);},[session,call,callStatusFn,onSaved]);
- const lines=useRef<Line[]>([]);const idRef=useRef('');
- const onTranscript=useCallback((value:Line[])=>{lines.current=value;},[]);
- const onEnded=useCallback(()=>{setFinished(true);},[]);
- useEffect(()=>{if(finished&&!review&&!busy&&channel==='website_voice')void prepareReview();// eslint-disable-next-line react-hooks/exhaustive-deps
- },[finished]);
- useEffect(()=>{if(!session||channel!=='website_voice'||review||finished)return;const timer=setInterval(()=>{if(lines.current.length)void persist({data:{sessionId:session.sessionId,lines:lines.current}}).catch(()=>setError('Transcript could not be saved. Please try again.'));},5000);return()=>clearInterval(timer);},[session,channel,persist,review,finished]);
- async function choose(mode:'website_voice'|'phone'){setBusy(true);setError('');try{const s=await prepare({data:{channel:mode}});idRef.current=s.sessionId;setSession(s);setPhone(s.phone.startsWith('+')?s.phone:s.phone.length===10?'+91'+s.phone:s.phone);lines.current=Array.isArray(s.transcript)?s.transcript as Line[]:[];const sm=(s.summary??{}) as Record<string,unknown>;if(s.context['check_in_status']==='awaiting_confirmation'&&typeof sm['summary']==='string'){setSummary(sm['summary']);setChannel('website_voice');setReview(true);return;}setChannel(mode);if(mode==='phone'&&s.callStatus)setCall(s.callStatus);}catch(e){setError(e instanceof Error?e.message:'Check-in unavailable.');}finally{setBusy(false);}}
- async function prepareReview(){if(!session)return;setBusy(true);setError('');try{const transcript=lines.current;if(!transcript.some(l=>l.role==='user'))throw new Error('No answers were recorded. Please start the check-in again.');await persist({data:{sessionId:session.sessionId,lines:transcript,interrupted:false}});lines.current=transcript;const s=await summarize({data:{sessionId:session.sessionId}});setSummary(s.summary);setReview(true);}catch(e){setError(e instanceof Error?e.message:'Summary unavailable.');}finally{setBusy(false);}}
- if(submitted)return <section className="ws-panel submission-success"><Check/><h2>Update submitted to your care team.</h2><Button variant="outline" onClick={()=>{setSubmitted(false);setChannel(null);setSession(null);setReview(false);}}>Done</Button></section>;
- return <div className="svara-compact">
- {error&&<p role="alert" className="dashboard-notice">{error}</p>}
- {!channel?<section className="ws-panel"><h2>Choose how to converse</h2><p className="nv-sub mb-4">Svara uses your current Care Plan for this scheduled check-in.</p><div className="svara-options"><Button variant="outline" disabled={!due||busy} onClick={()=>void choose('website_voice')}><Mic/><span><strong>On this website</strong><small>Use your microphone and view the live transcript.</small></span><ArrowRight/></Button><Button variant="outline" disabled={!due||busy} onClick={()=>void choose('phone')}><Phone/><span><strong>Get a phone call</strong><small>Review your number and call availability.</small></span><ArrowRight/></Button></div>{!due&&<p className="nv-sub mt-3"><Clock size={14}/> Your next check-in is not due yet.</p>}</section>:session&&<>
- <Button variant="ghost" disabled={busy} onClick={()=>{setChannel(null);setReview(false);setFinished(false);}}>Back to check-in options</Button>
- {channel==='phone'?<section className="ws-panel"><h2>Get a phone call</h2><form onSubmit={e=>{e.preventDefault();setBusy(true);setError('');void phoneSave({data:{sessionId:session.sessionId,phone,consent:true}}).then(r=>setCall(r.status)).catch(e=>setError(e instanceof Error?e.message:'The call could not be placed.')).finally(()=>setBusy(false));}}><label className="care-field"><span>Phone number</span><input type="tel" required pattern="\+91[6-9][0-9]{9}" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+91XXXXXXXXXX"/></label><label className="flex gap-3 items-center my-4"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)}/>I consent to receive this check-in call from Svara.</label>{call&&<p role="status" className="nv-sub mb-4">{({initiating:'Placing your call…',call_placed:'Svara is calling your phone now. Please answer.',in_progress:'Call in progress…',completed:'Call completed. Your update is being sent to your care team.',completed_no_transcript:'The call ended before any answers were recorded. Please try again.',no_answer:'The call was not answered. You can try again.',busy:'Your line was busy. You can try again.',failed:'The call could not be completed. You can try again.'} as Record<string,string>)[call]??call}</p>}<Button disabled={!consent||busy||['initiating','call_placed','in_progress'].includes(call??'')}><Phone/>{call&&['no_answer','busy','failed','completed_no_transcript'].includes(call)?'Call me again':'Call me now'}</Button></form></section>:<section className="ws-panel">
- {!review?<><SvaraVoice profileId={session.profileId} context={session.context} onTranscript={onTranscript} onEnded={onEnded}/>{finished&&<p className="nv-sub mt-4" role="status">{busy?'Svara is preparing your Health Card…':error?<Button onClick={()=>void prepareReview()}>Try again</Button>:''}</p>}</>:<><h2>Your Health Card</h2><div className="my-4"><TopicCards text={summary}/></div><label className="approve-tick"><input type="checkbox" checked={approved} onChange={e=>setApproved(e.target.checked)}/>Yes, this card is correct.</label><Button disabled={busy||!approved||!summary.trim()} onClick={()=>{setBusy(true);void confirm({data:{sessionId:session.sessionId,summary}}).then(()=>{setSubmitted(true);onSaved();}).catch(e=>setError(e instanceof Error?e.message:'Submission failed.')).finally(()=>setBusy(false));}}>Submit to Care Team<ArrowRight/></Button></>}
- </section>}
- </>}
- </div>;
+import { ProductOrb } from '@/components/product-orb';
+import { SvaraVoice, type Line } from './svara-voice';
+import { CareTicket } from './care-ticket';
+import { parseCard } from '@/lib/care-card';
+import { prepareSvaraSession, saveSvaraTranscript, saveSvaraPhone, summarizeSvaraSession, confirmSvaraSession, getSvaraCallStatus } from '@/lib/care.functions';
+
+type Session = Awaited<ReturnType<typeof prepareSvaraSession>>;
+type Stage = 'choose' | 'web' | 'phone' | 'generating' | 'review' | 'success';
+const STEPS = ['Reading your conversation with Svara', 'Matching each answer to your Care Plan topics', 'Writing short, clear findings per topic', 'Suggesting a review category for your care team', 'Laying out your Health Card'];
+const ACTIVE = ['initiating', 'call_placed', 'in_progress'];
+const CALL_TEXT: Record<string, string> = { initiating: 'Placing your call…', call_placed: 'Your phone is ringing. Please answer to begin.', in_progress: 'You are speaking with Svara.', completed: 'Call ended. Preparing your Health Card…', completed_no_transcript: 'The call ended before any answers were recorded.', no_answer: 'The call was not answered.', busy: 'Your line was busy.', failed: 'The call could not be completed.' };
+export const formatMobile = (d: string) => (d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d);
+
+export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => void }) {
+  const prepare = useServerFn(prepareSvaraSession), persist = useServerFn(saveSvaraTranscript), phoneSave = useServerFn(saveSvaraPhone), summarize = useServerFn(summarizeSvaraSession), confirm = useServerFn(confirmSvaraSession), callStatusFn = useServerFn(getSvaraCallStatus);
+  const navigate = useNavigate();
+  const [stage, setStage] = useState<Stage>('choose');
+  const [open, setOpen] = useState<'web' | 'phone' | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [digits, setDigits] = useState(''), [consent, setConsent] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
+  const [summary, setSummary] = useState(''), [approved, setApproved] = useState(false), [call, setCall] = useState<string | null>(null), [step, setStep] = useState(0);
+  const lines = useRef<Line[]>([]);
+
+  // Resume a check-in that already has a draft card awaiting the caregiver.
+  useEffect(() => { if (!due) return; void prepare({ data: { channel: 'website_voice' } }).then((s) => { const sm = (s.summary ?? {}) as Record<string, unknown>; if (s.context['check_in_status'] === 'awaiting_confirmation' && typeof sm['summary'] === 'string') { setSession(s); setSummary(sm['summary']); setStage('review'); } else if (s.phone) setDigits(s.phone.replace(/\D/g, '').slice(-10)); }).catch(() => {}); // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [due]);
+
+  // Card generation progress: steps advance while the real request runs.
+  useEffect(() => { if (stage !== 'generating') return; setStep(0); const t = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 1400); return () => clearInterval(t); }, [stage]);
+
+  // Phone: poll the real call record until a draft card exists.
+  useEffect(() => {
+    if (stage !== 'phone' || !session) return;
+    const t = setInterval(() => { void callStatusFn({ data: { sessionId: session.sessionId } }).then((r) => {
+      if (r.status === 'awaiting_confirmation' && r.draft) { setCall('completed'); setStage('generating'); window.setTimeout(() => { setSummary(r.draft!); setStage('review'); }, 4200); return; }
+      setCall(r.callStatus);
+    }).catch(() => {}); }, 4000);
+    return () => clearInterval(t);
+  }, [stage, session, callStatusFn]);
+
+  const onTranscript = useCallback((v: Line[]) => { lines.current = v; }, []);
+  useEffect(() => { if (stage !== 'web' || !session) return; const t = setInterval(() => { if (lines.current.length) void persist({ data: { sessionId: session.sessionId, lines: lines.current } }).catch(() => {}); }, 5000); return () => clearInterval(t); }, [stage, session, persist]);
+
+  async function startWeb() {
+    setBusy(true); setError('');
+    try { const s = await prepare({ data: { channel: 'website_voice' } }); setSession(s); lines.current = []; setStage('web'); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Check-in unavailable.'); } finally { setBusy(false); }
+  }
+  async function startPhone() {
+    setBusy(true); setError('');
+    try { const s = await prepare({ data: { channel: 'phone' } }); setSession(s); const r = await phoneSave({ data: { sessionId: s.sessionId, phone: `+91${digits}`, consent: true } }); setCall(r.status); setStage('phone'); }
+    catch (e) { setError(e instanceof Error ? e.message : 'The call could not be placed.'); } finally { setBusy(false); }
+  }
+  const onEnded = useCallback(() => { void (async () => {
+    const s = session; if (!s) return;
+    const transcript = lines.current;
+    if (!transcript.some((l) => l.role === 'user')) { setStage('choose'); setError('No answers were recorded. Please start the check-in again when you are ready.'); return; }
+    setStage('generating'); const started = Date.now();
+    try {
+      await persist({ data: { sessionId: s.sessionId, lines: transcript, interrupted: false } });
+      const r = await summarize({ data: { sessionId: s.sessionId } });
+      await new Promise((ok) => setTimeout(ok, Math.max(0, 5600 - (Date.now() - started))));
+      setSummary(r.summary); setApproved(false); setStage('review');
+    } catch (e) { setStage('choose'); setError(e instanceof Error ? e.message : 'Your Health Card could not be prepared. Please try again.'); }
+  })(); }, [session, persist, summarize]);
+
+  async function send() {
+    if (!session) return; setBusy(true); setError('');
+    try { await confirm({ data: { sessionId: session.sessionId, summary } }); onSaved(); setStage('success'); window.setTimeout(() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } }), 1800); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Submission failed.'); } finally { setBusy(false); }
+  }
+
+  const card = parseCard(summary);
+  const phoneValid = /^[6-9]\d{9}$/.test(digits);
+
+  if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} />;
+
+  return <div className="svara-stage">
+    {stage === 'choose' && <div className="svara-stage-center">
+      <div className="svara-hero-orb"><ProductOrb name="SVARA" state="working" /></div>
+      <h1 className="svara-title">Your check-in with Svara</h1>
+      <p className="svara-lede">{due ? 'Choose how you would like to talk. Svara asks only the questions in your baby’s Care Plan.' : 'Your next scheduled check-in is not due yet.'}</p>
+      {error && <p role="alert" className="svara-error">{error}</p>}
+      <div className="svara-ctas">
+        <div className={`svara-cta-group ${open === 'web' ? 'open' : ''}`}>
+          <button type="button" className="svara-cta primary" disabled={!due || busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></button>
+          {open === 'web' && <div className="svara-tray">
+            <p>Start a voice conversation with Svara now? Your microphone will be used.</p>
+            <Button className="w-full" disabled={busy} onClick={() => void startWeb()}>{busy ? <Loader2 className="animate-spin" /> : <Mic />}Start conversation</Button>
+          </div>}
+        </div>
+        <div className={`svara-cta-group ${open === 'phone' ? 'open' : ''}`}>
+          <button type="button" className="svara-cta" disabled={!due || busy} aria-expanded={open === 'phone'} onClick={() => setOpen(open === 'phone' ? null : 'phone')}><Phone /><span><strong>Get a phone call</strong><small>Svara calls your mobile number</small></span><ChevronDown className="chev" /></button>
+          {open === 'phone' && <form className="svara-tray" onSubmit={(e) => { e.preventDefault(); if (phoneValid && consent) void startPhone(); }}>
+            <label className="svara-phone">
+              <span className="svara-cc"><Phone aria-hidden="true" />+91</span>
+              <input inputMode="numeric" autoComplete="tel-national" aria-label="10-digit mobile number" placeholder="98765-43210" value={formatMobile(digits)} onChange={(e) => setDigits(e.target.value.replace(/\D/g, '').slice(0, 10))} />
+            </label>
+            <label className="svara-consent"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /><span>I agree to receive this check-in call from Svara on this number.</span></label>
+            <Button type="submit" className="w-full" disabled={busy || !phoneValid || !consent}>{busy ? <Loader2 className="animate-spin" /> : <PhoneCall />}Call me now</Button>
+          </form>}
+        </div>
+      </div>
+      {!due && <p className="svara-lede small"><Clock size={14} /> Svara opens when your check-in is due.</p>}
+    </div>}
+
+    {stage === 'phone' && <div className="svara-stage-center">
+      <div className="svara-hero-orb pulsing"><ProductOrb name="SVARA" state="working" /></div>
+      <h1 className="svara-title">Svara is on the phone with you</h1>
+      <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>
+      {call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) && <div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}><PhoneCall />Call me again</Button><Button variant="ghost" onClick={() => setStage('choose')}>Back</Button></div>}
+      {call && ACTIVE.includes(call) && <p className="svara-lede small">Keep this page open. Your Health Card appears here when the call ends.</p>}
+    </div>}
+
+    {stage === 'generating' && <div className="svara-stage-center">
+      <div className="svara-hero-orb thinking"><ProductOrb name="SVARA" state="working" /></div>
+      <h1 className="svara-title">Preparing your Health Card</h1>
+      <ol className="svara-steps" aria-live="polite">{STEPS.map((s, i) => <li key={s} className={i < step ? 'done' : i === step ? 'active' : ''}>{i < step ? <Check /> : i === step ? <Loader2 className="animate-spin" /> : <span />}{s}</li>)}</ol>
+    </div>}
+
+    {stage === 'review' && <div className="svara-stage-center wide">
+      <h1 className="svara-title">Review your Health Card</h1>
+      <p className="svara-lede">Check each topic. Approve when it matches what you shared, then send it to your care team.</p>
+      {error && <p role="alert" className="svara-error">{error}</p>}
+      {card ? <CareTicket source="Svara" title={session?.babyName ?? 'Health Card'} subtitle="Check-in summary" date={new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} card={card} stamp={approved ? 'Approved' : null} stubLabel="Caregiver" action={{ label: 'Approve card', onClick: () => setApproved(true) }} />
+        : <p className="svara-error">This card could not be displayed. Please start the check-in again.</p>}
+      <div className="svara-review-actions">
+        {approved && <Button variant="ghost" onClick={() => setApproved(false)}>Undo approval</Button>}
+        <Button size="lg" disabled={!approved || busy || !card} onClick={() => void send()}>{busy ? <Loader2 className="animate-spin" /> : null}Send to Care Team<ArrowRight /></Button>
+      </div>
+    </div>}
+
+    {stage === 'success' && <div className="svara-stage-center">
+      <div className="svara-success-mark"><Check /></div>
+      <h1 className="svara-title">Card submitted to your care team</h1>
+      <p className="svara-lede">Taking you back to Home…</p>
+    </div>}
+  </div>;
 }
