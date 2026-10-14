@@ -1,3 +1,4 @@
+import { CareTicket } from './care-ticket';
 import { GlassToggle } from '@/components/ui/glass-toggle';
 import { TopicCards } from './topic-cards';
 import { cardText, parseCard, type CareCard } from '@/lib/care-card';
@@ -192,8 +193,7 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
           <Button type="button" disabled={!said || organising} onClick={() => { setOrganising(true); setAiNote(''); void organise({ data: { appointmentId: appt.id, note: said + (files.length ? `\nAttached: ${files.map(x => x.name).join(', ')}` : ''), checklist: lekhaChecklist.map(i => ({ key: i.key, title: i.title })) } }).then(d => { setCard(d); setApproved(false); setReview(true); }).catch(e => setAiNote(e instanceof Error ? e.message : 'Lekha could not organise the note.')).finally(() => setOrganising(false)); }}>{organising ? 'Lekha is summarising…' : 'Done — create card'}<ArrowRight /></Button>
           {aiNote && <p className="text-xs text-muted-foreground" role="status">{aiNote}</p>}
         </> : <form className="documentation-review" onSubmit={e => { e.preventDefault(); if (!card) return; void run(async () => { await save({ data: { appointmentId: appt.id, observations: JSON.stringify(card), decision: cardText(card), followUp: card.topics.find(t => /follow/i.test(t.title))?.finding ?? '', additionalNote: files.map(x => x.name).join(', ') } }); onClose(); }, 'Appointment Health Card saved to Sutra.'); }}>
-          <h2>Appointment Health Card</h2><TopicCards card={card} />
-          <label className="approve-tick"><input type="checkbox" checked={approved} onChange={e => setApproved(e.target.checked)} />Yes, this card is correct.</label>
+          <CareTicket source="Lekha" title={baby?.baby_name ?? 'Appointment'} subtitle={appt.reason} date={fmtDay(appt.starts_at)} card={card} stamp={approved ? 'Reviewed' : null} stubLabel="Clinician review" action={{ label: 'Mark reviewed', onClick: () => setApproved(true) }} />
           <div className="flex gap-2 mt-auto"><Button type="button" variant="ghost" onClick={() => setReview(false)}><ArrowLeft />Back</Button><Button type="submit" className="flex-1" disabled={busy || !approved}>Save to care journey</Button></div>
         </form>}
       </section>
