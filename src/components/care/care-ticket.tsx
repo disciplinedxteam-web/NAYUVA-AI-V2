@@ -11,8 +11,8 @@ type Action = { label: string; onClick: () => void; disabled?: boolean };
  * Journey views pass `stub={false}` for a display-only ticket.
  */
 export function CareTicket({ source, title, subtitle, date, card, fields, quote, stamp, action, stub = true, stubLabel, children }: {
-  source: 'Svara' | 'Lekha' | 'Milan' | string; title: string; subtitle?: string; date?: string;
-  card?: CareCard | null; fields?: TicketField[]; quote?: string; stamp?: string | null;
+  source: 'Svara' | 'Lekha' | 'Milan' | string; title: string; subtitle?: string | undefined; date?: string | undefined;
+  card?: CareCard | null; fields?: TicketField[]; quote?: string | undefined; stamp?: string | null | undefined;
   action?: Action; stub?: boolean; stubLabel?: string; children?: ReactNode;
 }) {
   const torn = !!stamp;
