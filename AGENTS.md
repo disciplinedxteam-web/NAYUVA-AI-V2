@@ -30,3 +30,5 @@
 - Sutra's assistant runs server-side and answers only from the authorized baby's persisted journey (clinical notes only for care team), so it cannot leak or invent records.
 - Svara and Lekha summaries are structured topic cards (shared `care-card` module) stored as JSON text with an AI-suggested Priority/Review/Routine category that never defaults to Routine, so both products render and triage identically.
 - Sarvam agent tools call `/api/public/sarvam-questions` and `/api/public/sarvam-observations`, keyed by the live check-in id (optional `SVARA_TOOL_KEY` header), so personalisation comes from the baby's Care Plan and history, not the agent prompt.
+- Svara agent variables (ordered questions, prior answers, instructions) are built once in `svara-context.server.ts` and shared by website and phone sessions, so both channels personalise identically.
+- Approval cards across Svara, Lekha, Milan and Sutra use the shared `CareTicket` component (stub = action, stamp = approved/reviewed; Sutra hides the stub), and all segmented toggles use `GlassToggle`.
