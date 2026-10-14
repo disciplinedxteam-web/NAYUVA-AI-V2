@@ -1015,3 +1015,4 @@
 .journey-ticket:hover { transform: translateY(-3px); }
 .journey-ticket.selected .ticket-main { outline: 2px solid var(--primary); outline-offset: -2px; }
 .journey-ticket .care-ticket { max-width: none; }
+.scheduler-confirm { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 20px 0; }
