@@ -1,8 +1,9 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
-import { Mic, Square } from 'lucide-react';
+import { PhoneOff, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ProductOrb } from '@/components/product-orb';
 
-type Line = { role: 'user' | 'bot'; content: string };
+export type Line = { role: 'user' | 'bot'; content: string; live?: boolean };
 type Agent = { stop: () => Promise<void> };
 
 /** Sarvam transcript payloads may be strings or nested objects; always reduce to plain text so React never renders an object. */
@@ -15,51 +16,91 @@ export function transcriptText(v: unknown, depth = 0): string {
   return '';
 }
 
-/** Live Svara voice session via the Sarvam Web SDK. The key stays on the server proxy (/api/sarvam/). */
-function SvaraVoiceInner({ profileId, context, onTranscript, onEnded }: { profileId: string; context: Record<string, string>; onTranscript: (lines: Line[]) => void; onEnded: () => void }) {
-  const [state, setState] = useState('IDLE');
+/** Pure reducer for every Sarvam SDK message shape: text chunks stream into Svara's bubble, transcriptions finalise turns. */
+export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] {
+  const type = String(m['type'] ?? '').toLowerCase();
+  const last = lines[lines.length - 1];
+  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...lines.map((l) => ({ ...l, live: false })), { role: 'user', content: '', live: true }];
+  if (type.includes('transcription')) {
+    const content = transcriptText(m['content'] ?? m['text']).trim().slice(0, 6000); if (!content) return lines;
+    const role: Line['role'] = String(m['role'] ?? '').toLowerCase() === 'user' ? 'user' : 'bot';
+    const i = findLast(lines, (l) => l.role === role && !!l.live);
+    if (i >= 0) return lines.map((l, k) => (k === i ? { role, content } : l));
+    if (last && last.role === role && last.content === content) return lines;
+    return [...lines, { role, content }];
+  }
+  if (type.includes('text')) {
+    const t = transcriptText(m['text'] ?? m['content']); if (!t) return lines;
+    const chunk = type.includes('chunk');
+    const done = String(m['status'] ?? '').toLowerCase() === 'completed';
+    if (last?.role === 'bot' && last.live) return [...lines.slice(0, -1), { role: 'bot', content: (chunk ? last.content + t : t).slice(0, 6000), live: !done && chunk }];
+    return [...lines.map((l) => (l.role === 'user' && l.live && !l.content ? null : l)).filter(Boolean) as Line[], { role: 'bot', content: t.slice(0, 6000), live: chunk && !done }];
+  }
+  return lines;
+}
+function findLast<T>(a: T[], f: (x: T) => boolean) { for (let i = a.length - 1; i >= 0; i--) if (f(a[i]!)) return i; return -1; }
+
+/** Full-screen live Svara conversation via the Sarvam Web SDK. The key stays on the server proxy (/api/sarvam/). */
+function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded }: { profileId: string; context: Record<string, string>; babyName: string; onTranscript: (lines: Line[]) => void; onEnded: () => void }) {
+  const [state, setState] = useState('CONNECTING');
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState('');
   const agent = useRef<Agent | null>(null);
-  const botLive = useRef(false);
+  const ended = useRef(false);
   const logRef = useRef<HTMLDivElement>(null);
-  useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [lines]);
-  useEffect(() => () => { void agent.current?.stop(); }, []);
-  useEffect(() => { if(lines.length)onTranscript(lines); }, [lines, onTranscript]);
+  useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' }); }, [lines]);
+  useEffect(() => { if (lines.length) onTranscript(lines.filter((l) => l.content).map(({ role, content }) => ({ role, content }))); }, [lines, onTranscript]);
 
-  async function start() {
-    setError(''); setLines([]); botLive.current = false; setState('CONNECTING');
-    try {
-      const { ConversationAgent, BrowserAudioInterface, InteractionType, Role } = await import('sarvam-conv-ai-sdk/browser');
-      const a = new ConversationAgent({
-        apiKey: '',
-        baseUrl: `${window.location.origin}/api/sarvam/${context['check_in_id']}/`,
-        config: {
-          user_identifier_type: 'custom', user_identifier: profileId,
-          org_id: '01a06c4c-1ad9-769a-9b30-14878bafef8a', workspace_id: '01a06c4c-1ae1-7d6f-a195-f7c92c3f2058', app_id: 'Conversatio-1e149739-300e',
-          interaction_type: InteractionType.CALL, input_sample_rate: 16000, output_sample_rate: 16000,
-          agent_variables: context,
-        },
-        audioInterface: new BrowserAudioInterface(),
-        textCallback: async (m: { type?: unknown; text?: unknown; content?: unknown }) => { try { const t = transcriptText(m?.text ?? m?.content ?? m); if (!t) return; const chunk = String(m?.type ?? '').toLowerCase().includes('chunk'); setLines((l) => { const last = l[l.length - 1]; if (botLive.current && last?.role === 'bot') { const content = (chunk ? last.content + t : t).slice(0, 6000); return [...l.slice(0, -1), { role: 'bot', content }]; } botLive.current = true; return [...l, { role: 'bot', content: t.slice(0, 6000) }]; }); } catch { /* ignore malformed text event */ } },
-        transcriptCallback: async (m: { role?: unknown; content?: unknown }) => { try { const content = transcriptText(m?.content ?? m).trim().slice(0, 6000); if (!content) return; const role: Line['role'] = m?.role === Role.USER || m?.role === 'user' ? 'user' : 'bot'; setLines((l) => { const last = l[l.length - 1]; if (role === 'bot' && botLive.current && last?.role === 'bot') { botLive.current = false; return [...l.slice(0, -1), { role, content }]; } botLive.current = false; if (last && last.role === role && last.content === content) return l; return [...l, { role, content }]; }); } catch { /* ignore malformed transcript event */ } },
-        stateCallback: async (s: unknown) => { setState(typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'); },
-        endCallback: async () => { setState('IDLE'); agent.current = null; onEnded(); },
-      } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
-      agent.current = a;
-      await a.start();
-      if (!(await a.waitForConnect(10))) throw new Error('timeout');
-    } catch (e) {
-      setError('Svara could not connect. Check microphone access or type your update below.');
-      setState('IDLE'); await agent.current?.stop(); agent.current = null;
-    }
-  }
-  const live = state !== 'IDLE' && state !== 'ERROR';
-  return <div className="transcription">
-    <div className="flex items-center justify-between gap-4"><span className="eyebrow">{live ? `Svara · ${state.toLowerCase()}` : 'Talk to Svara'}</span>
-      <Button type="button" variant={live ? 'outline' : 'default'} onClick={() => { if (live) { void agent.current?.stop(); setState('IDLE'); onEnded(); } else void start(); }}>{live ? <Square /> : <Mic />}{live ? 'End conversation' : 'Start voice check-in'}</Button></div>
-    {(live || lines.length > 0) && <div ref={logRef} data-no-translate className="live-chat" aria-live="polite">{lines.length ? lines.map((l, i) => <div key={i} className={`chat-bubble ${l.role === 'user' ? 'me' : 'bot'}`}>{l.content}</div>) : <p className="nv-sub">Listening… the conversation will appear here as you speak.</p>}</div>}
-    {error && <p className="text-sm text-muted-foreground mt-3" role="status">{error}</p>}
+  function finish() { if (ended.current) return; ended.current = true; void agent.current?.stop(); agent.current = null; onEnded(); }
+  useEffect(() => {
+    let cancelled = false;
+    const ingest = async (m: unknown) => { try { if (m && typeof m === 'object') setLines((l) => applyMessage(l, m as Record<string, unknown>)); } catch { /* ignore malformed event */ } };
+    (async () => {
+      try {
+        const { ConversationAgent, BrowserAudioInterface, InteractionType } = await import('sarvam-conv-ai-sdk/browser');
+        if (cancelled) return;
+        const a = new ConversationAgent({
+          apiKey: '',
+          baseUrl: `${window.location.origin}/api/sarvam/${context['check_in_id']}/`,
+          config: {
+            user_identifier_type: 'custom', user_identifier: profileId,
+            org_id: '01a06c4c-1ad9-769a-9b30-14878bafef8a', workspace_id: '01a06c4c-1ae1-7d6f-a195-f7c92c3f2058', app_id: 'Conversatio-1e149739-300e',
+            interaction_type: InteractionType.CALL, input_sample_rate: 16000, output_sample_rate: 16000,
+            agent_variables: context,
+          },
+          audioInterface: new BrowserAudioInterface(),
+          textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
+          stateCallback: async (s: unknown) => { setState(typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'); },
+          endCallback: async () => { finish(); },
+        } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
+        agent.current = a;
+        await a.start();
+        if (!(await a.waitForConnect(10))) throw new Error('timeout');
+      } catch {
+        if (!cancelled) { setError('Svara could not connect. Please allow microphone access and try again.'); setState('IDLE'); await agent.current?.stop(); agent.current = null; }
+      }
+    })();
+    return () => { cancelled = true; void agent.current?.stop(); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const s = state.toLowerCase();
+  const label = error ? 'Not connected' : s.includes('connect') && !s.includes('ed') ? 'Connecting…' : s.includes('speak') ? 'Svara is speaking' : s.includes('listen') ? 'Listening' : s.includes('think') || s.includes('process') ? 'Thinking…' : 'In conversation';
+  return <div className="svara-live" role="dialog" aria-label="Svara conversation">
+    <header className="svara-live-top"><span className="svara-live-badge"><i aria-hidden="true" />Live · {babyName}</span><span className="svara-live-state">{label}</span></header>
+    <div ref={logRef} className="svara-live-log" aria-live="polite" data-no-translate>
+      <div className="svara-live-inner">
+        {!lines.length && !error && <p className="svara-live-hint">Svara will greet you in a moment. Speak naturally — your words appear here as you talk.</p>}
+        {lines.map((l, i) => l.role === 'user'
+          ? <div key={i} className="live-turn user"><p className={l.live && !l.content ? 'is-typing' : ''}>{l.content || <><span /><span /><span /></>}</p></div>
+          : <div key={i} className="live-turn bot"><div className="live-bot-card"><span className="live-bot-name">Svara</span><p>{l.content}{l.live && <span className="live-caret" aria-hidden="true" />}</p></div></div>)}
+        {error && <p className="svara-live-error" role="alert">{error}</p>}
+      </div>
+    </div>
+    <footer className="svara-live-dock">
+      <div className={`svara-live-orb ${s.includes('speak') ? 'is-speaking' : ''}`}><ProductOrb name="SVARA" state="working" /></div>
+      <Button type="button" size="lg" variant="destructive" className="svara-end" onClick={finish}><PhoneOff />{error ? 'Close' : 'End conversation'}</Button>
+    </footer>
   </div>;
 }
 
@@ -69,13 +110,13 @@ class VoiceBoundary extends Component<{ children: ReactNode; onReset: () => void
   override componentDidCatch(e: unknown) { console.error('Svara voice error', e); }
   override render() {
     if (!this.state.failed) return this.props.children;
-    return <div className="transcription" role="status"><p className="text-sm">The voice conversation was interrupted. Your saved transcript is kept — you can restart or continue by typing below.</p>
-      <Button type="button" className="mt-3" onClick={() => { this.setState({ failed: false }); this.props.onReset(); }}><Mic />Restart voice check-in</Button></div>;
+    return <div className="svara-live" role="status"><div className="svara-stage-center"><p>The voice conversation was interrupted. Your saved transcript is kept.</p>
+      <Button type="button" onClick={() => { this.setState({ failed: false }); this.props.onReset(); }}><Mic />Reconnect</Button></div></div>;
   }
 }
 
 /** Isolated so a voice/stream error can never take down the dashboard. */
-export function SvaraVoice(props: Parameters<typeof SvaraVoiceInner>[0]) {
+export function SvaraVoice(props: Parameters<typeof SvaraLiveInner>[0]) {
   const [key, setKey] = useState(0);
-  return <VoiceBoundary onReset={() => setKey((k) => k + 1)}><SvaraVoiceInner key={key} {...props} /></VoiceBoundary>;
+  return <VoiceBoundary onReset={() => setKey((k) => k + 1)}><SvaraLiveInner key={key} {...props} /></VoiceBoundary>;
 }
