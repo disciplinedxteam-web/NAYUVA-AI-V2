@@ -1,3 +1,4 @@
+import { GlassToggle } from '@/components/ui/glass-toggle';
 import { TopicCards } from './topic-cards';
 import { cardText, parseCard, type CareCard } from '@/lib/care-card';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -21,7 +22,7 @@ const fmt = (v: string) => `${fmtDay(v)} · ${fmtTime(v)}`;
 const loc = (a: Appointment) => (a.location ?? {}) as Record<string, string>;
 
 export function Toggle({ options, value, onChange }: { options: { key: string; label: string; count: number }[]; value: string; onChange: (k: string) => void }) {
-  return <div className="ws-toggle" role="group">{options.map(o => <Button variant="ghost" key={o.key} type="button" aria-pressed={value === o.key} onClick={() => onChange(o.key)}>{o.label}<span className="count">{o.count}</span></Button>)}</div>;
+  return <GlassToggle options={options} value={value} onChange={onChange} />;
 }
 function EmptyState({ children }: { children: React.ReactNode }) { return <div className="care-empty"><p>{children}</p></div>; }
 
