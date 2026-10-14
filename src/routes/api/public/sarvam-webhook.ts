@@ -56,12 +56,24 @@ export const Route = createFileRoute('/api/public/sarvam-webhook')({
 
         if (status !== 'completed' || !hasCaregiver) return Response.json({ ok: true, draft: false });
         // Draft only: the caregiver must review and confirm before anything reaches the care team.
-        const caregiverWords = lines.filter((l) => l.role === 'user').map((l) => l.content).join(' / ');
-        let draft: Record<string, unknown> = { summary: `Phone check-in. Caregiver said: ${caregiverWords}`.slice(0, 5000), observations: [], missingInformation: [], source: 'caregiver_words' };
-        try {
-          const { draftSvaraSummary } = await import('@/lib/care.functions');
-          draft = { ...(await draftSvaraSummary(lines, s.plan_snapshot)), source: 'sarvam_llm' };
-        } catch (e) { console.error('svara draft fallback', e instanceof Error ? e.message : 'unknown'); }
+        // Prefer the answers Svara confirmed during the call (saved via the observations tool); add the transcript as context.
+        const { data: answers } = await db.from('caregiver_responses').select('topic,original_text').eq('session_id', s.id).order('created_at');
+        const qa = (answers ?? []).filter((a) => a.original_text).flatMap((a) => [{ role: 'bot', content: `[${a.topic}]` }, { role: 'user', content: String(a.original_text) }]);
+        const source = qa.length ? [...qa, ...lines] : lines;
+        let draft: Record<string, unknown> | null = null;
+        const { draftSvaraSummary } = await import('@/lib/care.functions');
+        for (let i = 0; i < 2 && !draft; i++) {
+          try { draft = { ...(await draftSvaraSummary(source, s.plan_snapshot)), source: qa.length ? 'confirmed_answers' : 'sarvam_llm' }; }
+          catch (e) { console.error('svara draft attempt failed', e instanceof Error ? e.message : 'unknown'); }
+        }
+        if (!draft) {
+          // Structured fallback (never a paragraph): one topic per confirmed answer, queued for review.
+          const { normalizeCard } = await import('@/lib/care-card');
+          const items = (answers ?? []).filter((a) => a.original_text);
+          if (!items.length) { await db.from('checkin_sessions').update({ failure_code: 'summary_unavailable' }).eq('id', s.id); return Response.json({ ok: true, draft: false }); }
+          const card = normalizeCard({ topics: items.map((a) => ({ title: a.topic, finding: String(a.original_text).split(/\s+/).slice(0, 6).join(' '), status: 'Not discussed', quote: a.original_text })), priority: 'Review Needed', priorityReason: 'Automatic summary unavailable; please review' });
+          draft = { summary: JSON.stringify(card), card, source: 'confirmed_answers_fallback' };
+        }
         await db.from('checkin_sessions').update({ status: 'awaiting_confirmation', summary: { ...summaryJson, ...draft } as Json }).eq('id', s.id).neq('status', 'submitted');
         return Response.json({ ok: true, draft: true });
       },

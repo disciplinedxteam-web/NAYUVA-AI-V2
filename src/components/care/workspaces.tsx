@@ -1,3 +1,5 @@
+import { CareTicket } from './care-ticket';
+import { GlassToggle } from '@/components/ui/glass-toggle';
 import { TopicCards } from './topic-cards';
 import { cardText, parseCard, type CareCard } from '@/lib/care-card';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -21,7 +23,7 @@ const fmt = (v: string) => `${fmtDay(v)} · ${fmtTime(v)}`;
 const loc = (a: Appointment) => (a.location ?? {}) as Record<string, string>;
 
 export function Toggle({ options, value, onChange }: { options: { key: string; label: string; count: number }[]; value: string; onChange: (k: string) => void }) {
-  return <div className="ws-toggle" role="group">{options.map(o => <Button variant="ghost" key={o.key} type="button" aria-pressed={value === o.key} onClick={() => onChange(o.key)}>{o.label}<span className="count">{o.count}</span></Button>)}</div>;
+  return <GlassToggle options={options} value={value} onChange={onChange} />;
 }
 function EmptyState({ children }: { children: React.ReactNode }) { return <div className="care-empty"><p>{children}</p></div>; }
 
@@ -113,7 +115,13 @@ function Scheduler({ data, busy, run, onDone }: { data: Data; busy: boolean; run
   const baby = data.babies.find(b => b.id === babyId);
   const days = useMemo(() => { const first = month.getDay(); const n = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate(); return [...Array<null>(first).fill(null), ...Array.from({ length: n }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))]; }, [month]);
   const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  return <form className="ws-split scheduler-compact" onSubmit={e => { e.preventDefault(); if (!baby || !date || !time || !endTime || endTime <= time) return; void run(async () => { await create({ data: { babyId: baby.id, date: iso(date), time, endTime, reason, location: { facilityName: settings['facilityName'] ?? '', address: settings['address'] ?? '', mapsLink } } }); onDone(); }, 'Appointment scheduled and shared with the caregiver.'); }}>
+  const [confirming, setConfirming] = useState(false); const [stamped, setStamped] = useState(false);
+  if (confirming && baby && date) return <div className="scheduler-confirm">
+    <h2 className="svara-title">Confirm this appointment</h2>
+    <CareTicket source="Milan" title={baby.baby_name} subtitle={reason} date={date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} stamp={stamped ? 'Approved' : null} stubLabel="Care team" fields={[{ label: 'Caregiver', value: baby.caregiver_name }, { label: 'Date', value: date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) }, { label: 'Time', value: `${time} – ${endTime} IST` }, { label: 'Reason', value: reason }, { label: 'Location', value: settings['facilityName'] || 'Not configured' }, { label: 'Status', value: 'Scheduled' }]} action={{ label: 'Approve', disabled: busy, onClick: () => { setStamped(true); window.setTimeout(() => { void run(async () => { await create({ data: { babyId: baby.id, date: iso(date), time, endTime, reason, location: { facilityName: settings['facilityName'] ?? '', address: settings['address'] ?? '', mapsLink } } }); onDone(); }, 'Appointment scheduled and shared with the caregiver.');  }, 900); } }} />
+    <Button type="button" variant="ghost" disabled={stamped} onClick={() => setConfirming(false)}><ArrowLeft />Edit details</Button>
+  </div>;
+  return <form className="ws-split scheduler-compact" onSubmit={e => { e.preventDefault(); if (!baby || !date || !time || !endTime || endTime <= time) return; setStamped(false); setConfirming(true); }}>
     <section className="ws-panel">
       <div className="ws-panel-title"><CalendarDays /><div>Date & time<small>India Standard Time</small></div></div>
       <div className="cal-head"><Button type="button" variant="ghost" size="icon" aria-label="Previous month" disabled={month <= new Date(today.getFullYear(), today.getMonth(), 1)} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}><ChevronLeft /></Button><strong>{month.toLocaleDateString(`${language}-IN`, { month: 'long', year: 'numeric' })}</strong><Button type="button" variant="ghost" size="icon" aria-label="Next month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}><ChevronRight /></Button></div>
@@ -191,8 +199,7 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
           <Button type="button" disabled={!said || organising} onClick={() => { setOrganising(true); setAiNote(''); void organise({ data: { appointmentId: appt.id, note: said + (files.length ? `\nAttached: ${files.map(x => x.name).join(', ')}` : ''), checklist: lekhaChecklist.map(i => ({ key: i.key, title: i.title })) } }).then(d => { setCard(d); setApproved(false); setReview(true); }).catch(e => setAiNote(e instanceof Error ? e.message : 'Lekha could not organise the note.')).finally(() => setOrganising(false)); }}>{organising ? 'Lekha is summarising…' : 'Done — create card'}<ArrowRight /></Button>
           {aiNote && <p className="text-xs text-muted-foreground" role="status">{aiNote}</p>}
         </> : <form className="documentation-review" onSubmit={e => { e.preventDefault(); if (!card) return; void run(async () => { await save({ data: { appointmentId: appt.id, observations: JSON.stringify(card), decision: cardText(card), followUp: card.topics.find(t => /follow/i.test(t.title))?.finding ?? '', additionalNote: files.map(x => x.name).join(', ') } }); onClose(); }, 'Appointment Health Card saved to Sutra.'); }}>
-          <h2>Appointment Health Card</h2><TopicCards card={card} />
-          <label className="approve-tick"><input type="checkbox" checked={approved} onChange={e => setApproved(e.target.checked)} />Yes, this card is correct.</label>
+          <CareTicket source="Lekha" title={baby?.baby_name ?? 'Appointment'} subtitle={appt.reason} date={fmtDay(appt.starts_at)} card={card} stamp={approved ? 'Reviewed' : null} stubLabel="Clinician review" action={{ label: 'Mark reviewed', onClick: () => setApproved(true) }} />
           <div className="flex gap-2 mt-auto"><Button type="button" variant="ghost" onClick={() => setReview(false)}><ArrowLeft />Back</Button><Button type="submit" className="flex-1" disabled={busy || !approved}>Save to care journey</Button></div>
         </form>}
       </section>
@@ -205,7 +212,7 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
 }
 
 /* ---------------- Sutra ---------------- */
-type JourneyItem = { id: string; when: string; kind: string; title: string; body: string; tag: string };
+type JourneyItem = { id: string; when: string; kind: string; title: string; body: string; tag: string; card?: CareCard | null };
 export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   const ask = useServerFn(askSutra);
   const [babyId, setBabyId] = useState(data.babies[0]?.id ?? ''); const baby = data.babies.find(b => b.id === babyId) ?? data.babies[0];
@@ -215,8 +222,8 @@ export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   async function play(i: number, text: string) { audio.current?.pause(); if (playing === i) { setPlaying(null); return; } setErr(''); try { let src = cache.current.get(i); if (!src) { src = 'data:audio/wav;base64,' + (await speak({ data: { text, language: 'en-IN' } })).audio; cache.current.set(i, src); } const a = new Audio(src); audio.current = a; a.onended = () => setPlaying(null); setPlaying(i); await a.play(); } catch (e) { setPlaying(null); setErr(e instanceof Error ? e.message : 'Audio unavailable.'); } }
   const items: JourneyItem[] = useMemo(() => !baby ? [] : [
     ...data.events.filter(e => e.baby_id === baby.id).map(e => ({ id: 'e' + e.id, when: e.created_at, kind: e.kind, title: e.kind, body: e.summary, tag: 'Journey' })),
-    ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, body: (() => { const k = parseCard(c.summary_text); return k ? cardText(k) : `${c.summary_text||c.observation} — “${c.quote}”`; })(), tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
-    ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', body: parseCard(n.observations) ? n.decision : `${n.observations} · ${n.decision}`, tag: 'Lekha' })) : []),
+    ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, card: parseCard(c.summary_text), body: (() => { const k = parseCard(c.summary_text); return k ? cardText(k) : `${c.summary_text||c.observation} — “${c.quote}”`; })(), tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
+    ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', card: parseCard(n.observations), body: parseCard(n.observations) ? n.decision : `${n.observations} · ${n.decision}`, tag: 'Lekha' })) : []),
   ].sort((a, b) => a.when.localeCompare(b.when)), [data, baby, role]);
   useEffect(() => { strip.current?.scrollTo({ left: strip.current.scrollWidth }); setSelected([]); setMsgs([]); }, [babyId]);
   const scroll = (d: number) => strip.current?.scrollBy({ left: d * 300, behavior: 'smooth' });
@@ -239,9 +246,8 @@ export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
       {speech.error && <p className="text-xs text-muted-foreground">{speech.error}</p>}
     </section>
     <div className="journey-heading"><h2>Care journey</h2><div><Button size="icon" variant="ghost" aria-label="Earlier entries" onClick={() => scroll(-1)}><ChevronLeft /></Button><Button size="icon" variant="ghost" aria-label="Later entries" onClick={() => scroll(1)}><ChevronRight /></Button></div></div>
-    {!items.length ? <EmptyState>No journey entries yet.</EmptyState> : <div className="journey-strip-wrap"><div className="journey-strip" ref={strip}>{items.map(i => { const on = selected.includes(i.id); return <Button variant="ghost" type="button" key={i.id} className={`nv-card compact text-left ${on ? 'selected' : ''}`} aria-pressed={on} onClick={() => setSelected(s => on ? s.filter(x => x !== i.id) : [...s, i.id].slice(-12))}>
-      <div className="nv-card-top"><span className="nv-tag">{i.kind.includes('Health') ? <HeartPulse /> : i.kind === 'Appointment' ? <CalendarDays /> : <FileText />}{i.kind}</span></div>
-      <h3>{i.title}</h3><p className="nv-sub">{fmt(i.when)}</p><p className="text-sm leading-relaxed text-muted-foreground line-clamp-3">{i.body}</p><span className="nv-pill">{on ? 'Selected' : i.tag}</span>
-    </Button>; })}</div></div>}
+    {!items.length ? <EmptyState>No journey entries yet.</EmptyState> : <div className="journey-strip-wrap"><div className="journey-strip" ref={strip}>{items.map(i => { const on = selected.includes(i.id); return <button type="button" key={i.id} className={`journey-ticket ${on ? 'selected' : ''}`} aria-pressed={on} onClick={() => setSelected(s => on ? s.filter(x => x !== i.id) : [...s, i.id].slice(-12))}>
+      <CareTicket stub={false} source={i.kind.includes('Appointment') ? 'Lekha' : i.kind.includes('Health') ? 'Svara' : i.kind} title={i.title} date={fmt(i.when)} subtitle={on ? 'Selected for Sutra' : i.tag} card={i.card ?? null} fields={i.card ? undefined : [{ label: 'Details', value: i.body.slice(0, 140) }]} />
+    </button>; })}</div></div>}
   </div>;
 }
