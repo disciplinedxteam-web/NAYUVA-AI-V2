@@ -1049,3 +1049,5 @@
 @keyframes journey-sway { from { transform:rotate(-.7deg); } to { transform:rotate(.7deg); } }
 @media(max-width:700px) { .svara-ctas { grid-template-columns:1fr; }.sutra-room { height:calc(100svh - 48px); }.sutra-room-head { padding-right:0; margin-top:32px; }.sutra-room-head .workspace-heading { margin-top:0; }.sutra-room-head > button { font-size:10px; }.sutra-welcome { gap:4px; padding-inline:0; }.sutra-welcome-orb { width:80px; }.sutra-welcome h2 { font-size:16px; }.hanging-entry { flex-basis:280px; }.sutra-profile-menu { width:260px; }.sutra-composer-footer { gap:4px; }.sutra-composer-footer > button { max-width:160px; overflow:hidden; }.svara-cta strong { font-size:14px; } }
 @media(prefers-reduced-motion:reduce) { .hanging-entry { animation:none; }.sutra-welcome,.sutra-journey-reveal { transition:none; }.hanging-track { scroll-behavior:auto; } }
+
+.svara-cta { height:auto; min-height:82px; white-space:normal; border-radius:0; justify-content:flex-start; }.svara-cta > svg:first-child { width:40px; height:40px; }.svara-stage-center:not(.wide) .svara-steps { max-width:480px; }
