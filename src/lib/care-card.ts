@@ -46,7 +46,7 @@ export function normalizeCard(raw: unknown): CareCard {
     .slice(0, 20);
   let p = priority(o['priority']);
   // A Routine card cannot contain a flagged concern.
-  if (p === 'Routine' && topics.some((t) => t.status === 'Concern')) p = 'Review Needed';
+  if (p === 'Routine' && topics.some((t) => t.status !== 'Normal')) p = 'Review Needed';
   return careCardSchema.parse({ topics, priority: p, priorityReason: str(o['priorityReason'] ?? o['priority_reason'], 200) });
 }
 
