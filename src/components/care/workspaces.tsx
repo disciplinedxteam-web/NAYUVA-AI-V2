@@ -1,10 +1,17 @@
 import { CareTicket } from './care-ticket';
+import { JourneyCarousel } from './journey-carousel';
+import { ProductOrb } from '@/components/product-orb';
+import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
+import { Message, MessageContent, MessageResponse } from '@/components/ai-elements/message';
+import { PromptInput, PromptInputTextarea, PromptInputFooter, PromptInputSubmit } from '@/components/ai-elements/prompt-input';
+import { Shimmer } from '@/components/ai-elements/shimmer';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { GlassToggle } from '@/components/ui/glass-toggle';
 import { TopicCards } from './topic-cards';
 import { cardText, parseCard, type CareCard } from '@/lib/care-card';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowLeft, ArrowRight, Volume2, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Volume2, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WorkspaceHeading } from './workspace-heading';
 import { askSutra, createAppointment, getCareData, saveClinicalNote, updateAppointment, transcribeSpeech, speakText, structureLekhaNote } from '@/lib/care.functions';
@@ -72,12 +79,11 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
         <div className="ws-grid">{list.map(a => {
           const b = babyOf(a.baby_id); const l = loc(a); const resched = a.reschedule as { date: string; time: string } | null;
           const documented = data.notes.some(n => (n as { appointment_id?: string }).appointment_id === a.id);
-          return <article key={a.id} className="nv-card">
-            <div className="nv-card-top"><span className="nv-tag"><CalendarDays />Appointment</span><span className={`nv-pill ${a.status === 'Confirmed' || a.status === 'Completed' ? 'ok' : ''}`}>{a.status}</span></div>
-            <h3>{a.reason}</h3>
-            <div className="nv-row"><CalendarDays /><div><strong>{fmtDay(a.starts_at)}</strong><small>{fmtTime(a.starts_at)}{a.ends_at ? ` – ${fmtTime(a.ends_at)}` : ''} IST</small></div></div>
-            <div className="nv-row"><User /><div><strong>{b?.baby_name ?? 'Baby'}</strong><small>Caregiver · {b?.caregiver_name ?? '—'}</small></div></div>
-            <div className="nv-row"><MapPin /><div><strong>{l['facilityName'] || 'Location not set'}</strong><small>{l['address'] || 'Add an address in Settings'}</small></div></div>
+          return <CareTicket key={a.id} source="Milan" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmtDay(a.starts_at)} stamp={a.status === 'Confirmed' || a.status === 'Completed' ? 'Approved' : null} stub={false} fields={[
+            { label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Time · IST', value: `${fmtTime(a.starts_at)}${a.ends_at ? ` – ${fmtTime(a.ends_at)}` : ''}` },
+            { label: 'Status', value: a.status }, { label: 'Location', value: l['facilityName'] || 'Not configured' }, { label: 'Address', value: l['address'] || 'Not recorded' },
+            { label: 'Documentation', value: documented ? 'Reviewed in Lekha' : a.status === 'Completed' ? 'Awaiting documentation' : 'Not yet due' },
+          ]}>
             {resched && a.status === 'Reschedule requested' && <p className="nv-sub">Requested: {resched.date} at {resched.time}</p>}
             {request === a.id ? <form className="nv-card-actions" onSubmit={e => { e.preventDefault(); void run(async () => { await change({ data: { id: a.id, status: 'Reschedule requested', preferredDate: rDate, preferredTime: rTime } }); setRequest(null); }, 'Reschedule request sent. Your original appointment time has not changed.'); }}>
               <input className="ws-input" type="date" required value={rDate} onChange={e => setRDate(e.target.value)} aria-label="Preferred date" />
@@ -89,7 +95,7 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
               {role === 'care-team' && a.status === 'Completed' && <Button variant="outline" onClick={onDocument}><FileText />{documented ? 'View in Lekha' : 'Document in Lekha'}</Button>}
               {l['mapsLink']?.startsWith('https://') && <Button asChild variant="ghost"><a href={l['mapsLink']} target="_blank" rel="noreferrer"><MapPin />Map</a></Button>}
             </div>}
-          </article>;
+          </CareTicket>;
         })}</div>}
     </>}
   </>;
@@ -153,14 +159,11 @@ export function LekhaWorkspace({ data, busy, run }: { data: Data; busy: boolean;
     <WorkspaceHeading title="Lekha" description="Clinician-reviewed appointment documentation." />
     <div className="ws-bar"><Toggle value={tab} onChange={setTab} options={[{ key: 'pending', label: 'Awaiting documentation', count: pending.length }, { key: 'done', label: 'Documented', count: done.length }]} /></div>
     {!list.length ? <EmptyState>{tab === 'pending' ? 'No completed appointments are waiting for documentation. Mark an appointment as done in Milan.' : 'No documented appointments yet.'}</EmptyState> :
-      <div className="ws-grid">{list.map(a => { const b = data.babies.find(x => x.id === a.baby_id); const n = noteFor(a.id); return <article key={a.id} className="nv-card">
-        <div className="nv-card-top"><span className="nv-tag"><HeartPulse />Appointment Health Card</span><span className={`nv-pill ${n ? 'ok' : ''}`}>{n ? 'Documented' : 'Awaiting'}</span></div>
-        <h3>{a.reason}</h3><p className="nv-sub">{n ? `Documented ${fmt(n.created_at)}` : `Seen ${fmt(a.starts_at)}`}</p>
-        <div className="nv-row"><User /><div><strong>{b?.baby_name}</strong><small>Caregiver · {b?.caregiver_name}</small></div></div>
-        {n ? <><TopicCards text={n.observations} compact /><div className="nv-row"><Sparkles /><div><strong>Follow-up</strong><small>{n.follow_up || 'None recorded'}</small></div></div></>
-          : <div className="nv-row"><MapPin /><div><strong>{loc(a)['facilityName'] || 'Location not set'}</strong><small>{loc(a)['address'] || '—'}</small></div></div>}
-        <div className="nv-card-actions">{!n && <Button onClick={() => setOpenId(a.id)}><FileText />Create documentation</Button>}</div>
-      </article>; })}</div>}
+      <div className="ws-grid">{list.map(a => { const b = data.babies.find(x => x.id === a.baby_id); const n = noteFor(a.id); return <CareTicket key={a.id} source="Lekha" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmt(a.starts_at)} card={n ? parseCard(n.observations) : null} stamp={n ? 'Reviewed' : null} stub={!n} fields={[{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Appointment', value: 'Completed' }, { label: 'Location', value: loc(a)['facilityName'] || 'Not configured' }]} action={{ label: 'Document', onClick: () => setOpenId(a.id) }}>
+        {n && !parseCard(n.observations) && <p className="nv-sub">{n.observations}</p>}
+        {n?.follow_up && <p className="nv-sub">Follow-up · {n.follow_up}</p>}
+      </CareTicket>; })}</div>}
+
   </>;
 }
 
@@ -215,39 +218,57 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
 type JourneyItem = { id: string; when: string; kind: string; title: string; body: string; tag: string; card?: CareCard | null };
 export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   const ask = useServerFn(askSutra);
-  const [babyId, setBabyId] = useState(data.babies[0]?.id ?? ''); const baby = data.babies.find(b => b.id === babyId) ?? data.babies[0];
+  const [babyId, setBabyId] = useState(role === 'caregiver' ? data.babies[0]?.id ?? '' : ''); const baby = data.babies.find(b => b.id === babyId);
+  const [journeyOpen, setJourneyOpen] = useState(false); const [profileOpen, setProfileOpen] = useState(false); const [search, setSearch] = useState('');
+  const inputRef = useRef<HTMLTextAreaElement>(null); const requestVersion = useRef(0);
   const [selected, setSelected] = useState<string[]>([]); const [msgs, setMsgs] = useState<Msg[]>([]); const [draft, setDraft] = useState(''); const [thinking, setThinking] = useState(false); const [err, setErr] = useState('');
   const strip = useRef<HTMLDivElement>(null); const speech = useSpeech(setDraft, draft); const speak = useServerFn(speakText); const audio = useRef<HTMLAudioElement | null>(null); const cache = useRef(new Map<number, string>()); const [playing, setPlaying] = useState<number | null>(null);
   useEffect(() => () => audio.current?.pause(), []);
   async function play(i: number, text: string) { audio.current?.pause(); if (playing === i) { setPlaying(null); return; } setErr(''); try { let src = cache.current.get(i); if (!src) { src = 'data:audio/wav;base64,' + (await speak({ data: { text, language: 'en-IN' } })).audio; cache.current.set(i, src); } const a = new Audio(src); audio.current = a; a.onended = () => setPlaying(null); setPlaying(i); await a.play(); } catch (e) { setPlaying(null); setErr(e instanceof Error ? e.message : 'Audio unavailable.'); } }
   const items: JourneyItem[] = useMemo(() => !baby ? [] : [
     ...data.events.filter(e => e.baby_id === baby.id).map(e => ({ id: 'e' + e.id, when: e.created_at, kind: e.kind, title: e.kind, body: e.summary, tag: 'Journey' })),
+    ...data.appointments.filter(a => a.baby_id === baby.id).map(a => ({ id: 'a' + a.id, when: a.starts_at, kind: 'Appointment', title: a.reason, body: `${a.status} · ${fmt(a.starts_at)} · ${loc(a)['facilityName'] || 'Location not configured'}`, tag: a.status })),
     ...data.cards.filter(c => c.baby_id === baby.id).map(c => ({ id: 'c' + c.id, when: c.created_at, kind: 'Health Card', title: `${c.category} update`, card: parseCard(c.summary_text), body: (() => { const k = parseCard(c.summary_text); return k ? cardText(k) : `${c.summary_text||c.observation} — “${c.quote}”`; })(), tag: c.reviewed ? 'Reviewed' : 'Submitted' })),
-    ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', card: parseCard(n.observations), body: parseCard(n.observations) ? n.decision : `${n.observations} · ${n.decision}`, tag: 'Lekha' })) : []),
+    ...(role === 'care-team' ? (data.notes as { id: string; baby_id: string; created_at: string; observations: string; decision: string }[]).filter(n => n.baby_id === baby.id).map(n => ({ id: 'n' + n.id, when: n.created_at, kind: 'Appointment Health Card', title: 'Appointment Health Card', card: parseCard(n.observations), body: parseCard(n.observations) ? n.decision : `${n.observations} · ${n.decision}`, tag: 'Reviewed' })) : []),
   ].sort((a, b) => a.when.localeCompare(b.when)), [data, baby, role]);
-  useEffect(() => { strip.current?.scrollTo({ left: strip.current.scrollWidth }); setSelected([]); setMsgs([]); }, [babyId]);
+  useEffect(() => { requestVersion.current++; setSelected([]); setMsgs([]); setErr(''); setDraft(''); cache.current.clear(); audio.current?.pause(); inputRef.current?.focus(); }, [babyId]);
   const scroll = (d: number) => strip.current?.scrollBy({ left: d * 300, behavior: 'smooth' });
   async function send() {
     const q = draft.trim(); if (!q || !baby || thinking) return; if (speech.listening) speech.toggle();
-    const focus = items.filter(i => selected.includes(i.id)).map(i => `${i.title} (${fmt(i.when)}): ${i.body}`);
-    setMsgs(m => [...m, { role: 'user', content: q }]); setDraft(''); setThinking(true); setErr('');
-    try { const r = await ask({ data: { babyId: baby.id, question: q, focus, history: msgs.slice(-10) } }); setMsgs(m => [...m, { role: 'assistant', content: r.answer }]); } catch (e) { setErr(e instanceof Error ? e.message : 'Sutra could not answer.'); } finally { setThinking(false); }
+    const version = requestVersion.current;
+    const focus = items.filter(i => selected.includes(i.id)).map(i => `${i.title} (${fmt(i.when)}): ${i.body}`.slice(0, 1200));
+    setMsgs(m => [...m, { role: 'user', content: q }]); setDraft(''); setThinking(true); setErr(''); inputRef.current?.focus();
+    try { const r = await ask({ data: { babyId: baby.id, question: q, focus, history: msgs.slice(-10) } }); if (version === requestVersion.current) setMsgs(m => [...m, { role: 'assistant', content: r.answer }]); } catch (e) { setErr(e instanceof Error ? e.message : 'Sutra could not answer.'); } finally { setThinking(false); inputRef.current?.focus(); }
   }
-  if (!baby) return <><WorkspaceHeading title="Sutra" description="Your connected care journey." /><EmptyState>No care journey yet. It starts when a Care Plan is created.</EmptyState></>;
-  return <div className="sutra-compact">
-    <WorkspaceHeading title="Sutra" description="Answers grounded in your care journey." />
-    <section className="ws-panel sutra-chat">
-      {role === 'care-team' ? <ProfileSearch babies={data.babies} value={baby.id} onSelect={id => { if (!thinking) setBabyId(id); }} /> : <p className="nv-sub">{baby.baby_name} · {baby.caregiver_name}</p>}
-      {!!msgs.length && <div className="chat-log">{msgs.map((m, i) => <div key={i} className={`chat-bubble ${m.role === 'user' ? 'me' : 'bot'}`}>{m.content}{m.role === 'assistant' && <Button type="button" size="sm" variant="ghost" onClick={() => void play(i, m.content)}>{playing === i ? <Square /> : <Volume2 />}{playing === i ? 'Stop' : 'Listen'}</Button>}</div>)}</div>}
-      {thinking && <p role="status" className="nv-sub">Looking through the journey…</p>}
-      {err && <p className="text-sm text-destructive" role="alert">{err}</p>}
-      {!!selected.length && <div className="chat-tags">{items.filter(i => selected.includes(i.id)).map(i => <span key={i.id}>{i.title}<Button variant="ghost" size="icon" type="button" aria-label={`Untag ${i.title}`} onClick={() => setSelected(s => s.filter(x => x !== i.id))}><X size={12} /></Button></span>)}</div>}
-      <div className="chat-input"><Button type="button" size="icon" variant={speech.listening ? 'default' : 'outline'} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button><textarea rows={1} value={draft} placeholder={speech.listening ? 'Recording… tap stop when done' : speech.processing ? 'Recognising speech…' : 'Ask about the care journey…'} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void send(); } }} /><Button type="button" size="icon" aria-label="Send" disabled={!draft.trim() || thinking} onClick={() => void send()}><Send /></Button></div>
-      {speech.error && <p className="text-xs text-muted-foreground">{speech.error}</p>}
-    </section>
-    <div className="journey-heading"><h2>Care journey</h2><div><Button size="icon" variant="ghost" aria-label="Earlier entries" onClick={() => scroll(-1)}><ChevronLeft /></Button><Button size="icon" variant="ghost" aria-label="Later entries" onClick={() => scroll(1)}><ChevronRight /></Button></div></div>
-    {!items.length ? <EmptyState>No journey entries yet.</EmptyState> : <div className="journey-strip-wrap"><div className="journey-strip" ref={strip}>{items.map(i => { const on = selected.includes(i.id); return <button type="button" key={i.id} className={`journey-ticket ${on ? 'selected' : ''}`} aria-pressed={on} onClick={() => setSelected(s => on ? s.filter(x => x !== i.id) : [...s, i.id].slice(-12))}>
-      <CareTicket stub={false} source={i.kind.includes('Appointment') ? 'Lekha' : i.kind.includes('Health') ? 'Svara' : i.kind} title={i.title} date={fmt(i.when)} subtitle={on ? 'Selected for Sutra' : i.tag} card={i.card ?? null} fields={i.card ? undefined : [{ label: 'Details', value: i.body.slice(0, 140) }]} />
-    </button>; })}</div></div>}
+  const matchingBabies = data.babies.filter(b => `${b.baby_name} ${b.caregiver_name}`.toLowerCase().includes(search.toLowerCase()));
+  return <div className="sutra-room">
+    <div className="sutra-room-head"><WorkspaceHeading title="Sutra" description={baby ? `${baby.baby_name} · Connected care journey` : 'Your connected care journey.'} />
+      <Button variant="ghost" size="sm" aria-label={journeyOpen ? 'Hide care journey' : 'Show care journey'} aria-expanded={journeyOpen} disabled={!baby} onClick={() => setJourneyOpen(v => !v)}>Care journey{journeyOpen ? <ChevronUp /> : <ChevronDown />}</Button>
+    </div>
+    <div className={`sutra-journey-reveal ${journeyOpen ? 'open' : ''}`} inert={!journeyOpen}>
+      <div>{items.length ? <JourneyCarousel entries={items.map(i => ({ id: i.id, label: `${i.title} ${fmtDay(i.when)}`, content: <CareTicket stub={false} source={i.kind.includes('Appointment') ? 'Milan' : i.kind.includes('Health') ? 'Svara' : i.kind} title={i.title} date={fmt(i.when)} subtitle={i.tag} stamp={i.tag === 'Reviewed' ? 'Reviewed' : null} card={i.card ?? null} fields={i.card ? undefined : [{ label: 'Details', value: i.body }]} /> }))} active={selected} onSelect={id => setSelected(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id].slice(-12))} /> : <p className="sutra-no-entries">No journey entries yet.</p>}</div>
+    </div>
+    <Conversation className="sutra-conversation">
+      <ConversationContent className="sutra-messages">
+        {msgs.map((m, i) => <Message key={`${babyId}-${i}`} from={m.role}><MessageContent><MessageResponse>{m.content}</MessageResponse></MessageContent>{m.role === 'assistant' && <Button type="button" size="icon-sm" variant="ghost" aria-label={playing === i ? 'Stop playback' : 'Listen to answer'} title="Listen to answer" onClick={() => void play(i, m.content)}>{playing === i ? <Square /> : <Volume2 />}</Button>}</Message>)}
+        {thinking && <Shimmer>Looking through the care journey…</Shimmer>}
+        {err && <p className="text-destructive text-sm" role="alert">{err}</p>}
+      </ConversationContent>
+      <ConversationScrollButton />
+    </Conversation>
+    <div className="sutra-composer-anchor">
+      <div className={`sutra-welcome ${msgs.length ? 'departed' : ''}`} aria-hidden={!!msgs.length}>
+        <div className="sutra-welcome-orb"><ProductOrb name="SUTRA" state="reasoning" /></div><div><h2>{baby ? `A connected story of ${baby.baby_name}’s care` : 'Every care journey, connected.'}</h2><p>{baby ? 'What would you like to look back on?' : 'Select a baby to begin.'}</p></div>
+      </div>
+      {!!selected.length && <div className="sutra-focus-tags">{items.filter(i => selected.includes(i.id)).map(i => <span key={i.id}>{i.title}<Button variant="ghost" size="icon-xs" aria-label={`Remove ${i.title}`} onClick={() => setSelected(s => s.filter(x => x !== i.id))}><X /></Button></span>)}</div>}
+      <PromptInput className="sutra-composer" onSubmit={() => send()}>
+        <PromptInputTextarea ref={inputRef} autoFocus value={draft} maxLength={1500} disabled={!baby || speech.processing} aria-label="Ask Sutra" placeholder={!baby ? 'Select a baby profile to begin…' : speech.listening ? 'Recording… stop to edit your words' : 'Ask about the care journey…'} onChange={e => setDraft(e.target.value)} />
+        <PromptInputFooter className="sutra-composer-footer">
+          {role === 'care-team' ? <Popover open={profileOpen} onOpenChange={setProfileOpen}><PopoverTrigger asChild><Button variant="secondary" size="sm" type="button" disabled={thinking} aria-label="Select baby profile"><User />{baby?.baby_name ?? 'Select baby'}<ChevronDown /></Button></PopoverTrigger><PopoverContent side="top" align="start" className="sutra-profile-menu"><div className="sutra-profile-search"><Search size={16} /><input autoFocus aria-label="Search baby profiles" placeholder="Search baby or caregiver" value={search} onChange={e => setSearch(e.target.value)} /></div><div className="sutra-profile-list">{matchingBabies.map(b => <Button key={b.id} variant="ghost" className="sutra-profile-option" onClick={() => { setBabyId(b.id); setProfileOpen(false); setSearch(''); }}><span className="sutra-profile-initial">{b.baby_name.charAt(0)}</span><span><strong>{b.baby_name}</strong><small>{b.caregiver_name}</small></span>{b.id === babyId && <Check />}</Button>)}{!matchingBabies.length && <p>No matching profiles.</p>}</div></PopoverContent></Popover> : <span className="sutra-composer-identity">{baby?.baby_name ?? 'Care journey'}</span>}
+          <div className="sutra-composer-actions"><Button type="button" size="icon" variant={speech.listening ? 'default' : 'ghost'} disabled={!baby || thinking || speech.processing} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} title="Voice input" onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button><PromptInputSubmit aria-label="Send to Sutra" status={thinking ? 'submitted' : 'ready'} disabled={!baby || !draft.trim() || thinking || speech.listening || speech.processing}>{thinking ? undefined : <ArrowUp />}</PromptInputSubmit></div>
+        </PromptInputFooter>
+      </PromptInput>
+      {speech.error && <p className="text-destructive text-xs" role="alert">{speech.error}</p>}
+    </div>
   </div>;
 }

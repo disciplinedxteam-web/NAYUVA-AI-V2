@@ -1,3 +1,10 @@
+# Current requested refinements
+- [ ] Repair Svara registered variables, connection lifecycle and personalized context; verify website transcripts and structured drafts.
+- [ ] Keep website/phone screens light pink and show side-by-side entry choices.
+- [ ] Redesign Sutra with bottom composer, explicit clinician profile selection and top hanging journey cards.
+- [ ] Unify detailed care tickets across Milan, Lekha and Sutra; show two Care Updates per laptop row.
+- [ ] Run targeted tests and browser checks; report real-call verification limitations.
+
 # Dashboard integration update
 - [ ] Refine both dashboard layouts, scheduler time window, Sutra and Lekha compact workspaces, sidebar and Home.
 - [ ] Connect authorized Svara website and outbound call sessions, provider status/transcripts and persisted review cards.

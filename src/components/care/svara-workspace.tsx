@@ -37,7 +37,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   useEffect(() => {
     if (stage !== 'phone' || !session) return;
     const t = setInterval(() => { void callStatusFn({ data: { sessionId: session.sessionId } }).then((r) => {
-      if (r.status === 'awaiting_confirmation' && r.draft) { setCall('completed'); setStage('generating'); window.setTimeout(() => { setSummary(r.draft!); setStage('review'); }, 4200); return; }
+      if (r.status === 'awaiting_confirmation' && r.draft) { const draft = r.draft; setCall('completed'); setSummary(draft); setStage('review'); return; }
       setCall(r.callStatus);
     }).catch(() => {}); }, 4000);
     return () => clearInterval(t);
@@ -78,7 +78,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const card = parseCard(summary);
   const phoneValid = /^[6-9]\d{9}$/.test(digits);
 
-  if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} />;
+  if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} onCancel={() => { setStage('choose'); setError(''); }} />;
 
   return <div className="svara-stage">
     {stage === 'choose' && <div className="svara-stage-center">
@@ -88,14 +88,14 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       {error && <p role="alert" className="svara-error">{error}</p>}
       <div className="svara-ctas">
         <div className={`svara-cta-group ${open === 'web' ? 'open' : ''}`}>
-          <button type="button" className="svara-cta primary" disabled={!due || busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></button>
+          <Button type="button" variant="ghost" className="svara-cta primary" disabled={!due || busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></Button>
           {open === 'web' && <div className="svara-tray">
             <p>Start a voice conversation with Svara now? Your microphone will be used.</p>
             <Button className="w-full" disabled={busy} onClick={() => void startWeb()}>{busy ? <Loader2 className="animate-spin" /> : <Mic />}Start conversation</Button>
           </div>}
         </div>
         <div className={`svara-cta-group ${open === 'phone' ? 'open' : ''}`}>
-          <button type="button" className="svara-cta" disabled={!due || busy} aria-expanded={open === 'phone'} onClick={() => setOpen(open === 'phone' ? null : 'phone')}><Phone /><span><strong>Get a phone call</strong><small>Svara calls your mobile number</small></span><ChevronDown className="chev" /></button>
+          <Button type="button" variant="ghost" className="svara-cta" disabled={!due || busy} aria-expanded={open === 'phone'} onClick={() => setOpen(open === 'phone' ? null : 'phone')}><Phone /><span><strong>Get a phone call</strong><small>Svara calls your mobile number</small></span><ChevronDown className="chev" /></Button>
           {open === 'phone' && <form className="svara-tray" onSubmit={(e) => { e.preventDefault(); if (phoneValid && consent) void startPhone(); }}>
             <label className="svara-phone">
               <span className="svara-cc"><Phone aria-hidden="true" />+91</span>

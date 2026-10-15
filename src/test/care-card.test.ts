@@ -14,6 +14,9 @@ describe('structured care card', () => {
   it('rejects a card with no topics', () => {
     expect(() => normalizeCard({ priority: 'Routine', topics: [] })).toThrow();
   });
+  it('does not classify a missing topic as Routine', () => {
+    expect(normalizeCard({ priority: 'Routine', topics: [{ title: 'Feeding', finding: '', status: 'Not discussed' }] }).priority).toBe('Review Needed');
+  });
   it('reads plain-text summaries as not a card', () => {
     expect(parseCard('Caregiver said all fine')).toBeNull();
   });

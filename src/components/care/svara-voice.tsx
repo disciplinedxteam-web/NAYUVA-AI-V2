@@ -1,5 +1,6 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
-import { PhoneOff, Mic } from 'lucide-react';
+import { PhoneOff, Mic, RotateCcw } from 'lucide-react';
+import { registeredSvaraVariables, hasCaregiverAnswer } from '@/lib/svara-agent-contract';
 import { Button } from '@/components/ui/button';
 import { ProductOrb } from '@/components/product-orb';
 
@@ -38,23 +39,27 @@ export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] 
   }
   return lines;
 }
-function findLast<T>(a: T[], f: (x: T) => boolean) { for (let i = a.length - 1; i >= 0; i--) if (f(a[i]!)) return i; return -1; }
+function findLast<T>(a: T[], f: (x: T) => boolean) { for (let i = a.length - 1; i >= 0; i--) { const item = a[i]; if (item !== undefined && f(item)) return i; } return -1; }
 
 /** Full-screen live Svara conversation via the Sarvam Web SDK. The key stays on the server proxy (/api/sarvam/). */
-function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded }: { profileId: string; context: Record<string, string>; babyName: string; onTranscript: (lines: Line[]) => void; onEnded: () => void }) {
+function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, onCancel }: { profileId: string; context: Record<string, string>; babyName: string; onTranscript: (lines: Line[]) => void; onEnded: () => void; onCancel: () => void }) {
   const [state, setState] = useState('CONNECTING');
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState('');
   const agent = useRef<Agent | null>(null);
   const ended = useRef(false);
+  const latestLines = useRef<Line[]>([]);
+  const ready = useRef(false);
+  const [attempt, setAttempt] = useState(0);
   const logRef = useRef<HTMLDivElement>(null);
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' }); }, [lines]);
-  useEffect(() => { if (lines.length) onTranscript(lines.filter((l) => l.content).map(({ role, content }) => ({ role, content }))); }, [lines, onTranscript]);
+  useEffect(() => { latestLines.current = lines; if (lines.length) onTranscript(lines.filter((l) => l.content).map(({ role, content }) => ({ role, content }))); }, [lines, onTranscript]);
 
-  function finish() { if (ended.current) return; ended.current = true; void agent.current?.stop(); agent.current = null; onEnded(); }
+  function finish() { if (ended.current) return; ended.current = true; onTranscript(latestLines.current.filter(l => l.content)); void agent.current?.stop(); agent.current = null; if (hasCaregiverAnswer(latestLines.current)) onEnded(); else onCancel(); }
   useEffect(() => {
     let cancelled = false;
-    const ingest = async (m: unknown) => { try { if (m && typeof m === 'object') setLines((l) => applyMessage(l, m as Record<string, unknown>)); } catch { /* ignore malformed event */ } };
+    ended.current = false; ready.current = false; setError(''); setState('CONNECTING');
+    const ingest = async (m: unknown) => { if (!cancelled && m && typeof m === 'object') setLines((l) => { const next = applyMessage(l, m as Record<string, unknown>); latestLines.current = next; return next; }); };
     (async () => {
       try {
         const { ConversationAgent, BrowserAudioInterface, InteractionType } = await import('sarvam-conv-ai-sdk/browser');
@@ -66,23 +71,23 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded }:
             user_identifier_type: 'custom', user_identifier: profileId,
             org_id: '01a06c4c-1ad9-769a-9b30-14878bafef8a', workspace_id: '01a06c4c-1ae1-7d6f-a195-f7c92c3f2058', app_id: 'Conversatio-1e149739-300e',
             interaction_type: InteractionType.CALL, input_sample_rate: 16000, output_sample_rate: 16000,
-            agent_variables: context,
+            agent_variables: registeredSvaraVariables(context),
           },
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
-          stateCallback: async (s: unknown) => { setState(typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'); },
-          endCallback: async () => { finish(); },
+          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; setState(value); },
+          endCallback: async () => { if (cancelled || ended.current) return; if (ready.current && hasCaregiverAnswer(latestLines.current)) finish(); else { setError('The connection ended before your answers were captured. Reconnect to try again.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
         agent.current = a;
         await a.start();
         if (!(await a.waitForConnect(10))) throw new Error('timeout');
-      } catch {
+      } catch (e) {
         if (!cancelled) { setError('Svara could not connect. Please allow microphone access and try again.'); setState('IDLE'); await agent.current?.stop(); agent.current = null; }
       }
     })();
-    return () => { cancelled = true; void agent.current?.stop(); };
+    return () => { cancelled = true; ready.current = false; void agent.current?.stop(); agent.current = null; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
 
   const s = state.toLowerCase();
   const label = error ? 'Not connected' : s.includes('connect') && !s.includes('ed') ? 'Connecting…' : s.includes('speak') ? 'Svara is speaking' : s.includes('listen') ? 'Listening' : s.includes('think') || s.includes('process') ? 'Thinking…' : 'In conversation';
@@ -99,6 +104,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded }:
     </div>
     <footer className="svara-live-dock">
       <div className={`svara-live-orb ${s.includes('speak') ? 'is-speaking' : ''}`}><ProductOrb name="SVARA" state="working" /></div>
+      {error && <Button type="button" onClick={() => { void agent.current?.stop(); setAttempt(a => a + 1); }}><RotateCcw />Reconnect</Button>}
       <Button type="button" size="lg" variant="destructive" className="svara-end" onClick={finish}><PhoneOff />{error ? 'Close' : 'End conversation'}</Button>
     </footer>
   </div>;
