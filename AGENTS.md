@@ -25,10 +25,11 @@
 - Preserve caregiver demo capabilities on navigation; only the public synthetic-profile entry may issue a selected caregiver session.
 - Render medical assistant characters from one browser-safe SVG component with optional working state and reduced-motion styles.
 - Svara voice sessions use the Sarvam Web SDK through the server proxy /api/sarvam/, which requires a caregiver demo session and forces the user identifier to that caregiver's profile, so the API key and identity never come from the browser.
-- Milan, Lekha and Sutra workspaces live in one shared workspace module using the unified card style and the SVG Mascot component, so cards and character states stay consistent across roles.
+- Milan and Lekha share workspace controls; Sutra composes AI Elements and a browser-safe JourneyCarousel so chat layout and hanging journey navigation remain independent.
 - Lekha's checklist ticks come from deterministic keyword detection in a shared module, never an AI judgement, so clinicians can predict and trust it.
 - Sutra's assistant runs server-side and answers only from the authorized baby's persisted journey (clinical notes only for care team), so it cannot leak or invent records.
 - Svara and Lekha summaries are structured topic cards (shared `care-card` module) stored as JSON text with an AI-suggested Priority/Review/Routine category that never defaults to Routine, so both products render and triage identically.
 - Sarvam agent tools call `/api/public/sarvam-questions` and `/api/public/sarvam-observations`, keyed by the live check-in id (optional `SVARA_TOOL_KEY` header), so personalisation comes from the baby's Care Plan and history, not the agent prompt.
-- Svara agent variables (ordered questions, prior answers, instructions) are built once in `svara-context.server.ts` and shared by website and phone sessions, so both channels personalise identically.
+- Both Svara channels send only registered variables through svara-agent-contract; the agent retrieves snapshot-scoped approved questions and history using check_in_id so undeclared context cannot reject a call.
 - Approval cards across Svara, Lekha, Milan and Sutra use the shared `CareTicket` component (stub = action, stamp = approved/reviewed; Sutra hides the stub), and all segmented toggles use `GlassToggle`.
+- Sutra conversation history remains one session in memory per selected baby; no new history persistence or threads are introduced during its visual redesign.
