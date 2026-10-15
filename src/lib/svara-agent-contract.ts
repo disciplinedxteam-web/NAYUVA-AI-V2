@@ -3,7 +3,9 @@
  */
 export const SVARA_VARIABLE_KEYS = ['baby_name', 'caregiver_name', 'check_in_id', 'check_in_status', 'gender', 'session_type'] as const;
 export function registeredSvaraVariables(context: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(SVARA_VARIABLE_KEYS.filter(key => typeof context[key] === 'string').map(key => [key, context[key]]));
+  const variables: Record<string, string> = {};
+  for (const key of SVARA_VARIABLE_KEYS) { const value = context[key]; if (typeof value === 'string') variables[key] = value; }
+  return variables;
 }
 export function hasCaregiverAnswer(lines: { role: string; content: string }[]) {
   return lines.some(line => line.role === 'user' && line.content.trim().length > 0);
