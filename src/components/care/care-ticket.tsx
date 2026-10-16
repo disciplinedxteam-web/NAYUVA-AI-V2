@@ -27,19 +27,20 @@ export function CareTicket({ source, title, subtitle, date, card, fields, quote,
           {priority && <span className={`ticket-priority p-${priority.split(' ')[0]?.toLowerCase()}`}>{priority}</span>}
         </header>
         {(subtitle || date) && <p className="ticket-sub">{subtitle}{subtitle && date ? ' · ' : ''}{date}</p>}
+        <div className="ticket-body">
         {fields && fields.length > 0 && <dl className="ticket-grid">{fields.map((f) => <div key={f.label} className="ticket-cell"><dt>{f.label}</dt><dd>{f.value || '—'}</dd></div>)}</dl>}
         {card && <dl className="ticket-grid">{card.topics.map((t, i) => (
           <div key={i} className={`ticket-cell s-${t.status.split(' ')[0]?.toLowerCase()}`}>
             <dt><span className="ticket-dot" aria-hidden="true" />{t.title}</dt>
             <dd>{t.finding || t.status}</dd>
-            <dd className="ticket-evidence">{t.quote ? <q>{t.quote}</q> : <span>{t.status}</span>}</dd>
+            <dd className="ticket-evidence">{t.status}</dd>
           </div>))}
         </dl>}
         {children}
-        {(quote || card?.priorityReason) && <footer className="ticket-foot">
-          {quote ? <q>{quote}</q> : <span />}
+        {card?.priorityReason && <footer className="ticket-foot">
           {card?.priorityReason && <small>{card.priorityReason}</small>}
         </footer>}
+        </div>
         <div className="ticket-record"><span>NAYUVA / {source.toUpperCase()}</span>{torn ? <span className="ticket-stamp" role="status"><Check size={13} />{stamp}</span> : <span>Awaiting {stubLabel ?? 'review'}</span>}</div>
       </div>
       {stub && <div className="ticket-stub">
