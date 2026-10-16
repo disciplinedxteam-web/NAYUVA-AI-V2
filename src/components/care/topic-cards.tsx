@@ -8,7 +8,6 @@ export function TopicCards({ card, text, compact }: { card?: CareCard | null; te
     {!compact && <div className="topic-cards-head"><span className={`topic-priority p-${c.priority.split(' ')[0]!.toLowerCase()}`}>{c.priority}</span>{c.priorityReason && <small>{c.priorityReason}</small>}</div>}
     <ul>{c.topics.map((t, i) => <li key={i} className={`topic-row s-${t.status.split(' ')[0]!.toLowerCase()}`}>
       <strong>{t.title}</strong><span>{t.finding || t.status}</span>
-      {!compact && t.quote && <q>{t.quote}</q>}
     </li>)}</ul>
   </div>;
 }

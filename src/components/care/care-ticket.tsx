@@ -11,7 +11,7 @@ type Action = { label: string; onClick: () => void; disabled?: boolean };
  * Left: structured content. Right stub: one action. Acting tears the stub away and stamps the pass.
  * Journey views pass `stub={false}` for a display-only ticket.
  */
-export function CareTicket({ source, title, subtitle, date, card, fields, quote, stamp, action, stub = true, stubLabel, children }: {
+export function CareTicket({ source, title, subtitle, date, card, fields, stamp, action, stub = true, stubLabel, children }: {
   source: 'Svara' | 'Lekha' | 'Milan' | string; title: string; subtitle?: string | undefined; date?: string | undefined;
   card?: CareCard | null; fields?: TicketField[] | undefined; quote?: string | undefined; stamp?: string | null | undefined;
   action?: Action; stub?: boolean; stubLabel?: string; children?: ReactNode;
@@ -27,19 +27,20 @@ export function CareTicket({ source, title, subtitle, date, card, fields, quote,
           {priority && <span className={`ticket-priority p-${priority.split(' ')[0]?.toLowerCase()}`}>{priority}</span>}
         </header>
         {(subtitle || date) && <p className="ticket-sub">{subtitle}{subtitle && date ? ' · ' : ''}{date}</p>}
+        <div className="ticket-body">
         {fields && fields.length > 0 && <dl className="ticket-grid">{fields.map((f) => <div key={f.label} className="ticket-cell"><dt>{f.label}</dt><dd>{f.value || '—'}</dd></div>)}</dl>}
         {card && <dl className="ticket-grid">{card.topics.map((t, i) => (
           <div key={i} className={`ticket-cell s-${t.status.split(' ')[0]?.toLowerCase()}`}>
             <dt><span className="ticket-dot" aria-hidden="true" />{t.title}</dt>
             <dd>{t.finding || t.status}</dd>
-            <dd className="ticket-evidence">{t.quote ? <q>{t.quote}</q> : <span>{t.status}</span>}</dd>
+            <dd className="ticket-evidence">{t.status}</dd>
           </div>))}
         </dl>}
         {children}
-        {(quote || card?.priorityReason) && <footer className="ticket-foot">
-          {quote ? <q>{quote}</q> : <span />}
+        {card?.priorityReason && <footer className="ticket-foot">
           {card?.priorityReason && <small>{card.priorityReason}</small>}
         </footer>}
+        </div>
         <div className="ticket-record"><span>NAYUVA / {source.toUpperCase()}</span>{torn ? <span className="ticket-stamp" role="status"><Check size={13} />{stamp}</span> : <span>Awaiting {stubLabel ?? 'review'}</span>}</div>
       </div>
       {stub && <div className="ticket-stub">
