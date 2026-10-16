@@ -1,4 +1,6 @@
 # Current requested refinements
+- [ ] Redesign caregiver profile entry with searchable full-width selector; replace logos and favicon.
+- [ ] Standardize care ticket dimensions, visible approval/review stamps and perforated tear-away motion; hide raw quotes on cards.
 - [ ] Repair Svara registered variables, connection lifecycle and personalized context; verify website transcripts and structured drafts.
 - [ ] Keep website/phone screens light pink and show side-by-side entry choices.
 - [ ] Redesign Sutra with bottom composer, explicit clinician profile selection and top hanging journey cards.
