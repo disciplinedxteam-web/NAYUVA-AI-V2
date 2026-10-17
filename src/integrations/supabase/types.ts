@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_transcripts: {
+        Row: {
+          appointment_id: string
+          content: string
+          created_at: string
+          event_key: string
+          id: string
+          speaker: string
+          spoken_at: string
+        }
+        Insert: {
+          appointment_id: string
+          content: string
+          created_at?: string
+          event_key: string
+          id?: string
+          speaker: string
+          spoken_at: string
+        }
+        Update: {
+          appointment_id?: string
+          content?: string
+          created_at?: string
+          event_key?: string
+          id?: string
+          speaker?: string
+          spoken_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_transcripts_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "online_appointments"
+            referencedColumns: ["appointment_id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -516,6 +554,73 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "care_profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      online_appointments: {
+        Row: {
+          appointment_id: string
+          created_at: string
+          failure_message: string | null
+          room_name: string
+          room_url: string
+          status: string
+        }
+        Insert: {
+          appointment_id: string
+          created_at?: string
+          failure_message?: string | null
+          room_name: string
+          room_url?: string
+          status?: string
+        }
+        Update: {
+          appointment_id?: string
+          created_at?: string
+          failure_message?: string | null
+          room_name?: string
+          room_url?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_appointments_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "care_appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      online_participation: {
+        Row: {
+          appointment_id: string
+          consent_at: string
+          id: string
+          profile_id: string | null
+          role: string
+        }
+        Insert: {
+          appointment_id: string
+          consent_at?: string
+          id?: string
+          profile_id?: string | null
+          role: string
+        }
+        Update: {
+          appointment_id?: string
+          consent_at?: string
+          id?: string
+          profile_id?: string | null
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "online_participation_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "online_appointments"
+            referencedColumns: ["appointment_id"]
           },
         ]
       }

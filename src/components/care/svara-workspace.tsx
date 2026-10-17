@@ -7,6 +7,7 @@ import { ProductOrb } from '@/components/product-orb';
 import { SvaraVoice, type Line } from './svara-voice';
 import { CareTicket } from './care-ticket';
 import { CardGeneration } from './card-generation';
+import { SvaraAnimation } from './svara-animation';
 import { parseCard } from '@/lib/care-card';
 import { prepareSvaraSession, saveSvaraTranscript, saveSvaraPhone, summarizeSvaraSession, confirmSvaraSession, getSvaraCallStatus } from '@/lib/care.functions';
 
@@ -130,7 +131,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     </div>}
 
     {stage === 'success' && <div className="svara-stage-center">
-      <div className="svara-success-mark"><Check /></div>
+      <div className="svara-hero-orb"><SvaraAnimation state="completion"/></div>
       <h1 className="svara-title">Card submitted to your care team</h1>
       <p className="svara-lede">Taking you back to Home…</p>
     </div>}

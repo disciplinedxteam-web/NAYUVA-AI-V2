@@ -2,7 +2,7 @@ import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PhoneOff, Mic, RotateCcw } from 'lucide-react';
 import { registeredSvaraVariables, hasCaregiverAnswer } from '@/lib/svara-agent-contract';
 import { Button } from '@/components/ui/button';
-import { ProductOrb } from '@/components/product-orb';
+import { SvaraAnimation } from './svara-animation';
 
 export type Line = { role: 'user' | 'bot'; content: string; live?: boolean };
 type Agent = { stop: () => Promise<void> };
@@ -103,7 +103,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
       </div>
     </div>
     <footer className="svara-live-dock">
-      <div className={`svara-live-orb ${s.includes('speak') ? 'is-speaking' : ''}`}><ProductOrb name="SVARA" state="working" /></div>
+      <div className="svara-live-orb"><SvaraAnimation state={s.includes('speak')?'speaking':s.includes('listen')?'listening':'idle'}/></div>
       {error && <Button type="button" onClick={() => { void agent.current?.stop(); setAttempt(a => a + 1); }}><RotateCcw />Reconnect</Button>}
       <Button type="button" size="lg" variant="destructive" className="svara-end" onClick={finish}><PhoneOff />{error ? 'Close' : 'End conversation'}</Button>
     </footer>
