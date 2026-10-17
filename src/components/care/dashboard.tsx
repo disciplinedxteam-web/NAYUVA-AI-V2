@@ -44,7 +44,7 @@ export function Dashboard({role,section}:{role:DemoRole;section:Section}){
  
  {section==='home'&&<DashboardHome data={data} baby={baby} role={role} go={go} onPriority={p=>{setPriorityFilter(p);void go('updates');}}/>}
  {section==='care-plan'&&<Plans babies={babies} busy={busy} run={run} onSelect={setSelected}/>}
- {section==='updates'&&<Updates data={data} initialFilter={priorityFilter} busy={busy} run={run} onMilan={id=>{setSelected(id);void go('milan');}}/>}
+ {section==='updates'&&<Updates data={data} initialFilter={priorityFilter} busy={busy} run={run} onMilan={id=>{setSelected(id);void go('milan');}} onEditPlan={id=>{setSelected(id);void go('care-plan');}}/>}
  {section==='svara'&&baby&&<Svara key={baby.id} baby={baby} cards={data.cards.filter(c=>c.baby_id===baby.id)} busy={busy} run={run}/>}
  {section==='milan'&&<MilanWorkspace data={data} role={role} busy={busy} run={run} onDocument={()=>void go('lekha')}/>}
  {section==='lekha'&&role==='care-team'&&<LekhaWorkspace data={data} busy={busy} run={run}/>}
