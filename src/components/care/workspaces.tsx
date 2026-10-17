@@ -1,4 +1,6 @@
 import { CareTicket } from './care-ticket';
+import { OnlineMeeting } from './online-meeting';
+import { useQuery } from '@tanstack/react-query';
 import { CardGeneration } from './card-generation';
 import { AssistantCharacter } from './assistant-character';
 import { JourneyCarousel } from './journey-carousel';
@@ -13,10 +15,10 @@ import { TopicCards } from './topic-cards';
 import { cardText, parseCard, type CareCard } from '@/lib/care-card';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Volume2, CalendarDays, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Volume2, CalendarDays, Video, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { WorkspaceHeading } from './workspace-heading';
-import { askSutra, createAppointment, getCareData, saveClinicalNote, updateAppointment, transcribeSpeech, speakText, structureLekhaNote } from '@/lib/care.functions';
+import { getOnlineAppointments, getAppointmentTranscript, askSutra, createAppointment, getCareData, saveClinicalNote, updateAppointment, transcribeSpeech, speakText, structureLekhaNote } from '@/lib/care.functions';
 import { reasons, type DemoRole } from '@/lib/care-domain';
 import { detectChecklist, lekhaChecklist } from '@/lib/lekha-checklist';
 import { useLanguage } from '@/components/language-provider';
@@ -64,12 +66,15 @@ function useSpeech(onText: (t: string) => void, current = '') {
 /* ---------------- Milan ---------------- */
 export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Data; role: DemoRole; busy: boolean; run: Run; onDocument: () => void }) {
   const change = useServerFn(updateAppointment);
+  const [search,setSearch]=useState(''),[meeting,setMeeting]=useState('');
+  const getOnline=useServerFn(getOnlineAppointments);const online=useQuery({queryKey:['online-appointments',role],queryFn:getOnline});
   const [tab, setTab] = useState('upcoming'); const [scheduling, setScheduling] = useState(false); const [request, setRequest] = useState<string | null>(null); const [rDate, setRDate] = useState(''); const [rTime, setRTime] = useState('');
   const isPast = (a: Appointment) => closed.includes(a.status) || new Date(a.starts_at).getTime() < Date.now();
   const upcoming = data.appointments.filter(a => !isPast(a)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
   const past = data.appointments.filter(isPast).sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-  const list = tab === 'upcoming' ? upcoming : past;
+  const list = (tab === 'upcoming' ? upcoming : past).filter(a=>{const b=data.babies.find(x=>x.id===a.baby_id);return `${b?.baby_name??''} ${b?.caregiver_name??''}`.toLowerCase().includes(search.toLowerCase());});
   const babyOf = (id: string) => data.babies.find(b => b.id === id);
+  if(meeting)return <OnlineMeeting id={meeting} onClose={()=>setMeeting('')}/>;
   return <>
     <WorkspaceHeading title="Milan" description="Appointments and coordinated follow-up care." />
     {scheduling ? <Scheduler data={data} busy={busy} run={run} onDone={() => setScheduling(false)} /> : <>
@@ -77,15 +82,15 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
         <div className="ws-bar-cluster">
           <Toggle value={tab} onChange={setTab} options={[{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, { key: 'past', label: 'Past', count: past.length }]} />
           {role === 'care-team' && <Button className="ws-bar-action" onClick={() => setScheduling(true)} disabled={!data.babies.length}><Plus />Schedule Appointment</Button>}
-        </div>
+        </div><div className="search-field"><Search/><input className="ws-input" aria-label="Filter Milan by baby" placeholder="Search baby or caregiver" value={search} onChange={e=>setSearch(e.target.value)}/></div>
       </div>
       {!list.length ? <EmptyState>{tab === 'upcoming' ? 'No upcoming appointments.' : 'No past appointments yet.'}</EmptyState> :
         <div className="ws-grid">{list.map(a => {
           const b = babyOf(a.baby_id); const l = loc(a); const resched = a.reschedule as { date: string; time: string } | null;
           const documented = data.notes.some(n => (n as { appointment_id?: string }).appointment_id === a.id);
-          return <CareTicket key={a.id} source="Milan" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmtDay(a.starts_at)} stamp={a.status === 'Confirmed' || a.status === 'Completed' ? 'Approved' : null} stub={false} fields={[
+          return <CareTicket key={a.id} source="Milan" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmtDay(a.starts_at)} stamp={null} stub={false} fields={[
             { label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Time · IST', value: `${fmtTime(a.starts_at)}${a.ends_at ? ` – ${fmtTime(a.ends_at)}` : ''}` },
-            { label: 'Status', value: a.status }, { label: 'Location', value: l['facilityName'] || 'Not configured' }, { label: 'Address', value: l['address'] || 'Not recorded' },
+            { label: 'Status', value: a.status }, { label: 'Mode', value: l['mode']==='online'?'Online video':'In-person' }, { label: 'Location', value: l['mode']==='online'?'Private Nayuva consultation':l['facilityName'] || 'Not configured' }, { label: 'Address', value: l['address'] || 'Not recorded' },
             { label: 'Documentation', value: documented ? 'Reviewed in Lekha' : a.status === 'Completed' ? 'Awaiting documentation' : 'Not yet due' },
           ]}>
             {resched && a.status === 'Reschedule requested' && <p className="nv-sub">Requested: {resched.date} at {resched.time}</p>}
@@ -94,6 +99,7 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
               <input className="ws-input" type="time" required value={rTime} onChange={e => setRTime(e.target.value)} aria-label="Preferred time" />
               <Button type="submit" disabled={busy}>Send</Button><Button type="button" variant="ghost" onClick={() => setRequest(null)}>Cancel</Button>
             </form> : <div className="nv-card-actions">
+              {l['mode']==='online'&&!closed.includes(a.status)&&<><Button variant="outline" onClick={()=>setMeeting(a.id)} disabled={online.data?.find(x=>x.appointment_id===a.id)?.status!=='ready'}><Video/>Join online</Button><Button variant="ghost" size="icon-sm" aria-label="Share appointment link" onClick={()=>void navigator.clipboard.writeText(`${window.location.origin}/${role==='care-team'?'caregiver':'care-team'}/milan?appointment=${a.id}`)}><Paperclip/></Button></>}
               {!isPast(a) && role === 'caregiver' && <><Button disabled={busy || a.status === 'Confirmed'} onClick={() => void run(() => change({ data: { id: a.id, status: 'Confirmed' } }), 'Appointment confirmed.')}>Confirm</Button><Button variant="outline" onClick={() => setRequest(a.id)}>Reschedule</Button></>}
               {!closed.includes(a.status) && role === 'care-team' && <><Button disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Completed' } }), 'Marked as done. It is now waiting in Lekha.')}><Check />Mark done</Button><Button variant="ghost" disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Cancelled' } }), 'Appointment cancelled.')}>Cancel</Button></>}
               {role === 'care-team' && a.status === 'Completed' && <Button variant="outline" onClick={onDocument}><FileText />{documented ? 'View in Lekha' : 'Document in Lekha'}</Button>}
@@ -121,6 +127,7 @@ function Scheduler({ data, busy, run, onDone }: { data: Data; busy: boolean; run
   const [month, setMonth] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [babyId, setBabyId] = useState(''); const [reason, setReason] = useState(reasons[0] ?? '');
   const [date, setDate] = useState<Date | null>(null); const [time, setTime] = useState(''); const [endTime, setEndTime] = useState('');
+  const [mode,setMode]=useState('offline');
   const [mapsLink, setMapsLink] = useState(settings['mapsLink'] ?? ''); const [editPlace, setEditPlace] = useState(false);
   const baby = data.babies.find(b => b.id === babyId);
   const days = useMemo(() => { const first = month.getDay(); const n = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate(); return [...Array<null>(first).fill(null), ...Array.from({ length: n }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))]; }, [month]);
@@ -128,7 +135,7 @@ function Scheduler({ data, busy, run, onDone }: { data: Data; busy: boolean; run
   const [confirming, setConfirming] = useState(false); const [stamped, setStamped] = useState(false);
   if (confirming && baby && date) return <div className="scheduler-confirm">
     <h2 className="svara-title">Confirm this appointment</h2>
-    <CareTicket source="Milan" title={baby.baby_name} subtitle={reason} date={date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} stamp={stamped ? 'Approved' : null} stubLabel="Care team" fields={[{ label: 'Caregiver', value: baby.caregiver_name }, { label: 'Date', value: date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) }, { label: 'Time', value: `${time} – ${endTime} IST` }, { label: 'Reason', value: reason }, { label: 'Location', value: settings['facilityName'] || 'Not configured' }, { label: 'Status', value: 'Scheduled' }]} action={{ label: 'Approve', disabled: busy, onClick: () => { setStamped(true); window.setTimeout(() => { void run(async () => { await create({ data: { babyId: baby.id, date: iso(date), time, endTime, reason, location: { facilityName: settings['facilityName'] ?? '', address: settings['address'] ?? '', mapsLink } } }); onDone(); }, 'Appointment scheduled and shared with the caregiver.');  }, 900); } }} />
+    <CareTicket source="Milan" title={baby.baby_name} subtitle={reason} date={date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} stamp={stamped ? 'Approved' : null} stubLabel="Care team" fields={[{ label: 'Caregiver', value: baby.caregiver_name }, { label: 'Date', value: date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) }, { label: 'Time', value: `${time} – ${endTime} IST` }, { label: 'Reason', value: reason }, { label: 'Mode', value: mode==='online'?'Online video':'In-person' }, { label: 'Location', value: mode==='online'?'Private Nayuva consultation':settings['facilityName'] || 'Not configured' }, { label: 'Status', value: 'Scheduled' }]} action={{ label: 'Approve', disabled: busy, onClick: () => { setStamped(true); window.setTimeout(() => { void run(async () => { await create({ data: { babyId: baby.id, date: iso(date), time, endTime, mode:mode as 'offline'|'online', reason, location: { facilityName: settings['facilityName'] ?? '', address: settings['address'] ?? '', mapsLink } } }); onDone(); }, 'Appointment scheduled and shared with the caregiver.');  }, 900); } }} />
     <Button type="button" variant="ghost" disabled={stamped} onClick={() => setConfirming(false)}><ArrowLeft />Edit details</Button>
   </div>;
   return <form className="ws-split scheduler-compact" onSubmit={e => { e.preventDefault(); if (!baby || !date || !time || !endTime || endTime <= time) return; setStamped(false); setConfirming(true); }}>
@@ -141,9 +148,11 @@ function Scheduler({ data, busy, run, onDone }: { data: Data; busy: boolean; run
     </section>
     <section className="ws-panel">
       <div className="ws-panel-title"><FileText /><div>Appointment details</div></div>
+      <div><span className="ws-label">Appointment mode</span><GlassToggle value={mode} onChange={setMode} options={[{key:'offline',label:'In-person'},{key:'online',label:'Online video'}]}/></div>
       <div><span className="ws-label">Care Plan profile</span><ProfileSearch babies={data.babies} value={babyId} onSelect={setBabyId} /></div>
       <label><span className="ws-label">Appointment reason</span><select className="ws-input" value={reason} onChange={e => setReason(e.target.value)}>{reasons.map(r => <option key={r} value={r}>{r}</option>)}</select></label>
-      <div><div className="flex items-center justify-between"><span className="ws-label">Appointment location</span><Button type="button" variant="ghost" size="sm" onClick={() => setEditPlace(v => !v)}>{editPlace ? 'Done' : 'Change'}</Button></div>{editPlace ? <label><span className="ws-label">Google Maps link</span><input type="url" className="ws-input" placeholder="https://maps.google.com/…" value={mapsLink} onChange={e => setMapsLink(e.target.value)} /></label> : <p className="nv-sub">{settings['facilityName'] || 'Location not configured'}{mapsLink && <><br /><a href={mapsLink} target="_blank" rel="noreferrer">View location</a></>}</p>}</div>
+      {mode==='offline'&&<div><div className="flex items-center justify-between"><span className="ws-label">Appointment location</span><Button type="button" variant="ghost" size="sm" onClick={() => setEditPlace(v => !v)}>{editPlace ? 'Done' : 'Change'}</Button></div>{editPlace ? <label><span className="ws-label">Google Maps link</span><input type="url" className="ws-input" placeholder="https://maps.google.com/…" value={mapsLink} onChange={e => setMapsLink(e.target.value)} /></label> : <p className="nv-sub">{settings['facilityName'] || 'Location not configured'}{mapsLink && <><br /><a href={mapsLink} target="_blank" rel="noreferrer">View location</a></>}</p>}</div>}
+      {mode==='online'&&<p className="nv-sub">A private online appointment will appear in both care dashboards. Both participants consent before transcription.</p>}
       <p className="scheduler-summary">{date ? date.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Choose an appointment date'}{time && ` · ${time}`}{endTime && ` – ${endTime} IST`}</p>
       <div className="flex gap-2 mt-auto"><Button type="button" variant="ghost" onClick={onDone}><ArrowLeft />Back</Button><Button type="submit" className="flex-1" disabled={busy || !baby || !date || !time || !endTime || endTime <= time}>Schedule appointment<ArrowRight /></Button></div>
     </section>
@@ -152,16 +161,17 @@ function Scheduler({ data, busy, run, onDone }: { data: Data; busy: boolean; run
 
 /* ---------------- Lekha ---------------- */
 export function LekhaWorkspace({ data, busy, run }: { data: Data; busy: boolean; run: Run }) {
+  const [search,setSearch]=useState('');
   const [tab, setTab] = useState('pending'); const [openId, setOpenId] = useState<string | null>(null);
   const noteFor = (id: string) => data.notes.find(n => (n as { appointment_id?: string }).appointment_id === id) as (Data['notes'][number] & { observations: string; decision: string; follow_up: string; created_at: string }) | undefined;
   const completed = data.appointments.filter(a => a.status === 'Completed').sort((a, b) => b.starts_at.localeCompare(a.starts_at));
   const pending = completed.filter(a => !noteFor(a.id)); const done = completed.filter(a => noteFor(a.id));
   const open = completed.find(a => a.id === openId);
   if (open && !noteFor(open.id)) return <LekhaSession data={data} appt={open} busy={busy} run={run} onClose={() => setOpenId(null)} />;
-  const list = tab === 'pending' ? pending : done;
+  const list = (tab === 'pending' ? pending : done).filter(a=>{const b=data.babies.find(x=>x.id===a.baby_id);return `${b?.baby_name??''} ${b?.caregiver_name??''}`.toLowerCase().includes(search.toLowerCase());});
   return <>
     <WorkspaceHeading title="Lekha" description="Clinician-reviewed appointment documentation." />
-    <div className="ws-bar"><Toggle value={tab} onChange={setTab} options={[{ key: 'pending', label: 'Awaiting documentation', count: pending.length }, { key: 'done', label: 'Documented', count: done.length }]} /></div>
+    <div className="ws-bar"><Toggle value={tab} onChange={setTab} options={[{ key: 'pending', label: 'Awaiting documentation', count: pending.length }, { key: 'done', label: 'Documented', count: done.length }]} /><div className="search-field"><Search/><input className="ws-input" aria-label="Filter Lekha by baby" placeholder="Search baby or caregiver" value={search} onChange={e=>setSearch(e.target.value)}/></div></div>
     {!list.length ? <EmptyState>{tab === 'pending' ? 'No completed appointments are waiting for documentation. Mark an appointment as done in Milan.' : 'No documented appointments yet.'}</EmptyState> :
       <div className="ws-grid">{list.map(a => { const b = data.babies.find(x => x.id === a.baby_id); const n = noteFor(a.id); return <CareTicket key={a.id} source="Lekha" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmt(a.starts_at)} card={n ? parseCard(n.observations) : null} stamp={n ? 'Reviewed' : null} stub={!n} fields={[{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Appointment', value: 'Completed' }, { label: 'Location', value: loc(a)['facilityName'] || 'Not configured' }]} action={{ label: 'Document', onClick: () => setOpenId(a.id) }}>
         {n?.follow_up && <p className="nv-sub">Follow-up · {n.follow_up}</p>}
@@ -179,6 +189,8 @@ function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Ap
   const [stage, setStage] = useState<'chat' | 'generating' | 'review' | 'done'>('chat');
   const [card, setCard] = useState<CareCard | null>(null); const [approved, setApproved] = useState(false);
   const speech = useSpeech(setDraft, draft); const organise = useServerFn(structureLekhaNote); const [aiNote, setAiNote] = useState(''); const fileRef = useRef<HTMLInputElement>(null);
+  const getTranscript=useServerFn(getAppointmentTranscript);
+  useEffect(()=>{if(loc(appt)['mode']!=='online')return;void getTranscript({data:{id:appt.id}}).then(text=>{if(text)setDraft(text);}).catch(e=>setAiNote(e instanceof Error?e.message:'Transcript unavailable.'));},[appt.id]);
   const said = msgs.filter(m => m.role === 'user').map(m => m.content).join('\n');
   const covered = detectChecklist(said + ' ' + draft, files.length);
   const total = lekhaChecklist.length;
