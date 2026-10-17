@@ -1,6 +1,5 @@
 import { CareTicket } from './care-ticket';
 import { parseCard } from '@/lib/care-card';
-import { TopicCards } from './topic-cards';
 import { useState,useEffect,useCallback,type ReactNode } from 'react';
 import { Link,useNavigate } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';

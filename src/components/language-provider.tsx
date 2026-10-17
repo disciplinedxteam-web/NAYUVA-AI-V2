@@ -61,5 +61,5 @@ export function LanguageProvider({children}:{children:ReactNode}) {
 }
 export function LanguageMenu(){
   const {language,setLanguage,error}=useLanguage();
-  return <div data-no-translate><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" aria-label="Choose language" title="Choose language"><Languages/><ChevronDown size={12}/></Button></DropdownMenuTrigger><DropdownMenuContent align="end">{languages.map(l=><DropdownMenuItem key={l.code} onSelect={()=>setLanguage(l.code)}>{l.code===language&&<Check/>}{l.name}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>{error&&<span role="status" className="text-xs text-destructive">{error}</span>}</div>;
+  return <div data-no-translate><DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" aria-label="Choose language" title="Choose language"><Languages/><ChevronDown size={12}/></Button></DropdownMenuTrigger><DropdownMenuContent align="end" className="nv-select-menu">{languages.map(l=><DropdownMenuItem key={l.code} onSelect={()=>setLanguage(l.code)}>{l.code===language&&<Check/>}{l.name}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>{error&&<span role="status" className="text-xs text-destructive">{error}</span>}</div>;
 }
