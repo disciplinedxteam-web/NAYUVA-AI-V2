@@ -1,38 +1,11 @@
-# Current requested refinements
-- [ ] Redesign caregiver profile entry with searchable full-width selector; replace logos and favicon.
-- [ ] Standardize care ticket dimensions, visible approval/review stamps and perforated tear-away motion; hide raw quotes on cards.
-- [ ] Repair Svara registered variables, connection lifecycle and personalized context; verify website transcripts and structured drafts.
-- [ ] Keep website/phone screens light pink and show side-by-side entry choices.
-- [ ] Redesign Sutra with bottom composer, explicit clinician profile selection and top hanging journey cards.
-- [ ] Unify detailed care tickets across Milan, Lekha and Sutra; show two Care Updates per laptop row.
-- [ ] Run targeted tests and browser checks; report real-call verification limitations.
+# Roadmap
 
-# Dashboard integration update
-- [ ] Refine both dashboard layouts, scheduler time window, Sutra and Lekha compact workspaces, sidebar and Home.
-- [ ] Connect authorized Svara website and outbound call sessions, provider status/transcripts and persisted review cards.
-- [ ] Provide site-wide eleven-language translation and caregiver emergency menu.
-- [ ] Verify real workflows and report provider or clinical-approval blockers accurately.
-- [ ] Simplify shell, enlarge assistant characters, add role Home screens and workflow category tabs.
-- [ ] Move caregiver selection to entry and enforce scheduled check-ins with linked saved cards.
-- [ ] Verify rules, browser workflows and publish readiness.
-# Homepage refinements
-- [x] Align all four team portraits at matching visual scale and refine team cards; verified desktop and mobile.
-- [ ] Build persistent connected demo Care Team and Caregiver workflows, multi-step care plans, updates, appointments, documentation, journey and settings.
-- [ ] Adjust portrait framing, persistent borders, hover treatment, scroll-direction header and half-visible hero flowers.
-- [ ] Test workflow rules and verify both dashboards and homepage.
-- [x] Tighten hero and inter-section spacing; preserve continuous background.
-- [x] Replace flowers with animated reference blooms at side edges only.
-- [x] Unify solution typography and improve animated solution graphics.
-- [x] Refresh impact cards with readable pink colors and animated graphics.
-- [x] Add supplied portraits and center the team heading.
-- [x] Add scroll-animated header and language picker; remove header CTA. Translation deferred as requested.
-- [x] Rebalance hero spacing and enlarge moving hero flowers without text overlap.
-- [x] Improve solution animations and restore follow-up/list and record/timeline visuals.
-- [x] Give every impact card a distinct continuous animation.
-- [x] Replace product previews with working, searching, lighthouse and reasoning demos.
-- [x] Verify the updated page, language control and animations; build and routing test pass.
-- [x] Verify laptop and narrow-screen presentation; routing test passed and no preview runtime errors.# Svara/Lekha structured cards
-- [x] Live chat transcript for Svara on the website.
-- [x] Personalised question and answer links for the Sarvam agent.
-- [x] Topic-card summaries with Priority/Review/Routine; single approval tick for caregiver and Lekha.
-- [ ] Paste the two links into Sarvam's tools and run a real call (needs the user in Sarvam).
+- [ ] New backgroundless logo everywhere (sidebar, navbar, profile selector); remove black-square treatment
+- [ ] GlassToggle: remove outer rectangular background; Milan Schedule Appointment inside toggle pill
+- [ ] Sidebar: hover-expand animation + rounded bold themed tooltips (both dashboards)
+- [ ] Language + emergency selectors: new check-item animated UI (home + dashboards)
+- [ ] Profile selector: two-tone brand card separation, backgroundless logo
+- [ ] Lekha workflow: chat doc screen (appointment card, LLM greeting, ChatGPT composer, 8-item checklist, coverage reply + proceed chips), flux-loader generation screen, approve, completion screen
+- [ ] Svara generation screen: same flux-loader UI
+- [ ] Care Updates review screen redesign (baby header, topic cards + View Transcription, history, quick actions, Mark as Reviewed)
+- [ ] Verify: typecheck, tests, browser check

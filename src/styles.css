@@ -1078,3 +1078,130 @@
 .entry-story { padding:42px 38px; display:flex; flex-direction:column; justify-content:flex-end; gap:28px; background:transparent; }.entry-story-label { color:var(--primary); font-size:11px; font-weight:700; text-transform:uppercase; }.entry-story > p { font-size:21px; line-height:1.8; font-weight:500; }.entry-story > p strong { color:var(--primary-deep); }
 .entry-signature { display:flex; align-items:center; gap:12px; }.entry-signature .entry-logo-square { width:42px; height:42px; padding:4px; }.entry-signature strong,.entry-signature small { display:block; }.entry-signature strong { font-size:13px; }.entry-signature small { font-size:11px; margin-top:4px; color:var(--muted-foreground); }
 @media(max-width:700px) { .caregiver-entry { padding:20px 18px 40px; justify-content:flex-start; }.entry-access-card { grid-template-columns:minmax(0,1fr); }.entry-selection { padding:28px 22px; }.entry-story { padding:26px 22px; gap:20px; }.entry-story > p { font-size:17px; }.caregiver-entry .entry-intro h1 { font-size:23px; } }
+
+/* ---- 2026-10 refresh: hover-expand sidebar, borderless toggle, new logo, Lekha workflow, review screen ---- */
+:root { --logo-surface: transparent; }
+.site-logo-image,.dashboard-brand img { background: transparent; padding: 0; }
+.entry-logo-square { background: transparent; padding: 0; }
+
+/* Borderless glass toggle: only the glider pill remains */
+.glass-toggle { background: transparent; border: 0; box-shadow: none; backdrop-filter: none; padding: 2px; }
+.glass-glider { box-shadow: 0 8px 22px -8px color-mix(in oklab, var(--primary-deep) 55%, transparent), inset 0 1px 0 oklch(1 0 0 / .35); }
+
+/* Milan bar: toggle + schedule action read as one control */
+.ws-bar-cluster { display: inline-flex; align-items: center; gap: 6px; }
+.ws-bar-action { border-radius: 12px; }
+
+/* Hover-expand icon rail sidebar (desktop) */
+@media (min-width: 1024px) {
+  .dashboard-shell, .dashboard-shell.sidebar-collapsed { grid-template-columns: 78px minmax(0,1fr); }
+  .dashboard-shell .dashboard-sidebar { width: 78px; padding-left: 10px; padding-right: 10px; overflow: hidden; transition: width .38s cubic-bezier(.22,1,.36,1), box-shadow .38s ease; }
+  .dashboard-shell .dashboard-sidebar:hover,
+  .dashboard-shell:not(.sidebar-collapsed) .dashboard-sidebar { width: 250px; }
+  .dashboard-shell .dashboard-sidebar:hover { box-shadow: 24px 0 60px -30px color-mix(in oklab, var(--primary-deep) 45%, transparent); }
+  .dashboard-shell:not(.sidebar-collapsed) { grid-template-columns: 250px minmax(0,1fr); }
+  .dashboard-nav span, .dashboard-brand span, .profile-trigger > span:nth-child(2) { white-space: nowrap; transition: opacity .22s ease; }
+  .sidebar-collapsed .dashboard-sidebar:not(:hover) .dashboard-nav span,
+  .sidebar-collapsed .dashboard-sidebar:not(:hover) .dashboard-brand span,
+  .sidebar-collapsed .dashboard-sidebar:not(:hover) .profile-trigger > span:nth-child(2) { opacity: 0; }
+  .sidebar-collapsed .dashboard-sidebar:not(:hover) .dashboard-nav { justify-content: center; padding: 0; }
+  .sidebar-collapsed .dashboard-sidebar:not(:hover) .profile-trigger { justify-content: center; }
+  .sidebar-collapsed .dashboard-sidebar:not(:hover) .profile-trigger > svg { display: none; }
+}
+/* Rounded, bold, themed hover tooltip for rail icons */
+@media (min-width: 1024px) {
+  .sidebar-collapsed .dashboard-sidebar:not(:hover) .dashboard-nav { position: relative; }
+  .sidebar-collapsed .dashboard-sidebar:not(:hover) .dashboard-nav:hover::after {
+    content: attr(title); position: absolute; left: calc(100% + 12px); top: 50%; translate: 0 -50%;
+    background: var(--primary-deep); color: var(--primary-foreground); font-size: 12px; font-weight: 700;
+    padding: 7px 14px; border-radius: 999px; white-space: nowrap; box-shadow: 0 10px 24px -10px color-mix(in oklab, var(--primary-deep) 60%, transparent);
+    animation: nav-tip-in .18s ease; z-index: 50; pointer-events: none;
+  }
+}
+@keyframes nav-tip-in { from { opacity: 0; translate: -6px -50%; } to { opacity: 1; translate: 0 -50%; } }
+
+/* Language / emergency selector menus */
+.nv-select-menu { border-radius: 18px; padding: 6px; background: color-mix(in oklab, var(--card) 88%, transparent); backdrop-filter: blur(18px); border: 1px solid color-mix(in oklab, var(--primary) 16%, transparent); box-shadow: 0 18px 44px -18px color-mix(in oklab, var(--primary-deep) 40%, transparent); }
+.nv-select-menu [role="menuitem"], .nv-select-menu [role="menuitem"] > a, .nv-select-menu [role="menuitem"] > span { display: flex; align-items: center; gap: 10px; border-radius: 12px; padding: 9px 12px; font-size: 13px; font-weight: 600; }
+.nv-select-menu [role="menuitem"]:hover, .nv-select-menu [role="menuitem"][data-highlighted] { background: var(--blush); color: var(--primary-deep); }
+.nv-select-menu [role="menuitem"] svg { color: var(--primary); }
+
+/* Profile selector: two-tone brand panels */
+.entry-selection { background: color-mix(in oklab, var(--card) 92%, transparent); border-radius: 6px 0 0 6px; }
+.entry-story { background: linear-gradient(160deg, var(--primary-deep), color-mix(in oklab, var(--primary-deep) 70%, var(--primary) 30%)); border-radius: 0 6px 6px 0; }
+.entry-story, .entry-story > p, .entry-story > p strong { color: oklch(.97 .01 350); }
+.entry-story-label { color: oklch(.9 .06 350); }
+.entry-signature small { color: oklch(.85 .04 350); }
+@media (max-width:700px) { .entry-selection { border-radius: 6px 6px 0 0; } .entry-story { border-radius: 0 0 6px 6px; } }
+
+/* Card generation stage (Svara + Lekha) */
+.card-generation { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; min-height: 62vh; text-align: center; padding: 30px 18px; }
+.card-generation .care-character { width: 240px; height: 190px; }
+.flux-label-wrap { position: relative; height: 44px; width: min(520px, 90vw); }
+.flux-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 650; letter-spacing: -.01em; color: var(--muted-foreground); animation: flux-label-in .5s cubic-bezier(.22,1,.36,1); }
+@keyframes flux-label-in { from { opacity: 0; transform: translateY(10px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+.flux-bar { position: relative; height: 14px; width: min(420px, 84vw); border-radius: 999px; background: color-mix(in oklab, var(--primary) 10%, var(--card)); box-shadow: inset 0 2px 3px oklch(0 0 0 / .08), inset 0 -1px 2px oklch(1 0 0 / .7); overflow: hidden; }
+.flux-fill { position: absolute; inset: 0 auto 0 0; border-radius: 999px; background: linear-gradient(90deg, var(--primary-deep), var(--primary) 45%, var(--rose-glow, oklch(.75 .14 10)) 70%, var(--primary)); box-shadow: 0 0 16px color-mix(in oklab, var(--primary) 55%, transparent), inset 0 1.5px 0 oklch(1 0 0 / .5); transition: width .6s cubic-bezier(.22,1,.36,1); }
+.flux-fill i { position: absolute; inset: 0; width: 50%; border-radius: inherit; background: linear-gradient(90deg, transparent, oklch(1 0 0 / .55), transparent); mix-blend-mode: screen; animation: flux-sheen 1.6s linear infinite; }
+@keyframes flux-sheen { from { transform: translateX(-110%); } to { transform: translateX(210%); } }
+@media (prefers-reduced-motion: reduce) { .flux-label { animation: none; } .flux-fill i { animation: none; } .flux-fill { transition: none; } }
+
+/* Lekha documentation workspace */
+.lekha-doc { display: grid; grid-template-columns: 280px minmax(0,1fr) 300px; gap: 18px; align-items: start; }
+@media (max-width: 1100px) { .lekha-doc { grid-template-columns: minmax(0,1fr) 300px; } .lekha-doc .appointment-context { grid-column: 1 / -1; } }
+@media (max-width: 800px) { .lekha-doc { grid-template-columns: minmax(0,1fr); } }
+.lekha-chat-col { display: flex; flex-direction: column; gap: 12px; background: var(--glass-surface); border: 1px solid var(--border); border-radius: 16px; backdrop-filter: blur(18px); padding: 18px; min-height: 420px; }
+.lekha-log { flex: 1; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; max-height: 46vh; padding: 4px; }
+.lekha-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.lekha-composer { display: flex; align-items: flex-end; gap: 6px; border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent); background: var(--card); border-radius: 999px; padding: 6px 8px; box-shadow: 0 10px 26px -16px color-mix(in oklab, var(--primary-deep) 35%, transparent); }
+.lekha-composer textarea { flex: 1; border: 0; background: transparent; resize: none; outline: none; font: inherit; font-size: 14px; padding: 8px 6px; max-height: 120px; }
+.lekha-composer button { border-radius: 999px; flex: none; }
+.lekha-create { align-self: center; }
+.lekha-checklist { background: var(--glass-surface); border: 1px solid var(--border); border-radius: 16px; backdrop-filter: blur(18px); padding: 18px; position: sticky; top: 20px; }
+.lekha-checklist-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.lekha-checklist-head h2 { font-size: 15px; font-weight: 700; }
+.lekha-checklist-head span { font-size: 12px; font-weight: 700; color: var(--primary); }
+.lekha-checklist-bar { height: 5px; border-radius: 99px; background: color-mix(in oklab, var(--primary) 12%, var(--card)); margin: 10px 0 14px; overflow: hidden; }
+.lekha-checklist-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--primary-deep), var(--primary)); transition: width .5s ease; }
+.lekha-checklist ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.lekha-checklist li { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border-radius: 12px; transition: background .3s ease; }
+.lekha-checklist li.done { background: color-mix(in oklab, var(--primary) 8%, transparent); }
+.lekha-checklist li strong { display: block; font-size: 13px; font-weight: 650; }
+.lekha-checklist li small { color: var(--muted-foreground); font-size: 11.5px; line-height: 1.4; }
+.lekha-checklist .check-dot { flex: none; width: 20px; height: 20px; margin-top: 1px; border-radius: 999px; border: 1.5px solid color-mix(in oklab, var(--primary) 40%, transparent); display: grid; place-items: center; color: var(--primary-foreground); background: transparent; transition: background .3s ease; }
+.lekha-checklist li.done .check-dot { background: var(--primary); border-color: var(--primary); }
+.lekha-review-stage { display: flex; flex-direction: column; gap: 16px; max-width: 720px; margin: 0 auto; }
+
+/* Care Updates review screen */
+.review-screen { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 18px; align-items: start; }
+@media (max-width: 1000px) { .review-screen { grid-template-columns: minmax(0,1fr); } }
+.review-baby-card { display: flex; flex-wrap: wrap; align-items: center; gap: 18px 28px; background: var(--glass-surface); border: 1px solid var(--border); border-radius: 16px; backdrop-filter: blur(18px); padding: 16px 20px; }
+.review-baby-card .patient-initial { width: 52px; height: 52px; font-size: 20px; }
+.review-baby-card h2 { font-size: 20px; font-weight: 750; letter-spacing: -.01em; }
+.review-baby-card .nv-sub { margin: 2px 0 0; }
+.review-baby-meta { display: flex; gap: 22px; flex-wrap: wrap; margin-left: auto; }
+.review-baby-meta div { display: flex; flex-direction: column; gap: 2px; }
+.review-baby-meta dt { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted-foreground); font-weight: 700; }
+.review-baby-meta dd { font-size: 13.5px; font-weight: 650; }
+.review-topics { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+.review-topic { background: var(--dashboard-surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+.review-topic header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.review-topic header strong { font-size: 13.5px; font-weight: 700; }
+.review-topic ul { margin: 0; padding-left: 16px; font-size: 12.5px; color: var(--muted-foreground); display: flex; flex-direction: column; gap: 3px; }
+.review-topic .view-transcript { align-self: flex-start; font-size: 12px; font-weight: 700; color: var(--primary); background: none; border: 0; padding: 0; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
+.review-topic blockquote { margin: 4px 0 0; padding: 8px 10px; border-left: 3px solid var(--primary); background: color-mix(in oklab, var(--primary) 7%, transparent); border-radius: 8px; font-size: 12px; color: var(--muted-foreground); }
+.review-history { background: var(--glass-surface); border: 1px solid var(--border); border-radius: 16px; backdrop-filter: blur(18px); padding: 16px 20px; }
+.review-history h3, .review-section-title { font-size: 14px; font-weight: 750; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.review-history p { font-size: 13px; color: var(--muted-foreground); line-height: 1.65; margin: 0; }
+.quick-actions { background: var(--glass-surface); border: 1px solid var(--border); border-radius: 16px; backdrop-filter: blur(18px); padding: 14px; display: flex; flex-direction: column; gap: 6px; position: sticky; top: 20px; }
+.quick-actions h3 { font-size: 14px; font-weight: 750; margin: 0 0 6px; }
+.quick-actions .qa-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 10px 12px; border-radius: 12px; background: transparent; border: 0; cursor: pointer; font: inherit; transition: background .2s ease; }
+.quick-actions .qa-row:hover { background: var(--blush); }
+.quick-actions .qa-row > span:first-child { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: color-mix(in oklab, var(--primary) 10%, transparent); color: var(--primary); }
+.quick-actions .qa-row strong { display: block; font-size: 13px; font-weight: 700; }
+.quick-actions .qa-row small { color: var(--muted-foreground); font-size: 11.5px; }
+.quick-actions .qa-row > svg:last-child { margin-left: auto; color: var(--muted-foreground); }
+.review-mark { width: 100%; margin-top: 8px; }
+
+/* Remove the outer rectangular layer behind toggles */
+.ws-bar { background: transparent; border: 0; box-shadow: none; backdrop-filter: none; padding: 0; }

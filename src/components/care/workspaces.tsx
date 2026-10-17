@@ -1,4 +1,6 @@
 import { CareTicket } from './care-ticket';
+import { CardGeneration } from './card-generation';
+import { AssistantCharacter } from './assistant-character';
 import { JourneyCarousel } from './journey-carousel';
 import { ProductOrb } from '@/components/product-orb';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
@@ -72,8 +74,10 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
     <WorkspaceHeading title="Milan" description="Appointments and coordinated follow-up care." />
     {scheduling ? <Scheduler data={data} busy={busy} run={run} onDone={() => setScheduling(false)} /> : <>
       <div className="ws-bar">
-        <Toggle value={tab} onChange={setTab} options={[{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, { key: 'past', label: 'Past', count: past.length }]} />
-        {role === 'care-team' && <Button onClick={() => setScheduling(true)} disabled={!data.babies.length}><Plus />Schedule Appointment</Button>}
+        <div className="ws-bar-cluster">
+          <Toggle value={tab} onChange={setTab} options={[{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, { key: 'past', label: 'Past', count: past.length }]} />
+          {role === 'care-team' && <Button className="ws-bar-action" onClick={() => setScheduling(true)} disabled={!data.babies.length}><Plus />Schedule Appointment</Button>}
+        </div>
       </div>
       {!list.length ? <EmptyState>{tab === 'upcoming' ? 'No upcoming appointments.' : 'No past appointments yet.'}</EmptyState> :
         <div className="ws-grid">{list.map(a => {
@@ -160,57 +164,75 @@ export function LekhaWorkspace({ data, busy, run }: { data: Data; busy: boolean;
     <div className="ws-bar"><Toggle value={tab} onChange={setTab} options={[{ key: 'pending', label: 'Awaiting documentation', count: pending.length }, { key: 'done', label: 'Documented', count: done.length }]} /></div>
     {!list.length ? <EmptyState>{tab === 'pending' ? 'No completed appointments are waiting for documentation. Mark an appointment as done in Milan.' : 'No documented appointments yet.'}</EmptyState> :
       <div className="ws-grid">{list.map(a => { const b = data.babies.find(x => x.id === a.baby_id); const n = noteFor(a.id); return <CareTicket key={a.id} source="Lekha" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmt(a.starts_at)} card={n ? parseCard(n.observations) : null} stamp={n ? 'Reviewed' : null} stub={!n} fields={[{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Appointment', value: 'Completed' }, { label: 'Location', value: loc(a)['facilityName'] || 'Not configured' }]} action={{ label: 'Document', onClick: () => setOpenId(a.id) }}>
-        {n && !parseCard(n.observations) && <p className="nv-sub">{n.observations}</p>}
         {n?.follow_up && <p className="nv-sub">Follow-up · {n.follow_up}</p>}
       </CareTicket>; })}</div>}
 
   </>;
 }
 
-type Msg = { role: 'user' | 'assistant'; content: string };
+type Msg = { role: 'user' | 'assistant'; content: string; chips?: string[] };
+const LEKHA_PHASES = ['Reading your appointment notes', 'Matching details to the documentation topics', 'Structuring findings into clear sections', 'Laying out the Appointment Health Card'];
 function LekhaSession({ data, appt, busy, run, onClose }: { data: Data; appt: Appointment; busy: boolean; run: Run; onClose: () => void }) {
   const save = useServerFn(saveClinicalNote); const baby = data.babies.find(b => b.id === appt.baby_id);
-  const [msgs, setMsgs] = useState<Msg[]>([]); const [draft, setDraft] = useState(''); const [files, setFiles] = useState<File[]>([]); const [review, setReview] = useState(false);
+  const greeting: Msg = { role: 'assistant', content: `Hi, let's document the appointment for ${baby?.baby_name ?? 'this baby'} — ${appt.reason}, ${fmtDay(appt.starts_at)}. Just tell me what happened, in any language you're comfortable with. I'll tick the topics you cover on the right, structure everything into a Health Card, and you review it before it's saved.` };
+  const [msgs, setMsgs] = useState<Msg[]>([greeting]); const [draft, setDraft] = useState(''); const [files, setFiles] = useState<File[]>([]);
+  const [stage, setStage] = useState<'chat' | 'generating' | 'review' | 'done'>('chat');
   const [card, setCard] = useState<CareCard | null>(null); const [approved, setApproved] = useState(false);
-  const speech = useSpeech(setDraft, draft); const organise = useServerFn(structureLekhaNote); const [organising, setOrganising] = useState(false); const [aiNote, setAiNote] = useState(''); const fileRef = useRef<HTMLInputElement>(null);
+  const speech = useSpeech(setDraft, draft); const organise = useServerFn(structureLekhaNote); const [aiNote, setAiNote] = useState(''); const fileRef = useRef<HTMLInputElement>(null);
   const said = msgs.filter(m => m.role === 'user').map(m => m.content).join('\n');
   const covered = detectChecklist(said + ' ' + draft, files.length);
-  function send() { const t = draft.trim(); if (!t) return; if (speech.listening) speech.toggle(); setMsgs(m => [...m, { role: 'user', content: t }]); setDraft(''); }
+  const total = lekhaChecklist.length;
+  function send() {
+    const t = draft.trim(); if (!t) return; if (speech.listening) speech.toggle();
+    const next = [...msgs, { role: 'user', content: t } as Msg];
+    const coveredNow = detectChecklist(next.filter(m => m.role === 'user').map(m => m.content).join('\n'), files.length);
+    next.push({ role: 'assistant', content: `Got it — I've captured that. You've covered ${coveredNow.size} of ${total} documentation topics. Would you like to add anything else, attach a file, or shall I prepare the structured Health Card now?`, chips: ['create'] });
+    setMsgs(next); setDraft('');
+  }
+  function generate() {
+    setStage('generating'); setAiNote('');
+    const started = Date.now();
+    void organise({ data: { appointmentId: appt.id, note: said + (files.length ? `\nAttached: ${files.map(x => x.name).join(', ')}` : ''), checklist: lekhaChecklist.map(i => ({ key: i.key, title: i.title })) } })
+      .then(async d => { await new Promise(ok => setTimeout(ok, Math.max(0, 5200 - (Date.now() - started)))); setCard(d); setApproved(false); setStage('review'); })
+      .catch(e => { setStage('chat'); setAiNote(e instanceof Error ? e.message : 'Lekha could not organise the note.'); });
+  }
+  if (stage === 'generating') return <CardGeneration assistant="lekha" title="Lekha is preparing the Health Card" phases={LEKHA_PHASES} />;
+  if (stage === 'done') return <div className="card-generation"><AssistantCharacter name="lekha" /><div className="svara-success-mark"><Check /></div><h1 className="svara-title">Appointment documented</h1><p className="svara-lede">The Appointment Health Card is saved to {baby?.baby_name ?? 'the baby'}'s care journey in Sutra.</p><Button onClick={onClose}>Back to Lekha<ArrowRight /></Button></div>;
   return <>
-    <WorkspaceHeading title="Lekha" description="Clinician-reviewed appointment documentation." /><div className="flex items-center justify-between mb-3"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button><span className="nv-pill">{review ? 'Review' : 'In progress'}</span></div>
-    <div className="lekha-compact">
+    <WorkspaceHeading title="Lekha" description="Clinician-reviewed appointment documentation." /><div className="flex items-center justify-between mb-3"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button><span className="nv-pill">{stage === 'review' ? 'Review' : 'In progress'}</span></div>
+    {stage === 'review' ? <form className="lekha-review-stage" onSubmit={e => { e.preventDefault(); if (!card) return; void run(async () => { await save({ data: { appointmentId: appt.id, observations: JSON.stringify(card), decision: cardText(card), followUp: card.topics.find(t => /follow/i.test(t.title))?.finding ?? '', additionalNote: files.map(x => x.name).join(', ') } }); setStage('done'); }, 'Appointment Health Card saved to Sutra.'); }}>
+      <CareTicket source="Lekha" title={baby?.baby_name ?? 'Appointment'} subtitle={appt.reason} date={fmtDay(appt.starts_at)} card={card} stamp={approved ? 'Reviewed' : null} stubLabel="Clinician review" action={{ label: 'Approve card', onClick: () => setApproved(true) }} />
+      <div className="flex gap-2 justify-center"><Button type="button" variant="ghost" onClick={() => setStage('chat')}><ArrowLeft />Back to notes</Button><Button type="submit" disabled={busy || !approved}>Save to care journey</Button></div>
+    </form> : <div className="lekha-doc">
       <section className="appointment-context">
-        <div className="ws-panel-title"><CalendarDays /><div>Appointment details</div></div>
+        <div className="ws-panel-title"><CalendarDays /><div>Appointment</div></div>
         <div className="nv-row"><FileText /><div><strong>{appt.reason}</strong><small>Completed</small></div></div>
         <div className="nv-row"><CalendarDays /><div><strong>{fmtDay(appt.starts_at)}</strong><small>{fmtTime(appt.starts_at)} IST</small></div></div>
         <div className="nv-row"><User /><div><strong>{baby?.baby_name}</strong><small>Caregiver · {baby?.caregiver_name}</small></div></div>
         <div className="nv-row"><MapPin /><div><strong>{loc(appt)['facilityName'] || 'Location not set'}</strong><small>{loc(appt)['address'] || '—'}</small></div></div>
-        <div className="ws-panel-title mt-2"><Paperclip /><div>Reports & files<small>Names are noted on the card</small></div></div>
+      </section>
+      <section className="lekha-chat-col">
+        <div className="chat-log lekha-log">
+          {msgs.map((m, i) => <div key={i} className={`chat-bubble ${m.role === 'user' ? 'me' : 'bot'}`}>{m.content}{m.chips && i === msgs.length - 1 && <span className="lekha-chips"><Button type="button" size="sm" variant="outline" onClick={() => fileRef.current?.click()}><Paperclip />Attach file</Button><Button type="button" size="sm" onClick={generate}>Create the card<ArrowRight /></Button></span>}</div>)}
+        </div>
         <input ref={fileRef} type="file" multiple hidden accept=".pdf,.jpg,.jpeg,.png" onChange={e => setFiles(x => [...x, ...Array.from(e.target.files ?? [])])} />
-        <Button type="button" variant="outline" onClick={() => fileRef.current?.click()}><Paperclip />Attach files</Button>
-        <div className="chat-tags">{files.map((x, i) => <span key={i}>{x.name}<button type="button" aria-label={`Remove ${x.name}`} onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))}><X size={12} /></button></span>)}</div>
+        {!!files.length && <div className="chat-tags">{files.map((x, i) => <span key={i}>{x.name}<button type="button" aria-label={`Remove ${x.name}`} onClick={() => setFiles(fs => fs.filter((_, j) => j !== i))}><X size={12} /></button></span>)}</div>}
+        <div className="lekha-composer">
+          <Button type="button" size="icon" variant="ghost" aria-label="Attach files" onClick={() => fileRef.current?.click()}><Plus /></Button>
+          <textarea rows={1} value={draft} aria-label="Documentation notes" placeholder={speech.listening ? 'Recording… tap stop when done' : speech.processing ? 'Recognising speech…' : 'Type a message, or use voice…'} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} />
+          <Button type="button" size="icon" variant={speech.listening ? 'default' : 'ghost'} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button>
+          <Button type="button" size="icon" aria-label="Send" onClick={send} disabled={!draft.trim()}><Send /></Button>
+        </div>
+        {speech.error && <p className="text-xs text-muted-foreground">{speech.error}</p>}
+        {aiNote && <p className="text-xs text-muted-foreground" role="status">{aiNote}</p>}
+        {said && <Button type="button" variant="outline" className="lekha-create" onClick={generate}>Done — create the Health Card<ArrowRight /></Button>}
       </section>
-      <section className="ws-panel chat-col lekha-chat">
-        {!review ? <>
-          <div className="chat-log">
-            
-            
-            {msgs.map((m, i) => <div key={i} className={`chat-bubble ${m.role === 'user' ? 'me' : 'bot'}`}>{m.content}</div>)}
-          </div>
-          <div className="chat-input"><Button type="button" size="icon" variant={speech.listening ? 'default' : 'outline'} aria-label={speech.listening ? 'Stop voice input' : 'Speak'} onClick={speech.toggle}>{speech.listening ? <Square /> : <Mic />}</Button><textarea rows={2} value={draft} placeholder={speech.listening ? 'Recording… tap stop when done' : speech.processing ? 'Recognising speech…' : 'Type or speak your notes…'} onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }} /><Button type="button" size="icon" variant="ghost" aria-label="Attach files" onClick={() => fileRef.current?.click()}><Paperclip /></Button><Button type="button" size="icon" aria-label="Send" onClick={send} disabled={!draft.trim()}><Send /></Button></div>
-          {speech.error && <p className="text-xs text-muted-foreground">{speech.error}</p>}
-          <Button type="button" disabled={!said || organising} onClick={() => { setOrganising(true); setAiNote(''); void organise({ data: { appointmentId: appt.id, note: said + (files.length ? `\nAttached: ${files.map(x => x.name).join(', ')}` : ''), checklist: lekhaChecklist.map(i => ({ key: i.key, title: i.title })) } }).then(d => { setCard(d); setApproved(false); setReview(true); }).catch(e => setAiNote(e instanceof Error ? e.message : 'Lekha could not organise the note.')).finally(() => setOrganising(false)); }}>{organising ? 'Lekha is summarising…' : 'Done — create card'}<ArrowRight /></Button>
-          {aiNote && <p className="text-xs text-muted-foreground" role="status">{aiNote}</p>}
-        </> : <form className="documentation-review" onSubmit={e => { e.preventDefault(); if (!card) return; void run(async () => { await save({ data: { appointmentId: appt.id, observations: JSON.stringify(card), decision: cardText(card), followUp: card.topics.find(t => /follow/i.test(t.title))?.finding ?? '', additionalNote: files.map(x => x.name).join(', ') } }); onClose(); }, 'Appointment Health Card saved to Sutra.'); }}>
-          <CareTicket source="Lekha" title={baby?.baby_name ?? 'Appointment'} subtitle={appt.reason} date={fmtDay(appt.starts_at)} card={card} stamp={approved ? 'Reviewed' : null} stubLabel="Clinician review" action={{ label: 'Mark reviewed', onClick: () => setApproved(true) }} />
-          <div className="flex gap-2 mt-auto"><Button type="button" variant="ghost" onClick={() => setReview(false)}><ArrowLeft />Back</Button><Button type="submit" className="flex-1" disabled={busy || !approved}>Save to care journey</Button></div>
-        </form>}
-      </section>
-      <section className="checklist-horizontal">
-        <h2>Optional documentation topics</h2>
-        <div className="check-list">{lekhaChecklist.map(i => <div key={i.key} className={`check-item ${covered.has(i.key) ? 'done' : ''}`}><span className="check-dot">{covered.has(i.key) && <Check size={12} />}</span><div><strong>{i.title}</strong></div></div>)}</div>
-      </section>
-    </div>
+      <aside className="lekha-checklist">
+        <div className="lekha-checklist-head"><h2>Visit checklist</h2><span>{covered.size} / {total} covered</span></div>
+        <div className="lekha-checklist-bar"><span style={{ width: `${(covered.size / total) * 100}%` }} /></div>
+        <ol>{lekhaChecklist.map((i, n) => <li key={i.key} className={covered.has(i.key) ? 'done' : ''}><span className="check-dot">{covered.has(i.key) && <Check size={12} />}</span><div><strong>{n + 1}. {i.title}</strong><small>{i.hint}</small></div></li>)}</ol>
+      </aside>
+    </div>}
   </>;
 }
 
