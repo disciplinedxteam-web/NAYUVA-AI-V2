@@ -1,4 +1,6 @@
 import { CareTicket } from './care-ticket';
+import { CardGeneration } from './card-generation';
+import { AssistantCharacter } from './assistant-character';
 import { JourneyCarousel } from './journey-carousel';
 import { ProductOrb } from '@/components/product-orb';
 import { Conversation, ConversationContent, ConversationScrollButton } from '@/components/ai-elements/conversation';
