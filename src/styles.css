@@ -1202,3 +1202,6 @@
 .quick-actions .qa-row small { color: var(--muted-foreground); font-size: 11.5px; }
 .quick-actions .qa-row > svg:last-child { margin-left: auto; color: var(--muted-foreground); }
 .review-mark { width: 100%; margin-top: 8px; }
+
+/* Remove the outer rectangular layer behind toggles */
+.ws-bar { background: transparent; border: 0; box-shadow: none; backdrop-filter: none; padding: 0; }

@@ -164,7 +164,6 @@ export function LekhaWorkspace({ data, busy, run }: { data: Data; busy: boolean;
     <div className="ws-bar"><Toggle value={tab} onChange={setTab} options={[{ key: 'pending', label: 'Awaiting documentation', count: pending.length }, { key: 'done', label: 'Documented', count: done.length }]} /></div>
     {!list.length ? <EmptyState>{tab === 'pending' ? 'No completed appointments are waiting for documentation. Mark an appointment as done in Milan.' : 'No documented appointments yet.'}</EmptyState> :
       <div className="ws-grid">{list.map(a => { const b = data.babies.find(x => x.id === a.baby_id); const n = noteFor(a.id); return <CareTicket key={a.id} source="Lekha" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmt(a.starts_at)} card={n ? parseCard(n.observations) : null} stamp={n ? 'Reviewed' : null} stub={!n} fields={[{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Appointment', value: 'Completed' }, { label: 'Location', value: loc(a)['facilityName'] || 'Not configured' }]} action={{ label: 'Document', onClick: () => setOpenId(a.id) }}>
-        {n && !parseCard(n.observations) && <p className="nv-sub">{n.observations}</p>}
         {n?.follow_up && <p className="nv-sub">Follow-up · {n.follow_up}</p>}
       </CareTicket>; })}</div>}
 
