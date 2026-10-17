@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { ProductOrb } from '@/components/product-orb';
 import { SvaraVoice, type Line } from './svara-voice';
 import { CareTicket } from './care-ticket';
+import { CardGeneration } from './card-generation';
 import { parseCard } from '@/lib/care-card';
 import { prepareSvaraSession, saveSvaraTranscript, saveSvaraPhone, summarizeSvaraSession, confirmSvaraSession, getSvaraCallStatus } from '@/lib/care.functions';
 
@@ -23,15 +24,12 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const [open, setOpen] = useState<'web' | 'phone' | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [digits, setDigits] = useState(''), [consent, setConsent] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  const [summary, setSummary] = useState(''), [approved, setApproved] = useState(false), [call, setCall] = useState<string | null>(null), [step, setStep] = useState(0);
+  const [summary, setSummary] = useState(''), [approved, setApproved] = useState(false), [call, setCall] = useState<string | null>(null);
   const lines = useRef<Line[]>([]);
 
   // Resume a check-in that already has a draft card awaiting the caregiver.
   useEffect(() => { if (!due) return; void prepare({ data: { channel: 'website_voice' } }).then((s) => { const sm = (s.summary ?? {}) as Record<string, unknown>; if (s.context['check_in_status'] === 'awaiting_confirmation' && typeof sm['summary'] === 'string') { setSession(s); setSummary(sm['summary']); setStage('review'); } else if (s.phone) setDigits(s.phone.replace(/\D/g, '').slice(-10)); }).catch(() => {}); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [due]);
-
-  // Card generation progress: steps advance while the real request runs.
-  useEffect(() => { if (stage !== 'generating') return; setStep(0); const t = setInterval(() => setStep((s) => Math.min(s + 1, STEPS.length - 1)), 1400); return () => clearInterval(t); }, [stage]);
 
   // Phone: poll the real call record until a draft card exists.
   useEffect(() => {
