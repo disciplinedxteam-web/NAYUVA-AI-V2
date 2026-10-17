@@ -74,8 +74,10 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
     <WorkspaceHeading title="Milan" description="Appointments and coordinated follow-up care." />
     {scheduling ? <Scheduler data={data} busy={busy} run={run} onDone={() => setScheduling(false)} /> : <>
       <div className="ws-bar">
-        <Toggle value={tab} onChange={setTab} options={[{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, { key: 'past', label: 'Past', count: past.length }]} />
-        {role === 'care-team' && <Button onClick={() => setScheduling(true)} disabled={!data.babies.length}><Plus />Schedule Appointment</Button>}
+        <div className="ws-bar-cluster">
+          <Toggle value={tab} onChange={setTab} options={[{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, { key: 'past', label: 'Past', count: past.length }]} />
+          {role === 'care-team' && <Button className="ws-bar-action" onClick={() => setScheduling(true)} disabled={!data.babies.length}><Plus />Schedule Appointment</Button>}
+        </div>
       </div>
       {!list.length ? <EmptyState>{tab === 'upcoming' ? 'No upcoming appointments.' : 'No past appointments yet.'}</EmptyState> :
         <div className="ws-grid">{list.map(a => {
