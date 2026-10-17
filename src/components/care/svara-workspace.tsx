@@ -117,11 +117,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       {call && ACTIVE.includes(call) && <p className="svara-lede small">Keep this page open. Your Health Card appears here when the call ends.</p>}
     </div>}
 
-    {stage === 'generating' && <div className="svara-stage-center">
-      <div className="svara-hero-orb thinking"><ProductOrb name="SVARA" state="working" /></div>
-      <h1 className="svara-title">Preparing your Health Card</h1>
-      <ol className="svara-steps" aria-live="polite">{STEPS.map((s, i) => <li key={s} className={i < step ? 'done' : i === step ? 'active' : ''}>{i < step ? <Check /> : i === step ? <Loader2 className="animate-spin" /> : <span />}{s}</li>)}</ol>
-    </div>}
+    {stage === 'generating' && <CardGeneration assistant="svara" title="Preparing your Health Card" phases={STEPS} />}
 
     {stage === 'review' && <div className="svara-stage-center wide">
       <h1 className="svara-title">Review your Health Card</h1>
