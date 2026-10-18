@@ -60,10 +60,75 @@ function DashboardHome({data,baby,role,go,onPriority}:{data:Data;baby?:Baby|unde
  return <>{role==='care-team'?<>
  <div className="workflow-categories">{['Priority Review','Review Needed','Routine'].map(p=><Button variant="outline" key={p} className={`workflow-category ${p==='Priority Review'?'priority-high':p==='Review Needed'?'priority-review':'priority-routine'}`} onClick={()=>onPriority(p)}><span>{priorityLabel(p)}</span><strong>{awaiting.filter(c=>c.priority===p).length}</strong><small>Awaiting review <ArrowRight size={14}/></small></Button>)}</div>
  <div className="home-columns"><section><h2>Outstanding actions</h2><Button className="home-row" variant="ghost" onClick={()=>go('updates')}><Activity/><span><strong>{awaiting.length} updates</strong><small>Awaiting care team review</small></span><ArrowRight/></Button><Button className="home-row" variant="ghost" onClick={()=>go('lekha')}><FileText/><span><strong>{pendingNotes.length} appointments</strong><small>Awaiting documentation</small></span><ArrowRight/></Button></section><section><h2>Care coordination</h2><Button className="home-row" variant="ghost" onClick={()=>go('milan')}><CalendarDays/><span><strong>{data.appointments.filter(a=>a.status==='Reschedule requested').length} reschedule requests</strong><small>Review preferred date and time</small></span><ArrowRight/></Button><Button className="home-row" variant="ghost" onClick={()=>go('care-plan')}><ClipboardList/><span><strong>{data.babies.length} Care Plans</strong><small>View or update connected profiles</small></span><ArrowRight/></Button></section></div>
- </>:<>{baby&&<ScheduledCheckin baby={baby} cards={data.cards} onStart={()=>go('svara')}/>}<div className="home-shortcuts"><Button onClick={()=>go('sutra')}><GitBranch/>View Care Journey</Button><Button variant="outline" onClick={()=>go('milan')}><CalendarDays/>Appointments</Button></div><div className="home-columns"><section><h2>Latest update</h2>{data.cards[0]?<div className="nv-row"><Activity/><div><strong>{data.cards[0].category}</strong><small>{formatDate(data.cards[0].created_at)} · {data.cards[0].reviewed?'Reviewed':'Awaiting care team review'}</small></div></div>:<p className="home-empty">No submitted updates yet.</p>}</section><section><h2>Care contacts</h2><EmergencyCompact settings={data.settings as Record<string,string>}/></section></div></>}
+ </>:<CaregiverHome data={data} baby={baby} go={go}/>}
+ {role==='care-team'&&<>
  <div className="home-section-heading"><h2>Upcoming appointments</h2><Button variant="ghost" onClick={()=>go('milan')}>View all<ArrowRight/></Button></div>
  {upcoming.length?<div className="home-appointment-grid">{upcoming.slice(0,3).map(a=><article className="nv-card" key={a.id}><div className="nv-card-top"><span className="nv-tag"><CalendarDays/>Appointment</span><span className="nv-pill">{a.status}</span></div><h3>{a.reason}</h3><p className="nv-sub">{data.babies.find(b=>b.id===a.baby_id)?.baby_name}</p><div className="nv-row"><Clock/><div><strong>{formatDate(a.starts_at)}</strong><small>{(a.location as Record<string,string>)['facilityName']||'Location not configured'}</small></div></div><Button variant="outline" onClick={()=>go('milan')}>View appointment<ArrowRight/></Button></article>)}</div>:<p className="home-empty">No upcoming appointments.</p>}
+ </>}
  </>;
+}
+const SUTRA_SUGGESTIONS=['How has feeding been this week?','What did the care team say last time?','Any concerns in my recent check-ins?'];
+function CaregiverHome({data,baby,go}:{data:Data;baby?:Baby|undefined;go:(s:Section)=>unknown}){
+ const change=useServerFn(updateAppointment);const queryClient=useQueryClient();const [q,setQ]=useState('');const [busyId,setBusyId]=useState('');
+ if(!baby)return <Empty>No care profile is connected yet.</Empty>;
+ const cards=data.cards.filter(c=>c.baby_id===baby.id);
+ const plan=baby.plan as unknown as CarePlan;
+ const slot=nextCheckin(plan,baby.created_at,cards[0]?.created_at);
+ const upcoming=data.appointments.filter(a=>a.baby_id===baby.id&&!['Completed','Cancelled'].includes(a.status)&&new Date(a.starts_at).getTime()>=Date.now()).slice(0,3);
+ const total=cards.length;
+ const pct=(p:string)=>total?Math.round(cards.filter(c=>c.priority===p).length/total*100):0;
+ const ask=(text:string)=>{if(text.trim()){sessionStorage.setItem('sutra-initial-query',text.trim());}void go('sutra');};
+ const confirm=async(id:string)=>{setBusyId(id);try{await change({data:{id,status:'Confirmed'}});void queryClient.invalidateQueries({queryKey:['care-data']});}finally{setBusyId('');}};
+ const ist=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+ const year=ist.getFullYear(),month=ist.getMonth();
+ const startDay=new Date(year,month,1).getDay();const daysInMonth=new Date(year,month+1,0).getDate();
+ const dayKey=(d:Date)=>d.toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+ const checkinDays=new Set(cards.map(c=>dayKey(new Date(c.created_at))));
+ const apptDays=new Set(data.appointments.filter(a=>a.baby_id===baby.id).map(a=>dayKey(new Date(a.starts_at))));
+ const cells:(number|null)[]=[...Array<null>(startDay).fill(null),...Array.from({length:daysInMonth},(_,i)=>i+1)];
+ const completed=data.appointments.filter(a=>a.baby_id===baby.id&&a.status==='Completed').slice(0,3);
+ const recent=cards.slice(0,4);
+ return <div className="home-grid">
+  <section className="nv-card home-widget home-wide">
+   <div className="nv-card-top"><span className="nv-tag"><MessageCircleHeart/>Svara check-in</span><span className={`nv-pill ${slot.due?'is-due':''}`}>{slot.due?'Due now':'Up to date'}</span></div>
+   <h3>{slot.due?'Your check-in is due':'Next scheduled check-in'}</h3>
+   <p className="nv-sub">{formatDate(slot.scheduledFor)} · {plan.frequency}</p>
+   <Button onClick={()=>go('svara')}>Start check-in with Svara<ArrowRight/></Button>
+  </section>
+  <section className="nv-card home-widget home-wide">
+   <div className="nv-card-top"><span className="nv-tag"><CalendarDays/>Upcoming appointments</span><Button variant="ghost" size="sm" onClick={()=>go('milan')}>View all<ArrowRight/></Button></div>
+   {upcoming.length?upcoming.map(a=><div className="home-appt" key={a.id}><div className="home-appt-date"><strong>{new Date(a.starts_at).toLocaleDateString('en-IN',{day:'2-digit',timeZone:'Asia/Kolkata'})}</strong><span>{new Date(a.starts_at).toLocaleDateString('en-IN',{month:'short',timeZone:'Asia/Kolkata'})}</span></div><div className="flex-1"><strong>{a.reason}</strong><small>{new Date(a.starts_at).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Kolkata'})} · {(a.location as Record<string,string>)['facilityName']||'Location not configured'}</small></div>{a.status==='Confirmed'?<span className="nv-pill">Confirmed</span>:<Button size="sm" variant="outline" disabled={busyId===a.id} onClick={()=>void confirm(a.id)}>Confirm availability</Button>}</div>):<p className="home-empty">No upcoming appointments.</p>}
+  </section>
+  <section className="nv-card home-widget home-wide">
+   <div className="nv-card-top"><span className="nv-tag"><GitBranch/>Ask Sutra</span></div>
+   <h3>Look back at {baby.baby_name}’s journey</h3>
+   <form className="home-sutra-bar" onSubmit={e=>{e.preventDefault();ask(q);}}>
+    <Input aria-label="Ask about the care journey" placeholder="Ask about the care journey…" value={q} onChange={e=>setQ(e.target.value)}/>
+    <Button type="submit" size="icon" aria-label="Ask Sutra"><ArrowRight/></Button>
+   </form>
+   <div className="home-suggestions">{SUTRA_SUGGESTIONS.map(s=><button type="button" key={s} onClick={()=>ask(s)}>{s}</button>)}</div>
+  </section>
+  <section className="nv-card home-widget">
+   <div className="nv-card-top"><span className="nv-tag"><Activity/>Check-in health</span></div>
+   {total?([['Routine',pct('Routine'),'routine'],['Review',pct('Review Needed'),'review'],['Priority',pct('Priority Review'),'priority']] as const).map(([label,value,key])=><div className="home-metric" key={key}><div><span>{label}</span><strong>{value}%</strong></div><div className="home-meter"><i className={`meter-${key}`} style={{width:`${value}%`}}/></div></div>):<p className="home-empty">No check-ins yet.</p>}
+  </section>
+  <section className="nv-card home-widget">
+   <div className="nv-card-top"><span className="nv-tag"><CalendarDays/>{ist.toLocaleDateString('en-IN',{month:'long',year:'numeric',timeZone:'Asia/Kolkata'})}</span></div>
+   <div className="home-calendar" role="grid" aria-label="Activity calendar">
+    {['S','M','T','W','T','F','S'].map((d,i)=><span className="cal-head" key={i}>{d}</span>)}
+    {cells.map((d,i)=>{if(d===null)return <span key={i}/>;const key=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;const c=checkinDays.has(key),a=apptDays.has(key);return <span key={i} className={`cal-day ${c&&a?'cal-both':c?'cal-checkin':a?'cal-appt':''} ${d===ist.getDate()?'cal-today':''}`}>{d}</span>;})}
+   </div>
+   <div className="home-legend"><span><i className="dot-checkin"/>Home check-in</span><span><i className="dot-appt"/>Appointment</span></div>
+  </section>
+  <section className="nv-card home-widget">
+   <div className="nv-card-top"><span className="nv-tag"><FileText/>Appointment notes</span></div>
+   {completed.length?completed.map(a=><button type="button" className="home-note" key={a.id} onClick={()=>go('sutra')}><strong>{a.reason}</strong><small>{formatDate(a.starts_at)}</small></button>):<p className="home-empty">No completed appointments yet.</p>}
+  </section>
+  <section className="nv-card home-widget home-wide">
+   <div className="nv-card-top"><span className="nv-tag"><Activity/>Recent updates</span></div>
+   {recent.length?<div className="home-timeline">{recent.map(c=><div className="home-timeline-row" key={c.id}><span className={`timeline-dot ${c.priority==='Priority Review'?'priority-high':c.priority==='Review Needed'?'priority-review':''}`}/><div className="flex-1"><strong>{c.category}</strong><small>{formatDate(c.created_at)}</small></div><span className="nv-pill">{c.reviewed?'Reviewed':'Awaiting review'}</span></div>)}</div>:<p className="home-empty">No submitted updates yet.</p>}
+  </section>
+ </div>;
 }
 function EmergencyCompact({settings}:{settings:Record<string,string>}){return <div className="home-shortcuts">{[['careTeamContact','Care Team'],['emergencyContact','Hospital Emergency'],['ambulanceNumber','Ambulance'],['afterHoursContact','After-hours contact']].map(([key,label])=>key&&settings[key]?<Button asChild variant="outline" size="sm" key={key}><a href={'tel:'+settings[key].replace(/[^\d+]/g,'')}><Phone/>{label}</a></Button>:null)}</div>;}
 function priorityLabel(v:string){return v==='Priority Review'?'Priority':v==='Review Needed'?'Review':v;}
