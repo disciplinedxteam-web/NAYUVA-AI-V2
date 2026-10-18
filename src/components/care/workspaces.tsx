@@ -258,6 +258,8 @@ export function SutraWorkspace({ data, role }: { data: Data; role: DemoRole }) {
   const [selected, setSelected] = useState<string[]>([]); const [msgs, setMsgs] = useState<Msg[]>([]); const [draft, setDraft] = useState(''); const [thinking, setThinking] = useState(false); const [err, setErr] = useState('');
   const strip = useRef<HTMLDivElement>(null); const speech = useSpeech(setDraft, draft); const speak = useServerFn(speakText); const audio = useRef<HTMLAudioElement | null>(null); const cache = useRef(new Map<number, string>()); const [playing, setPlaying] = useState<number | null>(null);
   useEffect(() => () => audio.current?.pause(), []);
+  // A question typed on the Home screen arrives here pre-filled.
+  useEffect(() => { const pending = sessionStorage.getItem('sutra-initial-query'); if (pending && babyId) { sessionStorage.removeItem('sutra-initial-query'); setDraft(pending); inputRef.current?.focus(); } }, [babyId]);
   async function play(i: number, text: string) { audio.current?.pause(); if (playing === i) { setPlaying(null); return; } setErr(''); try { let src = cache.current.get(i); if (!src) { src = 'data:audio/wav;base64,' + (await speak({ data: { text, language: 'en-IN' } })).audio; cache.current.set(i, src); } const a = new Audio(src); audio.current = a; a.onended = () => setPlaying(null); setPlaying(i); await a.play(); } catch (e) { setPlaying(null); setErr(e instanceof Error ? e.message : 'Audio unavailable.'); } }
   const items: JourneyItem[] = useMemo(() => !baby ? [] : [
     ...data.events.filter(e => e.baby_id === baby.id).map(e => ({ id: 'e' + e.id, when: e.created_at, kind: e.kind, title: e.kind, body: e.summary, tag: 'Journey' })),

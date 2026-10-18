@@ -1,20 +1,23 @@
 # Roadmap
 
-- [ ] Universal clean health cards, stamp-only animation, rounded toggles and section typography
-- [ ] Baby search and filters in Care Updates, Milan and Lekha
-- [ ] Hover/focus sidebar with clear icon rail and contextual subsections for both roles
-- [ ] Reference-matched translucent caregiver profile panels
-- [ ] Taal rolling fortnight continuity roster with reasons and outreach
-- [ ] Daily online scheduling, authorized rooms, consented transcripts and reviewed documentation
-- [ ] Backgroundless Svara listening/speaking/completion videos driven by actual states
-- [ ] Verify changed workflows, tests and dashboard presentation
+## Svara UI/UX
+- [ ] Choose screen: compact, centered, no scroll when CTA trays open
+- [ ] Greeting video (Namaskar) plays once, then looking-around video loops; remove orb/wave; backgroundless; same size
+- [ ] Phone input: +91 inside one input frame, aesthetic
+- [ ] Voice screen: more spacing above disconnect, larger character video, wider horizontal transcript gaps
+- [ ] Trim last 1.5s of speaking video
+- [ ] Functional hold + mute buttons
+- [ ] Svara always available (remove due gating)
+- [ ] Incomplete/left calls: no card, restart from fresh state
+- [ ] Completion video (2.4s) plays fully before redirect home
+- [ ] Phone stage shows looking-around video instead of orb
 
-- [ ] New backgroundless logo everywhere (sidebar, navbar, profile selector); remove black-square treatment
-- [ ] GlassToggle: remove outer rectangular background; Milan Schedule Appointment inside toggle pill
-- [ ] Sidebar: hover-expand animation + rounded bold themed tooltips (both dashboards)
-- [ ] Language + emergency selectors: new check-item animated UI (home + dashboards)
-- [ ] Profile selector: two-tone brand card separation, backgroundless logo
-- [ ] Lekha workflow: chat doc screen (appointment card, LLM greeting, ChatGPT composer, 8-item checklist, coverage reply + proceed chips), flux-loader generation screen, approve, completion screen
-- [ ] Svara generation screen: same flux-loader UI
-- [ ] Care Updates review screen redesign (baby header, topic cards + View Transcription, history, quick actions, Mark as Reviewed)
-- [ ] Verify: typecheck, tests, browser check
+## Caregiver Home dashboard
+- [ ] Full redesign per uploaded markdown (Svara card, appointments w/ availability action, Sutra shortcut w/ 3 suggested questions, analytics, activity calendar w/ split-color days, appointment notes/Lekha section, recent card status timeline)
+
+## Cards
+- [ ] Replace all card UI with uploaded 381-line component (ShineBorder), white card, light-pink inner tags, pink CTA, remove stamp
+
+## Sidebar / chrome
+- [ ] Fix sidebar not collapsing after selecting a section
+- [ ] Remove "Clinical decisions remain with your care team / IST" footer text everywhere

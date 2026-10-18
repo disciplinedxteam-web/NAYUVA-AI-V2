@@ -10,3 +10,11 @@ export function registeredSvaraVariables(context: Record<string, string>): Recor
 export function hasCaregiverAnswer(lines: { role: string; content: string }[]) {
   return lines.some(line => line.role === 'user' && line.content.trim().length > 0);
 }
+
+/** A check-in only becomes a Health Card when the conversation genuinely completed:
+ * the caregiver answered more than once and Svara spoke last (its closing). */
+export function isConversationComplete(lines: { role: string; content: string }[]) {
+  const filled = lines.filter(line => line.content.trim().length > 0);
+  const answers = filled.filter(line => line.role === 'user').length;
+  return answers >= 2 && filled[filled.length - 1]?.role === 'bot';
+}

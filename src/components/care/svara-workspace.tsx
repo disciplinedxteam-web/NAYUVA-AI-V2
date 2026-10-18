@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
-import { Mic, Phone, ArrowRight, Check, Clock, ChevronDown, Loader2, PhoneCall } from 'lucide-react';
+import { Mic, Phone, ArrowRight, Check, ChevronDown, Loader2, PhoneCall } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ProductOrb } from '@/components/product-orb';
 import { SvaraVoice, type Line } from './svara-voice';
 import { CareTicket } from './care-ticket';
 import { CardGeneration } from './card-generation';
@@ -70,31 +69,37 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
 
   async function send() {
     if (!session) return; setBusy(true); setError('');
-    try { await confirm({ data: { sessionId: session.sessionId, summary } }); onSaved(); setStage('success'); window.setTimeout(() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } }), 1800); }
+    try { await confirm({ data: { sessionId: session.sessionId, summary } }); onSaved(); setStage('success'); window.setTimeout(() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } }), 4000); }
     catch (e) { setError(e instanceof Error ? e.message : 'Submission failed.'); } finally { setBusy(false); }
   }
 
   const card = parseCard(summary);
   const phoneValid = /^[6-9]\d{9}$/.test(digits);
 
-  if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} onCancel={() => { setStage('choose'); setError(''); }} />;
+  const onAbandoned = useCallback(() => {
+    const s = session;
+    if (s && lines.current.length) void persist({ data: { sessionId: s.sessionId, lines: lines.current, interrupted: true } }).catch(() => {});
+    setStage('choose'); setError('The conversation ended before it was complete, so no Health Card was created. Start again when you are ready.');
+  }, [session, persist]);
+
+  if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} onCancel={onAbandoned} />;
 
   return <div className="svara-stage">
     {stage === 'choose' && <div className="svara-stage-center">
-      <div className="svara-hero-orb"><ProductOrb name="SVARA" state="working" /></div>
+      <div className="svara-hero-orb"><SvaraAnimation state="greeting" /></div>
       <h1 className="svara-title">Your check-in with Svara</h1>
-      <p className="svara-lede">{due ? 'Choose how you would like to talk. Svara asks only the questions in your baby’s Care Plan.' : 'Your next scheduled check-in is not due yet.'}</p>
+      <p className="svara-lede">Choose how you would like to talk. Svara asks only the questions in your baby’s Care Plan.{due ? '' : ' Your next scheduled check-in is not due yet, but you can talk to Svara anytime.'}</p>
       {error && <p role="alert" className="svara-error">{error}</p>}
       <div className="svara-ctas">
         <div className={`svara-cta-group ${open === 'web' ? 'open' : ''}`}>
-          <Button type="button" variant="ghost" className="svara-cta primary" disabled={!due || busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></Button>
+          <Button type="button" variant="ghost" className="svara-cta primary" disabled={busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></Button>
           {open === 'web' && <div className="svara-tray">
             <p>Start a voice conversation with Svara now? Your microphone will be used.</p>
             <Button className="w-full" disabled={busy} onClick={() => void startWeb()}>{busy ? <Loader2 className="animate-spin" /> : <Mic />}Start conversation</Button>
           </div>}
         </div>
         <div className={`svara-cta-group ${open === 'phone' ? 'open' : ''}`}>
-          <Button type="button" variant="ghost" className="svara-cta" disabled={!due || busy} aria-expanded={open === 'phone'} onClick={() => setOpen(open === 'phone' ? null : 'phone')}><Phone /><span><strong>Get a phone call</strong><small>Svara calls your mobile number</small></span><ChevronDown className="chev" /></Button>
+          <Button type="button" variant="ghost" className="svara-cta" disabled={busy} aria-expanded={open === 'phone'} onClick={() => setOpen(open === 'phone' ? null : 'phone')}><Phone /><span><strong>Get a phone call</strong><small>Svara calls your mobile number</small></span><ChevronDown className="chev" /></Button>
           {open === 'phone' && <form className="svara-tray" onSubmit={(e) => { e.preventDefault(); if (phoneValid && consent) void startPhone(); }}>
             <label className="svara-phone">
               <span className="svara-cc"><Phone aria-hidden="true" />+91</span>
@@ -105,11 +110,10 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
           </form>}
         </div>
       </div>
-      {!due && <p className="svara-lede small"><Clock size={14} /> Svara opens when your check-in is due.</p>}
     </div>}
 
     {stage === 'phone' && <div className="svara-stage-center">
-      <div className="svara-hero-orb pulsing"><ProductOrb name="SVARA" state="working" /></div>
+      <div className="svara-hero-orb"><SvaraAnimation state="idle" /></div>
       <h1 className="svara-title">Svara is on the phone with you</h1>
       <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>
       {call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) && <div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}><PhoneCall />Call me again</Button><Button variant="ghost" onClick={() => setStage('choose')}>Back</Button></div>}
@@ -131,7 +135,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     </div>}
 
     {stage === 'success' && <div className="svara-stage-center">
-      <div className="svara-hero-orb"><SvaraAnimation state="completion"/></div>
+      <div className="svara-hero-orb"><SvaraAnimation state="completion" onComplete={() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } })} /></div>
       <h1 className="svara-title">Card submitted to your care team</h1>
       <p className="svara-lede">Taking you back to Home…</p>
     </div>}

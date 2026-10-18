@@ -42,12 +42,13 @@ export const prepareSvaraSession=createServerFn({method:'POST'}).inputValidator(
  const session=await authorized('caregiver'); if(!session.caregiverProfileId)throw new Error('Choose your caregiver profile first.');
  const baby=await babyAccess(session.db,session.caregiverProfileId,'caregiver'); const db=session.db; const plan=baby.plan as unknown as import('./care-domain').CarePlan;
  const {data:cards,error:cardError}=await db.from('health_cards').select('created_at,category,quote,reviewed').eq('baby_id',baby.id).order('created_at',{ascending:false}).limit(12);check(cardError);
- const slot=nextCheckin(plan,baby.created_at,cards?.[0]?.created_at);if(!slot.due)throw new Error('Your next scheduled check-in is not due yet.');
+ // Svara is always available: a due slot reuses its scheduled time, otherwise the check-in is ad-hoc.
+ const slot=nextCheckin(plan,baby.created_at,cards?.[0]?.created_at);const scheduledFor=slot.due?slot.scheduledFor:new Date().toISOString();
  const {data:questions,error:qError}=await db.from('question_bank').select('id,topic,first_wording,returning_wording,response_type,validation,version').eq('active',true).eq('approval_status','approved').in('topic',[...plan.categories,'Caregiver concerns']);check(qError);
  const {data:instructions,error:iError}=await db.from('followup_instructions').select('instruction,topic,expires_on').eq('baby_id',baby.id).eq('plan_version',baby.plan_version).eq('status','active');check(iError);
- const {data:existing,error:xError}=await db.from('checkin_sessions').select('*').eq('baby_id',baby.id).eq('scheduled_for',slot.scheduledFor).maybeSingle();check(xError);
+ const {data:existing,error:xError}=await db.from('checkin_sessions').select('*').eq('baby_id',baby.id).eq('scheduled_for',scheduledFor).maybeSingle();check(xError);
  let checkin=existing;
- if(!checkin){const {data:created,error}=await db.from('checkin_sessions').insert({baby_id:baby.id,caregiver_name:baby.caregiver_name,plan_version:baby.plan_version,plan_snapshot:baby.plan,scheduled_for:slot.scheduledFor,channel:data.channel,status:'in_progress',started_at:new Date().toISOString(),question_ids:(questions??[]).map(q=>q.id),agent_version:'1'}).select().single();check(error);checkin=created;}
+ if(!checkin){const {data:created,error}=await db.from('checkin_sessions').insert({baby_id:baby.id,caregiver_name:baby.caregiver_name,plan_version:baby.plan_version,plan_snapshot:baby.plan,scheduled_for:scheduledFor,channel:data.channel,status:'in_progress',started_at:new Date().toISOString(),question_ids:(questions??[]).map(q=>q.id),agent_version:'1'}).select().single();check(error);checkin=created;}
  if(!checkin)throw new Error('Check-in could not be created.');
  if(checkin.status==='submitted')throw new Error('This check-in has already been submitted.');
  if(['incomplete','scheduled','failed'].includes(checkin.status)){check((await db.from('checkin_sessions').update({status:'in_progress',channel:data.channel}).eq('id',checkin.id)).error);checkin={...checkin,status:'in_progress'};}
@@ -83,6 +84,8 @@ export const getSvaraCallStatus=createServerFn({method:'POST'}).inputValidator(z
 export const summarizeSvaraSession=createServerFn({method:'POST'}).inputValidator(z.object({sessionId:z.string().uuid()})).handler(async({data})=>{
  const auth=await authorized('caregiver');const {data:s,error}=await auth.db.from('checkin_sessions').select('*').eq('id',data.sessionId).eq('baby_id',auth.caregiverProfileId??'').single();check(error);if(!s||s.status==='submitted')throw new Error('Check-in unavailable.');
  const {transcriptSchema}=await import('./svara-session-domain');const transcript=transcriptSchema.parse(s.transcript);if(!transcript.some(l=>l.role==='user'))throw new Error('No caregiver responses were recorded.');
+ // Interrupted or abandoned conversations never become a card; the check-in starts again.
+ const {isConversationComplete}=await import('./svara-agent-contract');if(s.status==='incomplete'||!isConversationComplete(transcript))throw new Error('This conversation ended before it was complete. Please start the check-in again.');
  const summary=await draftSvaraSummary(transcript,s.plan_snapshot);const scoring={priority:summary.card.priority,reason:summary.card.priorityReason,source:'sarvam_llm',note:'AI-suggested category; care team confirms.'};check((await auth.db.from('checkin_sessions').update({summary:{...summary,scoring} as Json,status:'awaiting_confirmation'}).eq('id',s.id)).error);return summary;
 });
 export const confirmSvaraSession=createServerFn({method:'POST'}).inputValidator(z.object({sessionId:z.string().uuid(),summary:z.string().trim().min(1).max(5000)})).handler(async({data})=>{
