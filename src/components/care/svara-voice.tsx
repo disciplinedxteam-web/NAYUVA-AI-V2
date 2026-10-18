@@ -46,6 +46,8 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
   const [state, setState] = useState('CONNECTING');
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState('');
+  const [muted, setMuted] = useState(false);
+  const [held, setHeld] = useState(false);
   const agent = useRef<Agent | null>(null);
   const ended = useRef(false);
   const latestLines = useRef<Line[]>([]);
@@ -55,7 +57,10 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: 'smooth' }); }, [lines]);
   useEffect(() => { latestLines.current = lines; if (lines.length) onTranscript(lines.filter((l) => l.content).map(({ role, content }) => ({ role, content }))); }, [lines, onTranscript]);
 
-  function finish() { if (ended.current) return; ended.current = true; onTranscript(latestLines.current.filter(l => l.content)); void agent.current?.stop(); agent.current = null; if (hasCaregiverAnswer(latestLines.current)) onEnded(); else onCancel(); }
+  // Only a genuinely completed conversation becomes a card; anything else restarts fresh.
+  function finish() { if (ended.current) return; ended.current = true; onTranscript(latestLines.current.filter(l => l.content)); void agent.current?.stop(); agent.current = null; setMuted(false); setHeld(false); if (isConversationComplete(latestLines.current)) onEnded(); else onCancel(); }
+  function toggleMute() { const a = agent.current; if (!a) return; if (a.isMuted()) { a.unmute(); setMuted(false); setHeld(false); } else { a.mute(); setMuted(true); } }
+  function toggleHold() { const a = agent.current; if (!a) return; if (held) { a.unmute(); setHeld(false); setMuted(false); } else { a.mute(); setHeld(true); setMuted(true); } }
   useEffect(() => {
     let cancelled = false;
     ended.current = false; ready.current = false; setError(''); setState('CONNECTING');
@@ -76,7 +81,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
           stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; setState(value); },
-          endCallback: async () => { if (cancelled || ended.current) return; if (ready.current && hasCaregiverAnswer(latestLines.current)) finish(); else { setError('The connection ended before your answers were captured. Reconnect to try again.'); setState('IDLE'); } },
+          endCallback: async () => { if (cancelled || ended.current) return; if (ready.current && isConversationComplete(latestLines.current)) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
         agent.current = a;
         await a.start();
@@ -103,9 +108,14 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
       </div>
     </div>
     <footer className="svara-live-dock">
-      <div className="svara-live-orb"><SvaraAnimation state={s.includes('speak')?'speaking':s.includes('listen')?'listening':'idle'}/></div>
-      {error && <Button type="button" onClick={() => { void agent.current?.stop(); setAttempt(a => a + 1); }}><RotateCcw />Reconnect</Button>}
-      <Button type="button" size="lg" variant="destructive" className="svara-end" onClick={finish}><PhoneOff />{error ? 'Close' : 'End conversation'}</Button>
+      <div className="svara-live-orb"><SvaraAnimation state={held?'idle':s.includes('speak')?'speaking':s.includes('listen')?'listening':'idle'}/></div>
+      {held && <p className="svara-live-hold" role="status">On hold — Svara is waiting for you.</p>}
+      <div className="svara-live-controls">
+        {error && <Button type="button" onClick={() => { void agent.current?.stop(); setAttempt(a => a + 1); }}><RotateCcw />Reconnect</Button>}
+        {!error && <Button type="button" variant="outline" className="svara-ctl" aria-pressed={muted} onClick={toggleMute}>{muted ? <MicOff /> : <Mic />}{muted ? 'Unmute' : 'Mute'}</Button>}
+        {!error && <Button type="button" variant="outline" className="svara-ctl" aria-pressed={held} onClick={toggleHold}>{held ? <Play /> : <Pause />}{held ? 'Resume' : 'Hold'}</Button>}
+        <Button type="button" size="lg" variant="destructive" className="svara-end" onClick={finish}><PhoneOff />{error ? 'Close' : 'End conversation'}</Button>
+      </div>
     </footer>
   </div>;
 }
