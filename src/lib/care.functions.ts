@@ -42,10 +42,11 @@ export const prepareSvaraSession=createServerFn({method:'POST'}).inputValidator(
  const session=await authorized('caregiver'); if(!session.caregiverProfileId)throw new Error('Choose your caregiver profile first.');
  const baby=await babyAccess(session.db,session.caregiverProfileId,'caregiver'); const db=session.db; const plan=baby.plan as unknown as import('./care-domain').CarePlan;
  const {data:cards,error:cardError}=await db.from('health_cards').select('created_at,category,quote,reviewed').eq('baby_id',baby.id).order('created_at',{ascending:false}).limit(12);check(cardError);
- const slot=nextCheckin(plan,baby.created_at,cards?.[0]?.created_at);if(!slot.due)throw new Error('Your next scheduled check-in is not due yet.');
+ // Svara is always available: a due slot reuses its scheduled time, otherwise the check-in is ad-hoc.
+ const slot=nextCheckin(plan,baby.created_at,cards?.[0]?.created_at);const scheduledFor=slot.due?slot.scheduledFor:new Date().toISOString();
  const {data:questions,error:qError}=await db.from('question_bank').select('id,topic,first_wording,returning_wording,response_type,validation,version').eq('active',true).eq('approval_status','approved').in('topic',[...plan.categories,'Caregiver concerns']);check(qError);
  const {data:instructions,error:iError}=await db.from('followup_instructions').select('instruction,topic,expires_on').eq('baby_id',baby.id).eq('plan_version',baby.plan_version).eq('status','active');check(iError);
- const {data:existing,error:xError}=await db.from('checkin_sessions').select('*').eq('baby_id',baby.id).eq('scheduled_for',slot.scheduledFor).maybeSingle();check(xError);
+ const {data:existing,error:xError}=await db.from('checkin_sessions').select('*').eq('baby_id',baby.id).eq('scheduled_for',scheduledFor).maybeSingle();check(xError);
  let checkin=existing;
  if(!checkin){const {data:created,error}=await db.from('checkin_sessions').insert({baby_id:baby.id,caregiver_name:baby.caregiver_name,plan_version:baby.plan_version,plan_snapshot:baby.plan,scheduled_for:slot.scheduledFor,channel:data.channel,status:'in_progress',started_at:new Date().toISOString(),question_ids:(questions??[]).map(q=>q.id),agent_version:'1'}).select().single();check(error);checkin=created;}
  if(!checkin)throw new Error('Check-in could not be created.');
