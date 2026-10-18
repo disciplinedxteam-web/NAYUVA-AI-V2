@@ -53,7 +53,7 @@ export function Dashboard({role,section}:{role:DemoRole;section:Section}){
  {section==='settings'&&role==='caregiver'&&<Emergency settings={data.settings as Record<string,string>}/>}
  {section==='settings'&&role==='care-team'&&<Facility settings={data.settings as Record<string,string>} busy={busy} run={run}/>}
  {section==='emergency'&&<Emergency settings={data.settings as Record<string,string>}/>}
- </>}<footer className="dashboard-footer"><ShieldCheck size={14}/><span>Clinical decisions remain with your care team.</span><span>India time · IST</span></footer></div></div></main>;
+ </>}</div></div></main>;
 }
 function DashboardHome({data,baby,role,go,onPriority}:{data:Data;baby?:Baby|undefined;role:DemoRole;go:(s:Section)=>unknown;onPriority:(p:string)=>void}){
  const upcoming=data.appointments.filter(a=>!['Completed','Cancelled'].includes(a.status)&&new Date(a.starts_at).getTime()>=Date.now()); const awaiting=data.cards.filter(c=>!c.reviewed); const pendingNotes=data.appointments.filter(a=>a.status==='Completed'&&!data.notes.some(n=>n.appointment_id===a.id));
