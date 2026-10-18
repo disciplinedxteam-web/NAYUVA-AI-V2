@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
-import { Mic, Phone, ArrowRight, Check, Clock, ChevronDown, Loader2, PhoneCall } from 'lucide-react';
+import { Mic, Phone, ArrowRight, Check, ChevronDown, Loader2, PhoneCall } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ProductOrb } from '@/components/product-orb';
 import { SvaraVoice, type Line } from './svara-voice';
 import { CareTicket } from './care-ticket';
 import { CardGeneration } from './card-generation';
@@ -70,7 +69,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
 
   async function send() {
     if (!session) return; setBusy(true); setError('');
-    try { await confirm({ data: { sessionId: session.sessionId, summary } }); onSaved(); setStage('success'); window.setTimeout(() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } }), 1800); }
+    try { await confirm({ data: { sessionId: session.sessionId, summary } }); onSaved(); setStage('success'); window.setTimeout(() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } }), 4000); }
     catch (e) { setError(e instanceof Error ? e.message : 'Submission failed.'); } finally { setBusy(false); }
   }
 
