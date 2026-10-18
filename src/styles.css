@@ -1371,3 +1371,9 @@
 .shine-border > .shine-inner { position: relative; border-radius: 16.5px; background: var(--card); height: 100%; }
 @keyframes shine-rotate { to { --shine-angle: 360deg; } }
 @media (prefers-reduced-motion: reduce) { .shine-border { animation: none; } }
+
+/* Shine card internals: light-pink tags on white */
+.shine-inner .ticket-cell { background: color-mix(in oklab, var(--primary) 4%, transparent); border-bottom: 0; border-radius: 10px; margin: 0; }
+.shine-inner .ticket-grid { gap: 8px; padding: 12px 14px; }
+.shine-inner .ticket-cell:nth-child(2n) { border-left: 0; }
+.shine-inner .ticket-record { border-top: 1px solid var(--border); }
