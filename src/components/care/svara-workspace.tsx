@@ -93,14 +93,14 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       {error && <p role="alert" className="svara-error">{error}</p>}
       <div className="svara-ctas">
         <div className={`svara-cta-group ${open === 'web' ? 'open' : ''}`}>
-          <Button type="button" variant="ghost" className="svara-cta primary" disabled={!due || busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></Button>
+          <Button type="button" variant="ghost" className="svara-cta primary" disabled={busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></Button>
           {open === 'web' && <div className="svara-tray">
             <p>Start a voice conversation with Svara now? Your microphone will be used.</p>
             <Button className="w-full" disabled={busy} onClick={() => void startWeb()}>{busy ? <Loader2 className="animate-spin" /> : <Mic />}Start conversation</Button>
           </div>}
         </div>
         <div className={`svara-cta-group ${open === 'phone' ? 'open' : ''}`}>
-          <Button type="button" variant="ghost" className="svara-cta" disabled={!due || busy} aria-expanded={open === 'phone'} onClick={() => setOpen(open === 'phone' ? null : 'phone')}><Phone /><span><strong>Get a phone call</strong><small>Svara calls your mobile number</small></span><ChevronDown className="chev" /></Button>
+          <Button type="button" variant="ghost" className="svara-cta" disabled={busy} aria-expanded={open === 'phone'} onClick={() => setOpen(open === 'phone' ? null : 'phone')}><Phone /><span><strong>Get a phone call</strong><small>Svara calls your mobile number</small></span><ChevronDown className="chev" /></Button>
           {open === 'phone' && <form className="svara-tray" onSubmit={(e) => { e.preventDefault(); if (phoneValid && consent) void startPhone(); }}>
             <label className="svara-phone">
               <span className="svara-cc"><Phone aria-hidden="true" />+91</span>
@@ -111,11 +111,10 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
           </form>}
         </div>
       </div>
-      {!due && <p className="svara-lede small"><Clock size={14} /> Svara opens when your check-in is due.</p>}
     </div>}
 
     {stage === 'phone' && <div className="svara-stage-center">
-      <div className="svara-hero-orb pulsing"><ProductOrb name="SVARA" state="working" /></div>
+      <div className="svara-hero-orb"><SvaraAnimation state="idle" /></div>
       <h1 className="svara-title">Svara is on the phone with you</h1>
       <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>
       {call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) && <div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}><PhoneCall />Call me again</Button><Button variant="ghost" onClick={() => setStage('choose')}>Back</Button></div>}
@@ -137,7 +136,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     </div>}
 
     {stage === 'success' && <div className="svara-stage-center">
-      <div className="svara-hero-orb"><SvaraAnimation state="completion"/></div>
+      <div className="svara-hero-orb"><SvaraAnimation state="completion" onComplete={() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } })} /></div>
       <h1 className="svara-title">Card submitted to your care team</h1>
       <p className="svara-lede">Taking you back to Home…</p>
     </div>}
