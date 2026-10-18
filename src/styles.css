@@ -995,7 +995,9 @@
 .svara-live-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 0 4px color-mix(in oklab, var(--primary) 30%, transparent); animation: svara-pulse 1.6s infinite; }
 .svara-live-state { font-size: 13px; opacity: .7; }
 .svara-live-log { flex: 1; overflow-y: auto; scroll-behavior: smooth; mask-image: linear-gradient(transparent, #000 40px, #000 calc(100% - 40px), transparent); }
-.svara-live-inner { width: min(100% - 48px, 760px); margin: 0 auto; padding: 40px 0 60px; display: flex; flex-direction: column; gap: 18px; }
+.svara-live-inner { width: min(100% - 48px, 820px); margin: 0 auto; padding: 40px 0 60px; display: flex; flex-direction: column; gap: 24px; }
+.live-turn.user p { margin-right: 12px; }
+.live-bot-card { margin-left: 12px; }
 .svara-live-hint { text-align: center; opacity: .6; font-size: 14px; margin-top: 18vh; }
 .svara-live-error { text-align:center; color:var(--destructive); }
 .live-turn { display: flex; animation: tray-in .35s ease both; }
@@ -1009,9 +1011,12 @@
 .live-bot-name { display: block; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
 .live-bot-card p { margin: 0; font-size: 15px; line-height: 1.55; }
 .live-caret { display: inline-block; width: 2px; height: 1em; margin-left: 3px; vertical-align: -2px; background: currentColor; animation: dot 1s infinite; }
-.svara-live-dock { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 0 0 28px; }
-.svara-live-orb { width: 150px; margin-bottom: -20px; transition: transform .4s; }
+.svara-live-dock { display: flex; flex-direction: column; align-items: center; gap: 26px; padding: 0 0 34px; }
+.svara-live-orb { width: 210px; transition: transform .4s; }
 .svara-live-orb.is-speaking { transform: scale(1.08); }
+.svara-live-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.svara-ctl { border-radius: 99px; padding-inline: 18px; }
+.svara-live-hold { margin: 0; font-size: 13px; font-weight: 600; color: var(--primary); }
 .svara-end { border-radius: 99px; padding-inline: 22px; }
 @media (prefers-reduced-motion: reduce) { .svara-hero-orb, .live-turn, .svara-tray, .svara-live-badge i, .live-caret, .live-turn.user p.is-typing span { animation: none !important; } }
 .journey-ticket { flex: 0 0 min(560px, 86vw); padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 20px; transition: transform .25s; text-align: left; }
