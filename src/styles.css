@@ -944,10 +944,11 @@
 @media(prefers-reduced-motion:reduce) { .ticket-stub { transition:none; animation:none; }.ticket-stamp { animation:none; } }
 
 /* ===== Svara stages ===== */
-.svara-stage { min-height: calc(100vh - 120px); display: grid; place-items: center; padding: 24px 0 40px; }
-.svara-stage-center { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; width: min(100%, 800px); }
+.svara-stage { min-height: calc(100svh - 140px); display: grid; place-items: center; padding: 8px 0 24px; }
+.svara-stage-center { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; width: min(100%, 800px); }
 .svara-stage-center.wide { width: min(100%, 780px); }
-.svara-hero-orb { width: 260px; margin-bottom: -18px; }
+.svara-hero-orb { width: 190px; margin-bottom: -8px; }
+.svara-hero-orb .svara-animation video { width: 100%; height: auto; display: block; }
 .svara-hero-orb.pulsing { animation: svara-pulse 2.4s ease-in-out infinite; }
 .svara-hero-orb.thinking { animation: svara-pulse 1.6s ease-in-out infinite; }
 @keyframes svara-pulse { 50% { transform: scale(1.04); filter: drop-shadow(0 0 26px color-mix(in oklab, var(--primary) 40%, transparent)); } }
