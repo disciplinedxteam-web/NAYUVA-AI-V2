@@ -77,13 +77,19 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const card = parseCard(summary);
   const phoneValid = /^[6-9]\d{9}$/.test(digits);
 
-  if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} onCancel={() => { setStage('choose'); setError(''); }} />;
+  const onAbandoned = useCallback(() => {
+    const s = session;
+    if (s && lines.current.length) void persist({ data: { sessionId: s.sessionId, lines: lines.current, interrupted: true } }).catch(() => {});
+    setStage('choose'); setError('The conversation ended before it was complete, so no Health Card was created. Start again when you are ready.');
+  }, [session, persist]);
+
+  if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} onCancel={onAbandoned} />;
 
   return <div className="svara-stage">
     {stage === 'choose' && <div className="svara-stage-center">
-      <div className="svara-hero-orb"><ProductOrb name="SVARA" state="working" /></div>
+      <div className="svara-hero-orb"><SvaraAnimation state="greeting" /></div>
       <h1 className="svara-title">Your check-in with Svara</h1>
-      <p className="svara-lede">{due ? 'Choose how you would like to talk. Svara asks only the questions in your baby’s Care Plan.' : 'Your next scheduled check-in is not due yet.'}</p>
+      <p className="svara-lede">Choose how you would like to talk. Svara asks only the questions in your baby’s Care Plan.{due ? '' : ' Your next scheduled check-in is not due yet, but you can talk to Svara anytime.'}</p>
       {error && <p role="alert" className="svara-error">{error}</p>}
       <div className="svara-ctas">
         <div className={`svara-cta-group ${open === 'web' ? 'open' : ''}`}>
