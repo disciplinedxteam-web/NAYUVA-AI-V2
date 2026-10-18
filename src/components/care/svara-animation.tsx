@@ -1,12 +1,44 @@
-import { useEffect,useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import listening from '@/assets/svara/listening.webm.asset.json';
-import speaking from '@/assets/svara/speaking.webm.asset.json';
-import completion from '@/assets/svara/completion.webm.asset.json';
-import listenPoster from '@/assets/svara/listening-poster.png.asset.json';
-import speakPoster from '@/assets/svara/speaking-poster.png.asset.json';
-import completePoster from '@/assets/svara/completion-poster.png.asset.json';
-export function SvaraAnimation({state}:{state:'listening'|'speaking'|'completion'|'idle'}){
- const ref=useRef<HTMLVideoElement>(null);const clip=state==='speaking'?speaking:state==='completion'?completion:listening;const poster=state==='speaking'?speakPoster:state==='completion'?completePoster:listenPoster;
- useEffect(()=>{const media=window.matchMedia('(prefers-reduced-motion: reduce)');const update=()=>{if(media.matches||state==='idle')ref.current?.pause();else void ref.current?.play().catch(()=>{});};update();media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[state]);
- return <div className="svara-animation" role="img" aria-label={`Svara ${state}`}><video key={clip.url} ref={ref} src={clip.url} poster={poster.url} loop muted playsInline preload="auto"/></div>;
+import speaking from '@/assets/svara/speaking-trim.webm.asset.json';
+import greeting from '@/assets/svara/greeting.webm.asset.json';
+import idle from '@/assets/svara/idle.webm.asset.json';
+import done from '@/assets/svara/done.webm.asset.json';
+
+type State = 'greeting' | 'idle' | 'listening' | 'speaking' | 'completion';
+
+/**
+ * Backgroundless Svara character clips.
+ * - `greeting` (Namaskar) plays exactly once, then hands over to the looping `idle` clip.
+ * - `completion` plays once and reports `onComplete` so navigation waits for the full clip.
+ * - `listening` / `speaking` loop while the conversation runs.
+ */
+export function SvaraAnimation({ state, onComplete }: { state: State; onComplete?: () => void }) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const [greeted, setGreeted] = useState(false);
+  const effective = state === 'greeting' && greeted ? 'idle' : state;
+  const clip = effective === 'speaking' ? speaking : effective === 'completion' ? done : effective === 'greeting' ? greeting : effective === 'idle' ? idle : listening;
+  const loops = effective === 'listening' || effective === 'speaking' || effective === 'idle';
+
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const video = ref.current;
+    const update = () => { if (media.matches) video?.pause(); else void video?.play().catch(() => {}); };
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [effective]);
+
+  return <div className="svara-animation" role="img" aria-label={`Svara ${effective}`}>
+    <video
+      key={clip.url}
+      ref={ref}
+      src={clip.url}
+      loop={loops}
+      muted
+      playsInline
+      preload="auto"
+      onEnded={() => { if (effective === 'greeting') setGreeted(true); if (effective === 'completion') onComplete?.(); }}
+    />
+  </div>;
 }
