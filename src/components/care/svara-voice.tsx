@@ -1,11 +1,11 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
-import { PhoneOff, Mic, RotateCcw } from 'lucide-react';
-import { registeredSvaraVariables, hasCaregiverAnswer } from '@/lib/svara-agent-contract';
+import { PhoneOff, Mic, MicOff, Pause, Play, RotateCcw } from 'lucide-react';
+import { registeredSvaraVariables, isConversationComplete } from '@/lib/svara-agent-contract';
 import { Button } from '@/components/ui/button';
 import { SvaraAnimation } from './svara-animation';
 
 export type Line = { role: 'user' | 'bot'; content: string; live?: boolean };
-type Agent = { stop: () => Promise<void> };
+type Agent = { stop: () => Promise<void>; mute: () => void; unmute: () => void; isMuted: () => boolean };
 
 /** Sarvam transcript payloads may be strings or nested objects; always reduce to plain text so React never renders an object. */
 export function transcriptText(v: unknown, depth = 0): string {
