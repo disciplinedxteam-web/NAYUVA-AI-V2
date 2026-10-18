@@ -902,10 +902,10 @@
 
 /* ===== Shared care pass: ruled fields, evidence and perforated review stub ===== */
 .ticket-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:32px; padding-right:18px; }
-.care-ticket { width:100%; min-width:0; height:var(--care-ticket-height); display:grid; grid-template-columns:minmax(0,1fr) 82px; text-align:left; color:var(--foreground); filter:drop-shadow(0 8px 14px color-mix(in oklab,var(--primary-deep) 10%,transparent)); }
+.care-ticket { width:100%; min-width:0; height:var(--care-ticket-height); display:grid; grid-template-columns:minmax(0,1fr); text-align:left; color:var(--foreground); }
 .care-ticket.no-stub { grid-template-columns:minmax(0,1fr); }
-.ticket-main,.ticket-stub { background:var(--ticket-surface); border:1px solid var(--ticket-outline); }
-.ticket-main { position:relative; min-width:0; min-height:0; border-radius:8px 0 0 8px; display:flex; flex-direction:column; overflow:hidden; }
+.ticket-main { background:var(--card); }
+.ticket-main { position:relative; min-width:0; min-height:0; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; }
 .ticket-body { flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--input) transparent; }
 .no-stub .ticket-main { border-radius:8px; }
 .ticket-head { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:14px 16px; border-bottom:2px solid var(--primary); }
@@ -928,7 +928,7 @@
 .ticket-foot { display:flex; flex-direction:column; gap:8px; padding:12px 16px; border-bottom:1px solid var(--border); color:var(--muted-foreground); font-size:11px; line-height:1.6; }
 .ticket-foot q { font-style:italic; }.ticket-foot small { font-size:11px; }
 .ticket-record { flex:none; min-height:54px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding:10px 14px; color:var(--muted-foreground); font:10px/1.5 ui-monospace,monospace; border-top:1px dashed var(--ticket-outline); }
-.ticket-stamp { display:inline-flex; align-items:center; gap:5px; color:var(--primary-deep); padding:5px 9px; border:2px solid currentColor; outline:1px solid currentColor; outline-offset:2px; border-radius:3px; font-size:13px; font-weight:800; text-transform:uppercase; transform:rotate(-7deg); animation:care-stamp-impact .55s cubic-bezier(.2,.9,.3,1.2) both; }
+.ticket-done { display:inline-flex; align-items:center; gap:5px; color:var(--primary); background:color-mix(in oklab, var(--primary) 10%, transparent); padding:5px 12px; border-radius:99px; font-size:11px; font-weight:700; font-family:inherit; letter-spacing:.02em; }
 .ticket-stub { position:relative; border-left:2px dashed var(--primary); border-radius:0 8px 8px 0; padding:14px 10px; display:flex; flex-direction:column; justify-content:space-between; align-items:center; gap:16px; text-align:center; transition:transform .65s cubic-bezier(.2,.8,.2,1); }
 .ticket-stub::before,.ticket-stub::after { content:''; position:absolute; left:-8px; width:14px; height:14px; border-radius:50%; background:var(--blush); }.ticket-stub::before { top:-7px; }.ticket-stub::after { bottom:-7px; }
 .is-torn .ticket-stub { transform:translateX(14px) rotate(3deg); border-left-style:dashed; animation:care-stub-tear .65s ease both; }
@@ -940,8 +940,7 @@
 @keyframes care-stamp-impact { 0% { opacity:0; transform:scale(1.8) rotate(-17deg); } 65% { opacity:1; transform:scale(.94) rotate(-7deg); } 100% { opacity:1; transform:scale(1) rotate(-7deg); } }
 @keyframes care-stub-tear { 0% { transform:none; } 35% { transform:translateX(3px) rotate(-2deg); } 100% { transform:translateX(14px) rotate(3deg); } }
 @media(max-width:800px) { .ticket-list { grid-template-columns:1fr; gap:26px; } }
-@media(max-width:480px) { .care-ticket { grid-template-columns:minmax(0,1fr) 64px; }.ticket-stub { padding:12px 6px; }.ticket-title { font-size:14px; }.ticket-head { padding:12px; }.ticket-record { padding-inline:10px; }.ticket-stamp { font-size:11px; }.ticket-cell { padding:10px; }.ticket-cell dd { font-size:12px; } }
-@media(prefers-reduced-motion:reduce) { .ticket-stub { transition:none; animation:none; }.ticket-stamp { animation:none; } }
+@media(max-width:480px) { .ticket-title { font-size:14px; }.ticket-head { padding:12px; }.ticket-record { padding-inline:10px; }.ticket-cell { padding:10px; }.ticket-cell dd { font-size:12px; } }
 
 /* ===== Svara stages ===== */
 .svara-stage { min-height: calc(100svh - 140px); display: grid; place-items: center; padding: 8px 0 24px; }
