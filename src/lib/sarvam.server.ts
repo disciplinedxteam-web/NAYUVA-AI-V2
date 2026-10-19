@@ -30,6 +30,7 @@ async function call(path: string, init: RequestInit, timeoutMs = 30000): Promise
   if (!res.ok) {
     console.error('sarvam failed', { cid, path, status: res.status, body: text.slice(0, 300) });
     if (res.status === 401 || res.status === 403) throw new SarvamError('The Sarvam key does not have access to speech and language services yet.', 'auth_error');
+    if (res.status === 402) throw new SarvamError('Sarvam has no credits available. Please replenish the Sarvam account to continue.', 'insufficient_credits');
     if (res.status === 429) throw new SarvamError('Sarvam is busy. Please try again shortly.', 'rate_limited');
     if (res.status === 400 || res.status === 422) throw new SarvamError('Sarvam could not process this request.', 'invalid_request');
     throw new SarvamError('Sarvam is unavailable right now.', 'provider_error');

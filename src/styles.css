@@ -1513,3 +1513,6 @@ button.bento-item { cursor: pointer; align-items: center; transition: border-col
 @keyframes sutra-composer-settle { 50% { opacity:.6; transform:scale(.985); } to { opacity:1; transform:none; } }
 @media(max-width:700px) { .sutra-studio { padding:50px 30px 0 0; min-height:480px; }.sutra-greeting { margin-bottom:22px; }.sutra-greeting > svg { width:130px; height:130px; }.sutra-greeting h1 { font-size:25px; }.sutra-greeting p { font-size:12px; }.sutra-reference-composer { padding:14px 10px 8px; }.sutra-right-tools > button span { max-width:100px; }.sutra-reference-tools { gap:4px; }.sutra-left-tools { gap:0; }.sutra-capture-status { position:absolute; bottom:100%; right:0; }.sutra-history-rail { right:-10px; }.sutra-shortcuts { justify-content:flex-start; }.sutra-governance { font-size:10px; }.sutra-thinking.first { min-height:200px; } }
 @media(prefers-reduced-motion:reduce) { .sutra-thinking *,.sutra-thinking,.sutra-studio.first-flight .sutra-reference-composer { animation:none!important; transition:none!important; }.sutra-progress-line::after { animation:none; transform:none; } }
+.sutra-phase-label { animation:sutra-label-enter .25s ease both; }
+@keyframes sutra-label-enter { from {opacity:0;transform:translateY(5px);} to {opacity:1;transform:none;} }
+@media(prefers-reduced-motion:reduce) { .sutra-phase-label {animation:none;} }
