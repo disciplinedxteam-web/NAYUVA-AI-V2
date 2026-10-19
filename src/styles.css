@@ -1015,7 +1015,7 @@
 @media (prefers-reduced-motion: reduce) { .svara-hero-orb, .live-turn, .svara-tray, .svara-live-badge i, .live-caret, .live-turn.user p.is-typing span { animation: none !important; } }
 .journey-ticket { flex: 0 0 min(560px, 86vw); padding: 0; border: 0; background: transparent; cursor: pointer; border-radius: 20px; transition: transform .25s; text-align: left; }
 .journey-ticket:hover { transform: translateY(-3px); }
-.journey-ticket.selected .ticket-main { outline: 2px solid var(--primary); outline-offset: -2px; }
+.journey-ticket.selected .shine-inner { outline: 2px solid var(--primary); outline-offset: -2px; }
 .journey-ticket .care-ticket { max-width: none; }
 .scheduler-confirm { display: flex; flex-direction: column; align-items: center; gap: 18px; padding: 20px 0; }
 
@@ -1049,7 +1049,7 @@
 .journey-cord { position:absolute; inset:0 0 auto; width:100%; height:50px; pointer-events:none; }.journey-cord path { fill:none; stroke:var(--primary); stroke-width:1; opacity:.35; }
 .hanging-track { display:flex; gap:24px; overflow-x:auto; padding:24px 20px 12px; scroll-snap-type:x mandatory; scrollbar-width:none; }.hanging-track::-webkit-scrollbar { display:none; }
 .hanging-entry { position:relative; flex:0 0 360px; scroll-snap-align:center; transform-origin:50% 0; animation:journey-sway 7s ease-in-out infinite alternate; }
-.hanging-entry:nth-child(2n) { animation-delay:-3s; }.hanging-entry.selected .ticket-main { border-color:var(--primary); }.journey-select { width:100%; height:26px; font-size:10px; color:var(--primary); padding:3px 8px; }
+.hanging-entry:nth-child(2n) { animation-delay:-3s; }.hanging-entry.selected .shine-inner { outline:2px solid var(--primary); outline-offset:-2px; }.journey-select { width:100%; height:26px; font-size:10px; color:var(--primary); padding:3px 8px; }
 .journey-peg { position:absolute; top:-22px; left:calc(50% - 4px); width:8px; height:22px; border-radius:2px; background:var(--primary); opacity:.55; }
 .journey-navigation { display:flex; align-items:center; justify-content:flex-end; gap:6px; padding:0 16px 6px; }.journey-navigation span { margin-right:auto; font-size:11px; color:var(--muted-foreground); }.sutra-no-entries { padding:20px; font-size:13px; color:var(--muted-foreground); }
 @keyframes journey-sway { from { transform:rotate(-.7deg); } to { transform:rotate(.7deg); } }
@@ -1218,7 +1218,7 @@
 .ticket-controls .nv-card-actions { margin:0;gap:6px;flex-wrap:wrap; }
 .ticket-controls .nv-card-actions button,.ticket-controls .nv-card-actions a { font-size:11px;padding-inline:8px; }
 .ticket-record { margin-top:auto; min-height:48px; padding:10px 20px; border-top:1px solid var(--border); font:10px/1.4 var(--font-sans); }
-.is-torn .ticket-main { animation:none;transform:none; }
+.is-torn .care-ticket { animation:none;transform:none; }
 .ticket-stamp { font-size:10px;border-radius:3px; }
 .ticket-list { padding:0; gap:22px; }
 .ws-grid { gap:20px; }
