@@ -1516,3 +1516,6 @@ button.bento-item { cursor: pointer; align-items: center; transition: border-col
 .sutra-phase-label { animation:sutra-label-enter .25s ease both; }
 @keyframes sutra-label-enter { from {opacity:0;transform:translateY(5px);} to {opacity:1;transform:none;} }
 @media(prefers-reduced-motion:reduce) { .sutra-phase-label {animation:none;} }
+.sutra-studio.is-empty.journey-open { justify-content:space-between; }
+.sutra-studio.journey-open .sutra-journey-reveal { max-height:calc(100% - 224px); min-height:0; }
+.sutra-studio.journey-open .sutra-drawer-heading { position:sticky; top:0; z-index:2; background:var(--card); backdrop-filter:blur(12px); }
