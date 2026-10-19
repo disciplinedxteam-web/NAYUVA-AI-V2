@@ -68,7 +68,6 @@ function DashboardHome({data,baby,role,go,onPriority}:{data:Data;baby?:Baby|unde
  </>}
  </>;
 }
-}
 function EmergencyCompact({settings}:{settings:Record<string,string>}){return <div className="home-shortcuts">{[['careTeamContact','Care Team'],['emergencyContact','Hospital Emergency'],['ambulanceNumber','Ambulance'],['afterHoursContact','After-hours contact']].map(([key,label])=>key&&settings[key]?<Button asChild variant="outline" size="sm" key={key}><a href={'tel:'+settings[key].replace(/[^\d+]/g,'')}><Phone/>{label}</a></Button>:null)}</div>;}
 function priorityLabel(v:string){return v==='Priority Review'?'Priority':v==='Review Needed'?'Review':v;}
 type Run=(action:()=>Promise<unknown>,message:string)=>Promise<void>;
