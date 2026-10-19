@@ -35,3 +35,5 @@
 - Sutra dated conversations and messages persist in RLS-locked tables accessed by validated demo-capability server functions scoped to baby and audience; history sent to the model is read server-side, never trusted from the browser.
 - Sutra uses a dedicated browser-safe workspace with document text extraction and dictation hooks; its first-turn character motion is separate from the reference composer and response layout.
 - Caregiver Home uses the vendored DraggableWidgetGrid with per-browser saved order, so rearranging never touches care data.
+- Svara's daily questions come from the shared Day 1–42 protocol module (day of life from DOB in India time plus condition observation prompts); the brief travels in the registered `session_type` variable and the questions tool, because the published agent rejects unregistered variables.
+- Workspace search is the shared SearchToggle that expands over its toggle, so every list keeps one consistent search pattern.

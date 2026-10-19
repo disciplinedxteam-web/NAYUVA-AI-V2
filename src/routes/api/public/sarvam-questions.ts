@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { FINAL_CONCERN_QUESTION } from '@/lib/care-domain';
 
 /** Sarvam tool `fetch_check_in_questions`: returns this baby's personalised, approved questions. */
 const idSchema = z.string().uuid();
@@ -38,20 +37,22 @@ export const Route = createFileRoute('/api/public/sarvam-questions')({
         const returning = (cards?.length ?? 0) > 0;
         const { parseCard } = await import('@/lib/care-card');
         const lastFor = (topic: string) => { const answer=responses?.find(a=>a.topic.toLowerCase()===topic.toLowerCase()&&a.original_text); if(answer)return `Previous caregiver answer: ${answer.original_text}`; for (const c of cards ?? []) { const k = parseCard(c.summary_text); const t = k?.topics.find((x) => x.title.toLowerCase() === topic.toLowerCase()); if (t) return `Last time: ${t.finding}`; } return ''; };
-        const ordered = topics.flatMap((t) => (qs ?? []).filter((q) => q.topic === t).slice(0, 1));
-        const questions = ordered.map((q) => ({ question_id: q.id, topic: q.topic, question_text: (returning && q.returning_wording) || q.first_wording, answer_type: 'free_text', context_note: lastFor(q.topic) }));
-        const missingTopics=topics.filter(t=>!ordered.some(q=>q.topic===t));
-        questions.push({ question_id: 'q_final_concerns', topic: 'Caregiver concerns', question_text: FINAL_CONCERN_QUESTION, answer_type: 'free_text', context_note: '', ...{ mandatory: true, ask_last: true } });
+        const { todaysCheckin } = await import('@/lib/day-protocol');
+        const day = todaysCheckin({ ...(b.plan as Record<string, unknown>), babyName: b.baby_name });
+        const questions = day.questions.map((q, i) => ({ question_id: `day${day.day}_q${i + 1}`, topic: q.topic, question_text: q.text, answer_type: 'free_text', context_note: q.source === 'final' ? '' : lastFor(q.topic), ...(q.source === 'final' ? { mandatory: true, ask_last: true } : {}) }));
+        const missingTopics: string[] = []; void qs; void topics;
         const today = new Date().toISOString().slice(0, 10);
         return json({
           session_id: s.id,
           caregiver_name: b.caregiver_name,
           baby_name: b.baby_name,
           session_type: returning ? 'returning' : 'first',
-          due_topics: topics,
+          day_of_life: day.day,
+          opening_line: day.opening,
+          due_topics: day.questions.map((q) => q.topic),
           missing_approved_topics: missingTopics,
           previous_answers: responses ?? [],
-          instructions: "Ask only the returned approved questions, one at a time. Use context_note and previous_answers to ask what changed; do not repeat answered questions within this check-in. Never invent generic replacement questions. Save each exact answer with submit_observation. Ask the mandatory final concern last.",
+          instructions: "Start with opening_line. Never diagnose or give treatment advice. Ask only the returned approved questions, one at a time. Use context_note and previous_answers to ask what changed; do not repeat answered questions within this check-in. Never invent generic replacement questions. Save each exact answer with submit_observation. Ask the mandatory final concern last.",
           previous_updates: (cards ?? []).map((c) => { const k = parseCard(c.summary_text); return k ? k.topics.map((t) => `${t.title}: ${t.finding}`).join('; ') : c.category; }),
           clinician_instructions: (ins ?? []).filter((i) => !i.expires_on || i.expires_on >= today).map((i) => i.instruction),
           questions,
