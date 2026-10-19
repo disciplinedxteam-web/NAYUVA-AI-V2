@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { Check, ChevronLeft, ChevronRight, HeartPulse } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ArrowRight, Check, ChevronDown, HeartPulse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { CareCard } from '@/lib/care-card';
 
@@ -7,40 +7,73 @@ export type TicketField = { label: string; value: string };
 type Action = { label: string; onClick: () => void; disabled?: boolean };
 
 /**
- * Nayuva care card: one clean white card with a soft rose shine border,
- * shared by Svara, Lekha, Milan and Sutra. Approvals show a simple status
- * pill — no tear-away or stamp motion.
+ * Nayuva universal care card — white card with a soft rose shine border,
+ * pink inner detail tags, and one full-width contextual CTA. Shared by
+ * Svara, Lekha, Milan and Sutra at a fixed universal size. When more than
+ * four detail tags exist, the tag area scrolls with a visible hint.
  */
-export function CareTicket({ source, title, subtitle, date, card, fields, stamp, action, stub = true, stubLabel, children }: {
+export function CareTicket({ source, title, subtitle, date, card, fields, stamp, action, stub = true, children }: {
   source: 'Svara' | 'Lekha' | 'Milan' | string; title: string; subtitle?: string | undefined; date?: string | undefined;
   card?: CareCard | null; fields?: TicketField[] | undefined; quote?: string | undefined; stamp?: string | null | undefined;
   action?: Action; stub?: boolean; stubLabel?: string; children?: ReactNode;
 }) {
   const done = !!stamp;
-  const [page, setPage] = useState(0);
-  const items = card ? card.topics.map(t => ({label:t.title,value:t.finding || t.status,status:t.status})) : (fields ?? []).map(f => ({...f,status:''}));
-  const pages = Math.max(1,Math.ceil(items.length / 4));
-  const current = Math.min(page,pages-1);
-  const visible = items.slice(current*4,current*4+4);
+  const items = card
+    ? card.topics.map((t) => ({ label: t.title, value: t.finding || t.status, status: t.status }))
+    : (fields ?? []).map((f) => ({ ...f, status: '' }));
   const priority = card?.priority;
+  const scrollable = items.length > 4;
+
+  const listRef = useRef<HTMLDivElement>(null);
+  const [atEnd, setAtEnd] = useState(false);
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el || !scrollable) return;
+    const onScroll = () => setAtEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - 8);
+    onScroll();
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [scrollable, items.length]);
+
   return (
     <div className="shine-border">
-    <article className={`care-ticket shine-inner ${stub ? '' : 'no-stub'}`} data-no-translate>
-      <div className="ticket-main">
+      <article className="care-ticket shine-inner" data-no-translate>
         <header className="ticket-head">
           <span className="ticket-source"><HeartPulse aria-hidden="true" />{source} · {source === 'Milan' ? 'Appointment' : 'Care record'}</span>
-          <strong className="ticket-title">{title}</strong>
           {priority && <span className={`ticket-priority p-${priority.split(' ')[0]?.toLowerCase()}`}>{priority}</span>}
         </header>
-        {(subtitle || date) && <p className="ticket-sub">{subtitle}{subtitle && date ? ' · ' : ''}{date}</p>}
-        <div className="ticket-body">
-        <dl className="ticket-grid">{visible.map((f,i)=><div key={i} className="ticket-cell"><dt>{f.label}</dt><dd title={f.value}>{f.value || '—'}</dd></div>)}</dl>
-        {pages > 1 && <div className="ticket-pages"><span>Details {current+1} of {pages}</span><Button variant="ghost" size="icon-xs" aria-label="Previous card details" disabled={current===0} onClick={()=>setPage(current-1)}><ChevronLeft/></Button><Button variant="ghost" size="icon-xs" aria-label="Next card details" disabled={current===pages-1} onClick={()=>setPage(current+1)}><ChevronRight/></Button></div>}
+        <div className="ticket-heading">
+          <strong className="ticket-title">{title}</strong>
+          {(subtitle || date) && <p className="ticket-sub">{subtitle}{subtitle && date ? ' · ' : ''}{date}</p>}
+        </div>
+        <div className={`ticket-tags ${scrollable ? 'is-scrollable' : ''}`}>
+          <div className="ticket-tags-scroll" ref={listRef}>
+            {items.map((f, i) => (
+              <div key={i} className={`ticket-tag s-${f.status.split(' ')[0]!.toLowerCase()}`}>
+                <span className="ticket-tag-label">{f.label}</span>
+                <span className="ticket-tag-value" title={f.value}>{f.value || '—'}</span>
+              </div>
+            ))}
+          </div>
+          {scrollable && !atEnd && (
+            <button type="button" className="ticket-scroll-hint" onClick={() => listRef.current?.scrollBy({ top: 120, behavior: 'smooth' })}>
+              <ChevronDown size={13} aria-hidden="true" /> Scroll for more details
+            </button>
+          )}
         </div>
         {children && <div className="ticket-controls">{children}</div>}
-        <div className="ticket-record"><span>NAYUVA AI</span>{done ? <span className="ticket-done" role="status"><Check size={13} />{stamp}</span> : action && stub ? <Button type="button" size="sm" disabled={action.disabled} onClick={action.onClick}>{action.label}</Button> : <span>{source==='Milan'?'Appointment record':'Care journey'}</span>}</div>
-      </div>
-    </article>
+        <footer className="ticket-foot">
+          {done ? (
+            <span className="ticket-done" role="status"><Check size={14} aria-hidden="true" />{stamp}</span>
+          ) : action && stub ? (
+            <Button type="button" className="ticket-cta" disabled={action.disabled} onClick={action.onClick}>
+              {action.label}<ArrowRight size={15} aria-hidden="true" />
+            </Button>
+          ) : (
+            <span className="ticket-foot-note">{source === 'Milan' ? 'Appointment record' : 'Care journey'} · Nayuva AI</span>
+          )}
+        </footer>
+      </article>
     </div>
   );
 }
