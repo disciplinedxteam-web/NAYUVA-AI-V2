@@ -84,7 +84,7 @@ export function CaregiverHome({ data, baby, go }: { data: Data; baby?: Baby | un
   cards.forEach(c => { const k = dayKey(new Date(c.created_at)); checkinDays.set(k, (checkinDays.get(k) ?? 0) + 1); });
   const apptDays = new Set(appts.map(a => dayKey(new Date(a.starts_at))));
   const today = new Date(); const todayKey = dayKey(today);
-  const WEEKS = 5; const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const WEEKS = 18; const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const dow = (today.getDay() + 6) % 7; // Monday = 0
   const start = new Date(today); start.setDate(today.getDate() - dow - (WEEKS - 1) * 7);
   const matrix = DAY_LABELS.map((_, d) => Array.from({ length: WEEKS }, (_, w) => { const dt = new Date(start); dt.setDate(start.getDate() + w * 7 + d); return dt; }));
@@ -95,10 +95,10 @@ export function CaregiverHome({ data, baby, go }: { data: Data; baby?: Baby | un
 
   const render = (item: WidgetItem) => {
     switch (item.id) {
-      case 'activity': return <Shell title="Activity calendar" meta={<span>Last {WEEKS} weeks</span>}>
+      case 'activity': return <Shell title="Activity calendar" meta={<span>Last 4 months</span>}>
         <Big unit="check-ins · 14 days">{last14}</Big>
         <div className="bento-matrix" role="img" aria-label={`${total} check-ins and ${appts.length} appointments recorded.`}>
-          <span />{matrix[0]!.map((dt, w) => <span key={w} className="bento-axis">{dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: tz })}</span>)}
+          <span />{matrix[0]!.map((dt, w) => <span key={w} className="bento-axis">{w % 4 ? "" : dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: tz })}</span>)}
           {matrix.map((row, d) => <Fragment key={d}><span className="bento-axis">{DAY_LABELS[d]}</span>{row.map((dt, w) => {
             const k = dayKey(dt); const n = checkinDays.get(k) ?? 0; const a = apptDays.has(k); const future = dt > today && k !== todayKey;
             const cls = future ? 'future' : n && a ? 'both' : a ? 'appt' : n >= 2 ? 'heat-2' : n ? 'heat-1' : '';

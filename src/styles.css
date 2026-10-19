@@ -1378,9 +1378,9 @@
 .bento-dot.pulse::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: bento-ping 1.6s ease-out infinite; }
 @keyframes bento-ping { to { transform: scale(2.6); opacity: 0; } }
 .tone-ok { background: oklch(.62 .12 160); } .tone-warn { background: var(--workflow-attention); } .tone-err { background: var(--workflow-priority); } .tone-brand { background: var(--primary); }
-.bento-matrix { margin-top: auto; display: grid; grid-template-columns: 34px repeat(5, minmax(0, 1fr)); gap: 4px; align-items: center; }
-.bento-axis { font-size: 10.5px; color: var(--muted-foreground); white-space: nowrap; overflow: hidden; }
-.bento-tile { display: block; height: 14px; border-radius: 3px; background: color-mix(in oklab, var(--primary-deep) 9%, transparent); transition: transform .2s; }
+.bento-matrix { margin-top: auto; display: grid; grid-template-columns: 30px repeat(18, 1fr); gap: 4px; max-width: 520px; align-items: center; }
+.bento-axis { font-size: 10.5px; color: var(--muted-foreground); white-space: nowrap; overflow: visible; }
+.bento-tile { display: block; aspect-ratio: 1; width: 100%; max-width: 22px; border-radius: 3px; background: color-mix(in oklab, var(--primary-deep) 9%, transparent); transition: transform .2s; }
 .bento-tile:hover { transform: scale(1.08); }
 .bento-tile.heat-1 { background: color-mix(in oklab, var(--primary) 55%, transparent); }
 .bento-tile.heat-2 { background: var(--primary-deep); }
@@ -1390,7 +1390,7 @@
 .bento-tile.today { outline: 2px solid var(--primary-deep); outline-offset: 1px; }
 .bento-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 11px; color: var(--muted-foreground); }
 .bento-legend span { display: inline-flex; align-items: center; gap: 6px; }
-.bento-legend i { width: 11px; height: 11px; }
+.bento-legend i { width: 11px; height: 11px; aspect-ratio: auto; }
 .bento-cta { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 42px; padding: 0 16px; border: 0; border-radius: 12px; background: linear-gradient(135deg, var(--primary), var(--primary-deep)); color: var(--primary-foreground); font-weight: 600; font-size: 13.5px; cursor: pointer; box-shadow: 0 10px 22px -12px var(--primary-deep); transition: transform .2s, filter .2s; }
 .bento-cta:hover { transform: translateY(-1px); filter: brightness(1.05); }
 .bento-cta:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -1431,3 +1431,4 @@ button.bento-item { cursor: pointer; align-items: center; transition: border-col
 .bento-chips button { border: 1px solid color-mix(in oklab, var(--primary) 30%, transparent); background: oklch(1 0 0 / .85); color: var(--primary-deep); border-radius: 99px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; transition: background .2s; }
 .bento-chips button:hover { background: color-mix(in oklab, var(--primary) 12%, oklch(1 0 0)); }
 @media (prefers-reduced-motion: reduce) { .bento-dot.pulse::after { animation: none; } .bento-cta, .bento-tile { transition: none; } }
+.bento-icon.tone-ok { background: oklch(.62 .12 160); } .bento-icon.tone-warn { background: var(--workflow-attention); } .bento-icon.tone-err { background: var(--workflow-priority); }
