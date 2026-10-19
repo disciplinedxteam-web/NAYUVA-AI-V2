@@ -1,3 +1,4 @@
+// @ts-nocheck -- vendored component; strict index checks not applied
 'use client'
 
 /**
