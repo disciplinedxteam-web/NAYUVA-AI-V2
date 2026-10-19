@@ -1,6 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { z } from 'zod';
-import { FINAL_CONCERN_QUESTION } from '@/lib/care-domain';
 
 /** Sarvam tool `fetch_check_in_questions`: returns this baby's personalised, approved questions. */
 const idSchema = z.string().uuid();
