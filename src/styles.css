@@ -1519,3 +1519,12 @@ button.bento-item { cursor: pointer; align-items: center; transition: border-col
 .sutra-studio.is-empty.journey-open { justify-content:space-between; }
 .sutra-studio.journey-open .sutra-journey-reveal { max-height:calc(100% - 224px); min-height:0; }
 .sutra-studio.journey-open .sutra-drawer-heading { position:sticky; top:0; z-index:2; background:var(--card); backdrop-filter:blur(12px); }
+.sutra-history-ticks { max-height:260px; gap:0; }
+.sutra-history-tick { border:0; background:none; padding:7px 4px; position:relative; cursor:pointer; display:flex; align-items:center; justify-content:flex-end; }
+.sutra-history-tick i { display:block; transition:width .2s,background .2s; }
+.sutra-history-tick.active i,.sutra-history-tick:hover i,.sutra-history-tick:focus-visible i { width:26px; background:var(--primary); }
+.sutra-history-preview { position:absolute; right:calc(100% + 14px); top:50%; transform:translateY(-50%); width:280px; padding:16px; background:var(--popover); border:1px solid var(--border); border-radius:14px; box-shadow:0 8px 32px rgb(90 40 60 / .12); display:none; flex-direction:column; gap:8px; text-align:left; z-index:10; pointer-events:none; }
+.sutra-history-tick:hover .sutra-history-preview,.sutra-history-tick:focus-visible .sutra-history-preview { display:flex; }
+.sutra-history-preview small { color:var(--muted-foreground); font-size:10px; }
+.sutra-history-preview strong { font-size:12px; color:var(--foreground); }
+.sutra-history-preview > span { color:var(--muted-foreground); font-size:11px; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; line-height:1.6; }
