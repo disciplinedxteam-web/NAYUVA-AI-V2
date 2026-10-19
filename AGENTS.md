@@ -33,3 +33,4 @@
 - Both Svara channels send only registered variables through svara-agent-contract; the agent retrieves snapshot-scoped approved questions and history using check_in_id so undeclared context cannot reject a call.
 - Approval cards across Svara, Lekha, Milan and Sutra use the shared `CareTicket` component (stub = action, stamp = approved/reviewed; Sutra hides the stub), and all segmented toggles use `GlassToggle`.
 - Sutra conversation history remains one session in memory per selected baby; no new history persistence or threads are introduced during its visual redesign.
+- Caregiver Home uses the vendored DraggableWidgetGrid with per-browser saved order, so rearranging never touches care data.
