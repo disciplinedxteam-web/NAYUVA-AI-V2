@@ -1378,9 +1378,9 @@
 .bento-dot.pulse::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: bento-ping 1.6s ease-out infinite; }
 @keyframes bento-ping { to { transform: scale(2.6); opacity: 0; } }
 .tone-ok { background: oklch(.62 .12 160); } .tone-warn { background: var(--workflow-attention); } .tone-err { background: var(--workflow-priority); } .tone-brand { background: var(--primary); }
-.bento-matrix { margin-top: auto; display: grid; grid-template-columns: 30px repeat(18, minmax(0, 1fr)); gap: 3px; max-width: 500px; align-items: center; }
+.bento-matrix { margin-top: auto; display: grid; grid-template-columns: 30px repeat(18, 16px); justify-content: space-between; row-gap: 4px; align-items: center; }
 .bento-axis { font-size: 10.5px; color: var(--muted-foreground); white-space: nowrap; overflow: visible; }
-.bento-tile { display: block; aspect-ratio: 1; width: 100%; max-width: 17px; border-radius: 3px; background: color-mix(in oklab, var(--primary-deep) 9%, transparent); transition: transform .2s; }
+.bento-tile { display: block; width: 16px; height: 16px; border-radius: 3px; background: color-mix(in oklab, var(--primary-deep) 9%, transparent); transition: transform .2s; }
 .bento-tile:hover { transform: scale(1.08); }
 .bento-tile.heat-1 { background: color-mix(in oklab, var(--primary) 55%, transparent); }
 .bento-tile.heat-2 { background: var(--primary-deep); }
