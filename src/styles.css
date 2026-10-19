@@ -1433,3 +1433,4 @@ button.bento-item { cursor: pointer; align-items: center; transition: border-col
 @media (prefers-reduced-motion: reduce) { .bento-dot.pulse::after { animation: none; } .bento-cta, .bento-tile { transition: none; } }
 .bento-icon.tone-ok { background: oklch(.62 .12 160); } .bento-icon.tone-warn { background: var(--workflow-attention); } .bento-icon.tone-err { background: var(--workflow-priority); }
 .bento-matrix > .bento-axis { min-width: 0; } .bento-matrix > .bento-axis:not(:nth-child(19n+1)) { width: 0; }
+.bento-shell { gap: 8px; padding: 18px 20px; } .bento-body { gap: 8px; }
