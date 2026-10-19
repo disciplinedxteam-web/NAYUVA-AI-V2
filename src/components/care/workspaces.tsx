@@ -1,3 +1,4 @@
+import { SearchToggle } from '@/components/ui/search-toggle';
 import { CareTicket } from './care-ticket';
 import { OnlineMeeting } from './online-meeting';
 import { useQuery } from '@tanstack/react-query';
@@ -80,9 +81,9 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
     {scheduling ? <Scheduler data={data} busy={busy} run={run} onDone={() => setScheduling(false)} /> : <>
       <div className="ws-bar">
         <div className="ws-bar-cluster">
-          <Toggle value={tab} onChange={setTab} options={[{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, { key: 'past', label: 'Past', count: past.length }]} />
+          <SearchToggle label="Filter Milan by baby" value={search} onChange={setSearch}><Toggle value={tab} onChange={setTab} options={[{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, { key: 'past', label: 'Past', count: past.length }]} /></SearchToggle>
           {role === 'care-team' && <Button className="ws-bar-action" onClick={() => setScheduling(true)} disabled={!data.babies.length}><Plus />Schedule Appointment</Button>}
-        </div><div className="search-field"><Search/><input className="ws-input" aria-label="Filter Milan by baby" placeholder="Search baby or caregiver" value={search} onChange={e=>setSearch(e.target.value)}/></div>
+        </div>
       </div>
       {!list.length ? <EmptyState>{tab === 'upcoming' ? 'No upcoming appointments.' : 'No past appointments yet.'}</EmptyState> :
         <div className="ws-grid">{list.map(a => {
@@ -171,7 +172,7 @@ export function LekhaWorkspace({ data, busy, run }: { data: Data; busy: boolean;
   const list = (tab === 'pending' ? pending : done).filter(a=>{const b=data.babies.find(x=>x.id===a.baby_id);return `${b?.baby_name??''} ${b?.caregiver_name??''}`.toLowerCase().includes(search.toLowerCase());});
   return <>
     <WorkspaceHeading title="Lekha" description="Clinician-reviewed appointment documentation." />
-    <div className="ws-bar"><Toggle value={tab} onChange={setTab} options={[{ key: 'pending', label: 'Awaiting documentation', count: pending.length }, { key: 'done', label: 'Documented', count: done.length }]} /><div className="search-field"><Search/><input className="ws-input" aria-label="Filter Lekha by baby" placeholder="Search baby or caregiver" value={search} onChange={e=>setSearch(e.target.value)}/></div></div>
+    <div className="ws-bar"><SearchToggle label="Filter Lekha by baby" value={search} onChange={setSearch}><Toggle value={tab} onChange={setTab} options={[{ key: 'pending', label: 'Awaiting documentation', count: pending.length }, { key: 'done', label: 'Documented', count: done.length }]} /></SearchToggle></div>
     {!list.length ? <EmptyState>{tab === 'pending' ? 'No completed appointments are waiting for documentation. Mark an appointment as done in Milan.' : 'No documented appointments yet.'}</EmptyState> :
       <div className="ws-grid">{list.map(a => { const b = data.babies.find(x => x.id === a.baby_id); const n = noteFor(a.id); return <CareTicket key={a.id} source="Lekha" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmt(a.starts_at)} card={n ? parseCard(n.observations) : null} stamp={n ? 'Reviewed' : null} stub={!n} fields={[{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Appointment', value: 'Completed' }, { label: 'Location', value: loc(a)['facilityName'] || 'Not configured' }]} action={{ label: 'Document', onClick: () => setOpenId(a.id) }}>
         {n?.follow_up && <p className="nv-sub">Follow-up · {n.follow_up}</p>}
