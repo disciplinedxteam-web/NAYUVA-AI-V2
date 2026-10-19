@@ -32,5 +32,6 @@
 - Sarvam agent tools call `/api/public/sarvam-questions` and `/api/public/sarvam-observations`, keyed by the live check-in id (optional `SVARA_TOOL_KEY` header), so personalisation comes from the baby's Care Plan and history, not the agent prompt.
 - Both Svara channels send only registered variables through svara-agent-contract; the agent retrieves snapshot-scoped approved questions and history using check_in_id so undeclared context cannot reject a call.
 - Approval cards across Svara, Lekha, Milan and Sutra use the shared `CareTicket` component (stub = action, stamp = approved/reviewed; Sutra hides the stub), and all segmented toggles use `GlassToggle`.
-- Sutra conversation history remains one session in memory per selected baby; no new history persistence or threads are introduced during its visual redesign.
+- Sutra dated conversations and messages persist in RLS-locked tables accessed by validated demo-capability server functions scoped to baby and audience; history sent to the model is read server-side, never trusted from the browser.
+- Sutra uses a dedicated browser-safe workspace with document text extraction and dictation hooks; its first-turn character motion is separate from the reference composer and response layout.
 - Caregiver Home uses the vendored DraggableWidgetGrid with per-browser saved order, so rearranging never touches care data.
