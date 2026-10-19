@@ -1378,9 +1378,9 @@
 .bento-dot.pulse::after { content: ""; position: absolute; inset: 0; border-radius: inherit; background: inherit; animation: bento-ping 1.6s ease-out infinite; }
 @keyframes bento-ping { to { transform: scale(2.6); opacity: 0; } }
 .tone-ok { background: oklch(.62 .12 160); } .tone-warn { background: var(--workflow-attention); } .tone-err { background: var(--workflow-priority); } .tone-brand { background: var(--primary); }
-.bento-matrix { margin-top: auto; display: grid; grid-template-columns: 30px repeat(18, 1fr); gap: 4px; max-width: 520px; align-items: center; }
+.bento-matrix { margin-top: auto; display: grid; grid-template-columns: 30px repeat(18, minmax(0, 1fr)); gap: 3px; max-width: 500px; align-items: center; }
 .bento-axis { font-size: 10.5px; color: var(--muted-foreground); white-space: nowrap; overflow: visible; }
-.bento-tile { display: block; aspect-ratio: 1; width: 100%; max-width: 22px; border-radius: 3px; background: color-mix(in oklab, var(--primary-deep) 9%, transparent); transition: transform .2s; }
+.bento-tile { display: block; aspect-ratio: 1; width: 100%; max-width: 17px; border-radius: 3px; background: color-mix(in oklab, var(--primary-deep) 9%, transparent); transition: transform .2s; }
 .bento-tile:hover { transform: scale(1.08); }
 .bento-tile.heat-1 { background: color-mix(in oklab, var(--primary) 55%, transparent); }
 .bento-tile.heat-2 { background: var(--primary-deep); }
@@ -1432,3 +1432,4 @@ button.bento-item { cursor: pointer; align-items: center; transition: border-col
 .bento-chips button:hover { background: color-mix(in oklab, var(--primary) 12%, oklch(1 0 0)); }
 @media (prefers-reduced-motion: reduce) { .bento-dot.pulse::after { animation: none; } .bento-cta, .bento-tile { transition: none; } }
 .bento-icon.tone-ok { background: oklch(.62 .12 160); } .bento-icon.tone-warn { background: var(--workflow-attention); } .bento-icon.tone-err { background: var(--workflow-priority); }
+.bento-matrix > .bento-axis { min-width: 0; } .bento-matrix > .bento-axis:not(:nth-child(19n+1)) { width: 0; }
