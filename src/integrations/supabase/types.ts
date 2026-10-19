@@ -672,6 +672,76 @@ export type Database = {
         }
         Relationships: []
       }
+      sutra_conversations: {
+        Row: {
+          audience: string
+          baby_id: string
+          created_at: string
+          id: string
+          title: string
+          updated_at: string
+          workspace: string
+        }
+        Insert: {
+          audience: string
+          baby_id: string
+          created_at?: string
+          id?: string
+          title: string
+          updated_at?: string
+          workspace?: string
+        }
+        Update: {
+          audience?: string
+          baby_id?: string
+          created_at?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          workspace?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sutra_conversations_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sutra_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sutra_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "sutra_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topic_schedules: {
         Row: {
           active: boolean
