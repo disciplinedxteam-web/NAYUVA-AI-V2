@@ -39,11 +39,14 @@ export const listCaregiverDemos=createServerFn({method:'GET'}).handler(async()=>
 export const getSutraHistory=createServerFn({method:'POST'}).inputValidator(z.object({babyId:z.string().uuid(),conversationId:z.string().uuid().optional()})).handler(async({data})=>{
  const session=await authorized(); await babyAccess(session.db,data.babyId,session.role);
  const {data:conversations,error}=await session.db.from('sutra_conversations').select('*').eq('baby_id',data.babyId).eq('workspace',workspace).eq('audience',session.role).order('updated_at',{ascending:false}).limit(100);check(error);
- if(!data.conversationId)return {conversations:conversations??[],messages:[]};
+ const ids=(conversations??[]).map(c=>c.id);
+ const previews=ids.length?await session.db.from('sutra_messages').select('conversation_id,content').in('conversation_id',ids).eq('role','assistant').order('created_at',{ascending:false}).limit(1000):{data:[],error:null};check(previews.error);
+ const listed=(conversations??[]).map(c=>({...c,preview:previews.data?.find(m=>m.conversation_id===c.id)?.content.slice(0,180)??''}));
+ if(!data.conversationId)return {conversations:listed,messages:[]};
  const conversation=conversations?.find(c=>c.id===data.conversationId); const {canReadSutraConversation}=await import('./sutra-domain');
  if(!conversation||!canReadSutraConversation(conversation,data.babyId,session.role))throw new Error('Conversation unavailable for this profile.');
  const result=await session.db.from('sutra_messages').select('*').eq('conversation_id',conversation.id).order('created_at').order('id');check(result.error);
- return {conversations:conversations??[],messages:result.data??[]};
+ return {conversations:listed,messages:result.data??[]};
 });
 export const askSutra=createServerFn({method:'POST'}).inputValidator(z.object({babyId:z.string().uuid(),question:z.string().min(1).max(1500),conversationId:z.string().uuid().optional(),focus:z.array(z.string().max(100)).max(12),attachments:z.array(z.object({name:z.string().max(200),text:z.string().max(12000)})).max(4).default([])})).handler(async({data})=>{
  const session=await authorized(); const baby=await babyAccess(session.db,data.babyId,session.role); const db=session.db;
