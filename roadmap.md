@@ -1,5 +1,12 @@
 # Roadmap
 
+## Sutra redesign
+- [ ] Replace legacy Sutra layout with reference greeting, composer and single-row shortcuts
+- [ ] Implement character-led first-message motion and normal subsequent-message indicator
+- [ ] Connect live editable dictation and attachments
+- [ ] Persist authorized dated conversations and resume from right-side history
+- [ ] Refine grounded friendly answers and verify both roles
+
 ## Svara UI/UX
 - [ ] Choose screen: compact, centered, no scroll when CTA trays open
 - [ ] Greeting video (Namaskar) plays once, then looking-around video loops; remove orb/wave; backgroundless; same size
