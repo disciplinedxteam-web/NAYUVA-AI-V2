@@ -900,47 +900,41 @@
 .glass-glider { position: absolute; z-index: 1; top: var(--pad); bottom: var(--pad); left: var(--pad); width: calc((100% - var(--pad) * 2) / var(--n)); border-radius: 12px; transform: translateX(calc(var(--i) * 100%)); background: linear-gradient(135deg, var(--primary), var(--primary-deep)); box-shadow: 0 0 18px color-mix(in oklab, var(--primary) 45%, transparent), inset 0 0 10px oklch(1 0 0 / .25); transition: transform .5s cubic-bezier(.37,1.6,.66,.86); }
 @media (prefers-reduced-motion: reduce) { .glass-glider { transition: none; } }
 
-/* ===== Shared care pass: ruled fields, evidence and perforated review stub ===== */
+/* ===== Universal care card: white card, rose shine border, pink detail tags ===== */
 .ticket-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:32px; padding-right:18px; }
-.care-ticket { width:100%; min-width:0; height:var(--care-ticket-height); display:grid; grid-template-columns:minmax(0,1fr); text-align:left; color:var(--foreground); }
-.care-ticket.no-stub { grid-template-columns:minmax(0,1fr); }
-.ticket-main { background:var(--card); }
-.ticket-main { position:relative; min-width:0; min-height:0; border-radius:16px; display:flex; flex-direction:column; overflow:hidden; }
-.ticket-body { flex:1; min-height:0; overflow-y:auto; scrollbar-width:thin; scrollbar-color:var(--input) transparent; }
-.no-stub .ticket-main { border-radius:8px; }
-.ticket-head { display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:14px 16px; border-bottom:2px solid var(--primary); }
-.ticket-source { font-size:10px; font-weight:800; color:var(--primary); display:flex; align-items:center; gap:6px; }
-.ticket-source i { width:6px; height:6px; border-radius:50%; background:currentColor; }
-.ticket-title { flex:1; min-width:100px; font-size:16px; font-weight:750; overflow-wrap:anywhere; }
-.ticket-priority { font-size:10px; font-weight:700; padding:4px 7px; border:1px solid currentColor; border-radius:4px; }
-.ticket-priority.p-priority { color:var(--destructive); }
+.care-ticket { width:100%; min-width:0; height:var(--care-ticket-height); display:flex; flex-direction:column; text-align:left; color:var(--foreground); overflow:hidden; }
+.ticket-head { flex:none; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:16px 18px 0; }
+.ticket-source { font-size:10px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--primary); display:flex; align-items:center; gap:6px; }
+.ticket-source svg { width:14px; height:14px; }
+.ticket-priority { flex:none; font-size:10px; font-weight:700; padding:4px 9px; border-radius:99px; background:var(--blush); }
+.ticket-priority.p-priority { color:var(--destructive); background:color-mix(in oklab, var(--destructive) 10%, transparent); }
 .ticket-priority.p-review { color:var(--primary-deep); }
-.ticket-priority.p-routine { color:var(--success); }
-.ticket-sub { margin:0; padding:10px 16px; font-size:11px; line-height:1.5; color:var(--muted-foreground); border-bottom:1px solid var(--border); }
-.ticket-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); margin:0; }
-.ticket-cell { min-width:0; padding:12px 14px; border-bottom:1px solid var(--border); }
-.ticket-cell:nth-child(2n) { border-left:1px solid var(--border); }
-.ticket-cell dt { display:flex; align-items:center; gap:5px; font-size:10px; font-weight:800; text-transform:uppercase; color:var(--muted-foreground); overflow-wrap:anywhere; }
-.ticket-cell dd { margin:6px 0 0; font-size:13px; font-weight:650; line-height:1.5; overflow-wrap:anywhere; }
-.ticket-cell dd.ticket-evidence { font-size:11px; font-weight:400; color:var(--muted-foreground); line-height:1.5; }
-.ticket-dot { width:5px; height:5px; border-radius:50%; background:var(--muted-foreground); flex:none; }
-.s-normal .ticket-dot { background:var(--success); }.s-concern .ticket-dot { background:var(--destructive); }
-.ticket-foot { display:flex; flex-direction:column; gap:8px; padding:12px 16px; border-bottom:1px solid var(--border); color:var(--muted-foreground); font-size:11px; line-height:1.6; }
-.ticket-foot q { font-style:italic; }.ticket-foot small { font-size:11px; }
-.ticket-record { flex:none; min-height:54px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; margin-top:auto; padding:10px 14px; color:var(--muted-foreground); font:10px/1.5 ui-monospace,monospace; border-top:1px dashed var(--ticket-outline); }
-.ticket-done { display:inline-flex; align-items:center; gap:5px; color:var(--primary); background:color-mix(in oklab, var(--primary) 10%, transparent); padding:5px 12px; border-radius:99px; font-size:11px; font-weight:700; font-family:inherit; letter-spacing:.02em; }
-.ticket-stub { position:relative; border-left:2px dashed var(--primary); border-radius:0 8px 8px 0; padding:14px 10px; display:flex; flex-direction:column; justify-content:space-between; align-items:center; gap:16px; text-align:center; transition:transform .65s cubic-bezier(.2,.8,.2,1); }
-.ticket-stub::before,.ticket-stub::after { content:''; position:absolute; left:-8px; width:14px; height:14px; border-radius:50%; background:var(--blush); }.ticket-stub::before { top:-7px; }.ticket-stub::after { bottom:-7px; }
-.is-torn .ticket-stub { transform:translateX(14px) rotate(3deg); border-left-style:dashed; animation:care-stub-tear .65s ease both; }
-.ticket-stub-label { font-size:10px; font-weight:700; color:var(--muted-foreground); writing-mode:vertical-rl; transform:rotate(180deg); text-transform:uppercase; }
-.ticket-action { white-space:normal; width:100%; height:auto; min-height:38px; padding:8px 6px; font-size:11px; border-radius:5px; }
-.ticket-stub-done { display:flex; flex-direction:column; align-items:center; gap:8px; font-size:11px; color:var(--primary); }.ticket-stub-done svg { width:22px; height:22px; }
-.ticket-main > .nv-card-actions { padding:12px; margin:0; border-top:1px solid var(--border); flex-wrap:wrap; }.ticket-main > .nv-sub { padding:0 14px; }.ticket-main .nv-card-actions button { font-size:11px; }
+.ticket-priority.p-routine { color:var(--success); background:color-mix(in oklab, var(--success) 10%, transparent); }
+.ticket-heading { flex:none; padding:8px 18px 12px; }
+.ticket-title { display:block; font-size:17px; font-weight:750; line-height:1.35; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ticket-sub { margin:3px 0 0; font-size:11.5px; line-height:1.5; color:var(--muted-foreground); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ticket-tags { flex:1; min-height:0; position:relative; display:flex; flex-direction:column; padding:0 18px; }
+.ticket-tags-scroll { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:8px; scrollbar-width:none; padding-bottom:4px; }
+.ticket-tags-scroll::-webkit-scrollbar { display:none; }
+.ticket-tags.is-scrollable .ticket-tags-scroll { mask-image:linear-gradient(to bottom, black calc(100% - 28px), transparent); }
+.ticket-tag { flex:none; display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:9px 12px; border-radius:10px; background:color-mix(in oklab, var(--primary) 5%, var(--card)); }
+.ticket-tag-label { flex:none; max-width:45%; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.03em; color:var(--primary-deep); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ticket-tag-value { min-width:0; font-size:12.5px; font-weight:600; line-height:1.45; text-align:right; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.ticket-tag.s-concern { background:color-mix(in oklab, var(--destructive) 7%, var(--card)); }
+.ticket-tag.s-concern .ticket-tag-label { color:var(--destructive); }
+.ticket-scroll-hint { flex:none; display:flex; align-items:center; justify-content:center; gap:5px; width:100%; margin-top:2px; padding:5px 0 2px; border:0; background:none; cursor:pointer; font-size:10.5px; font-weight:700; color:var(--primary); animation:ticket-hint-bob 1.8s ease-in-out infinite; }
+@keyframes ticket-hint-bob { 0%,100% { transform:translateY(0); } 50% { transform:translateY(2px); } }
+@media (prefers-reduced-motion: reduce) { .ticket-scroll-hint { animation:none; } }
+.ticket-controls { flex:none; padding:8px 18px 0; }
+.ticket-foot { flex:none; margin-top:auto; padding:12px 18px 16px; }
+.ticket-cta { width:100%; height:42px; border-radius:12px; font-size:13px; font-weight:700; gap:8px; background:linear-gradient(135deg, var(--primary), var(--primary-deep)); color:var(--primary-foreground); box-shadow:var(--shadow-control); }
+.ticket-cta:hover { filter:brightness(1.05); }
+.ticket-done { display:flex; align-items:center; justify-content:center; gap:7px; width:100%; height:42px; border-radius:12px; color:var(--primary-deep); background:color-mix(in oklab, var(--primary) 9%, transparent); font-size:12.5px; font-weight:700; }
+.ticket-foot-note { display:block; text-align:center; font-size:10.5px; color:var(--muted-foreground); padding:6px 0; }
 @keyframes ticket-stamp { from { opacity:0; transform:scale(1.1); } to { opacity:1; transform:none; } }
 @keyframes care-stamp-impact { 0% { opacity:0; transform:scale(1.8) rotate(-17deg); } 65% { opacity:1; transform:scale(.94) rotate(-7deg); } 100% { opacity:1; transform:scale(1) rotate(-7deg); } }
-@keyframes care-stub-tear { 0% { transform:none; } 35% { transform:translateX(3px) rotate(-2deg); } 100% { transform:translateX(14px) rotate(3deg); } }
 @media(max-width:800px) { .ticket-list { grid-template-columns:1fr; gap:26px; } }
-@media(max-width:480px) { .ticket-title { font-size:14px; }.ticket-head { padding:12px; }.ticket-record { padding-inline:10px; }.ticket-cell { padding:10px; }.ticket-cell dd { font-size:12px; } }
+@media(max-width:480px) { .ticket-title { font-size:15px; }.ticket-head,.ticket-heading { padding-inline:14px; }.ticket-tags,.ticket-foot { padding-inline:14px; } }
 
 /* ===== Svara stages ===== */
 .svara-stage { min-height: calc(100svh - 140px); display: grid; place-items: center; padding: 8px 0 24px; }
