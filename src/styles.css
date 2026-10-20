@@ -1788,3 +1788,16 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .taal-detail-events > div { padding:5px 0; }
 .lekha-top { padding-right:140px; }
 @media(max-width:700px) { .lekha-top { padding-right:110px; }.lekha-top > .bento-pill { display:none; } }
+
+/* Liquid hero + footer */
+.hero-brand{display:inline-flex;align-items:center;gap:10px;letter-spacing:.18em;font-weight:600}
+.hero-brand img{width:32px;height:32px;object-fit:contain}
+.site-footer-card{background:linear-gradient(160deg,var(--primary-deep),color-mix(in oklab,var(--primary-deep) 70%,black));color:var(--primary-foreground);box-shadow:0 30px 60px -30px color-mix(in oklab,var(--primary-deep) 60%,transparent)}
+.site-footer-logo{background:color-mix(in oklab,var(--primary-foreground) 92%,transparent);border-radius:12px;padding:4px}
+.site-footer-label{font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.6;font-weight:600}
+.site-footer-link{font-size:14px;opacity:.85;transition:opacity .2s}
+.site-footer-link:hover{opacity:1;text-decoration:underline;text-underline-offset:4px}
+.site-footer-cta{display:inline-flex;align-items:center;justify-content:space-between;gap:12px;border-radius:999px;padding:11px 18px;font-size:13px;font-weight:600;background:var(--primary-foreground);color:var(--primary-deep);transition:transform .2s}
+.site-footer-cta:hover{transform:translateY(-1px)}
+.site-footer-cta-ghost{background:transparent;color:var(--primary-foreground);border:1px solid color-mix(in oklab,var(--primary-foreground) 35%,transparent)}
+.site-footer-rule{height:1px;background:color-mix(in oklab,var(--primary-foreground) 18%,transparent)}
