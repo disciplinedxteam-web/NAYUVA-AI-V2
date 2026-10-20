@@ -1128,8 +1128,7 @@ const DEFAULTS = {
   ],
   navCta: { label: "Contact", href: "#" },
   eyebrow: "Independent studio — Est. 2019",
-  headline: "Form that
-answers back.",
+  headline: "Form that\nanswers back.",
   headlineAccent: "answers back.",
   body: "We shape products, identities and spaces with the precision of engineering and the patience of craft — work that holds up under attention.",
   primaryCta: { label: "Start a project", href: "#" },
