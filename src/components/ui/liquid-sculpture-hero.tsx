@@ -1304,8 +1304,7 @@ function injectFonts() {
 }
 
 function renderHeadline(text: string, accent: string) {
-  const lines = text.split("
-")
+  const lines = text.split("\n")
   return lines.map((line, li) => {
     let content: React.ReactNode = line
     const a = accent && accent.trim()
