@@ -190,9 +190,10 @@ export const getLekhaCapture=createServerFn({method:'POST'}).inputValidator(z.ob
  const s=await lekhaAccess(data.appointmentId);const r=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.appointmentId).maybeSingle();check(r.error);
  if(!r.data)return {capture:null,segments:[]};
  // Daily supplies named remote/local speakers after its own two-party consent gate.
- if(r.data.mode==='live'&&r.data.consent_at&&(s.appointment.location as Record<string,unknown>)?.['mode']==='online'){
+ const capture=r.data;
+ if(capture.mode==='live'&&capture.consent_at&&(s.appointment.location as Record<string,unknown>)?.['mode']==='online'){
   const t=await s.db.from('appointment_transcripts').select('*').eq('appointment_id',data.appointmentId);check(t.error);
-  if(t.data?.length)check((await s.db.from('lekha_segments').upsert(t.data.map(x=>({capture_id:r.data.id,event_key:x.id,speaker:x.speaker,content:x.content,spoken_at:x.spoken_at})),{onConflict:'capture_id,event_key',ignoreDuplicates:true})).error);
+  if(t.data?.length)check((await s.db.from('lekha_segments').upsert(t.data.map(x=>({capture_id:capture.id,event_key:x.id,speaker:x.speaker,content:x.content,spoken_at:x.spoken_at})),{onConflict:'capture_id,event_key',ignoreDuplicates:true})).error);
  }
  const lines=await s.db.from('lekha_segments').select('event_key,speaker,content,spoken_at').eq('capture_id',r.data.id).order('spoken_at');check(lines.error);
  return {capture:r.data,segments:lines.data??[]};
