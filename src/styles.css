@@ -1776,3 +1776,8 @@ body:has(.lekha-action-drawer) .lekha-studio { width:42%;margin-left:0;padding-r
 body:has(.lekha-action-drawer) .lekha-action-drawer { width:54vw!important; }
 body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr; }
 @media(max-width:700px) { body:has(.lekha-action-drawer) .lekha-studio { width:100%; }body:has(.lekha-action-drawer) .lekha-action-drawer { width:calc(100vw - 24px)!important;right:12px!important; } }
+.taal-detail-dialog { left:50%!important;translate:none!important;transform:translateX(-50%)!important; }
+.lekha-action-drawer { translate:none!important; }
+.taal-detail-dialog .glass-toggle button { font-size:10px;padding:6px 10px; }
+.taal-detail-calendar .taal-calendar > .day-complete { background:var(--success-soft);color:var(--workflow-routine); }
+.taal-detail-calendar .taal-calendar > .day-overdue { background:var(--workflow-priority-surface);color:var(--workflow-priority); }
