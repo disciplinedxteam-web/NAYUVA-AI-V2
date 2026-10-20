@@ -66,7 +66,7 @@ export function CareTeamHome({ data, go, onPriority, onSelectBaby }: { data: Dat
   const count = (s: string) => rows.filter(r => r.status === s).length;
   const adherence = ranked.length ? Math.round(count('Active') / ranked.length * 100) : null;
   const reviewedPct = data.cards.length ? Math.round((data.cards.length - m.pending.length) / data.cards.length * 100) : null;
-  const ask = (text: string) => { if (!askBaby || !text.trim()) return; onSelectBaby(askBaby); sessionStorage.setItem('sutra-initial-query', text.trim()); sessionStorage.setItem('sutra-baby', askBaby); void go('sutra'); };
+  const ask = (text: string) => { if (!askBaby || !text.trim()) return; onSelectBaby(askBaby); sessionStorage.setItem('sutra-initial-query', text.trim()); void go('sutra'); };
   const apptRow = (a: (typeof m.upcoming)[number], isVideo: boolean) => <article className="bento-item" key={a.id}>
     <div className="bento-date"><strong>{fmtDay(a.starts_at)}</strong><span>{fmtMon(a.starts_at)}</span></div>
     <div className="bento-item-body"><div className="bento-item-top"><strong>{m.name(a.baby_id)}</strong><span className={`bento-pill ${a.status === 'Confirmed' ? 'ok' : ''}`}>{a.status}</span></div>
@@ -87,7 +87,7 @@ export function CareTeamHome({ data, go, onPriority, onSelectBaby }: { data: Dat
         <Big unit={reviewedPct === null ? '' : '% reviewed'}>{reviewedPct === null ? '—' : reviewedPct}</Big>
         <div className="bento-chips mt-auto">{([['Priority Review', 'Priority'], ['Review Needed', 'Review'], ['Routine', 'Routine']] as const).map(([p, l]) => <button type="button" key={p} onClick={() => onPriority(p)}>{l} · {m.pending.filter(c => c.priority === p).length}</button>)}</div></Shell>;
       case 'plans': return <Shell title="Care Plans" meta={<ClipboardList className="size-4" />}>
-        <div className="bento-list">{data.babies.slice(0, 3).map(b => { const p = b.plan as unknown as CarePlan; return <div className="bento-item" key={b.id}><div className="bento-item-body"><div className="bento-item-top"><strong>{b.baby_name}</strong><span className="bento-pill">Day {p.dob ? babyDay(p.dob, new Date()) : '—'}</span></div></div></div>; })}
+        <div className="bento-list">{data.babies.slice(0, 3).map(b => { const p = b.plan as unknown as CarePlan; return <div className="bento-item" key={b.id}><div className="bento-item-body"><div className="bento-item-top"><strong>{b.baby_name}</strong><span className="bento-pill">Day {p.dob ? babyDay(p.dob) : '—'}</span></div></div></div>; })}
           {!data.babies.length && <p className="home-empty">No Care Plans yet.</p>}</div>
         <button type="button" className="bento-cta mt-auto" onClick={() => go('care-plan')}><ClipboardList />Create Care Plan<ArrowRight /></button></Shell>;
       case 'offline': return <Shell title="In-person visits" meta={<Link onClick={() => go('milan')} />}>
