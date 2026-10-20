@@ -1786,3 +1786,5 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .taal-detail-calendar .taal-calendar > div { min-height:48px;padding:6px; }
 .taal-detail-metrics strong { font-size:22px;margin:5px 0 3px; }
 .taal-detail-events > div { padding:5px 0; }
+.lekha-top { padding-right:140px; }
+@media(max-width:700px) { .lekha-top { padding-right:110px; }.lekha-top > .bento-pill { display:none; } }
