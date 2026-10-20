@@ -37,3 +37,5 @@
 - Caregiver Home uses the vendored DraggableWidgetGrid with per-browser saved order, so rearranging never touches care data.
 - Svara's daily questions come from the shared Day 1–42 protocol module (day of life from DOB in India time plus condition observation prompts); the brief travels in the registered `session_type` variable and the questions tool, because the published agent rejects unregistered variables.
 - Workspace search is the shared SearchToggle that expands over its toggle, so every list keeps one consistent search pattern.
+- Care Team Home reuses the caregiver bento widget grid in its own component with a separate saved layout key, so both roles share one look while widgets stay role-specific.
+- Profile photo and display preferences live in per-browser storage only, so they never alter care records.
