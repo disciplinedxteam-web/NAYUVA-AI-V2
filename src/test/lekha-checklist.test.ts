@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { detectChecklist } from '@/lib/lekha-checklist';
+import { detectChecklist, lekhaChecklist } from '@/lib/lekha-checklist';
 
 describe('Lekha checklist detection', () => {
   it('ticks topics the clinician actually mentions', () => {
@@ -9,8 +9,9 @@ describe('Lekha checklist detection', () => {
     expect(done.has('next')).toBe(true);
     expect(done.has('history')).toBe(false);
   });
-  it('ticks the attachment item only when a file is uploaded', () => {
-    expect(detectChecklist('', 0).has('files')).toBe(false);
-    expect(detectChecklist('', 1).has('files')).toBe(true);
+  it('has exactly eight optional documentation topics', () => expect(lekhaChecklist).toHaveLength(8));
+  it('includes attachments within the reports topic', () => {
+    expect(detectChecklist('', 0).has('reports')).toBe(false);
+    expect(detectChecklist('', 1).has('reports')).toBe(true);
   });
 });
