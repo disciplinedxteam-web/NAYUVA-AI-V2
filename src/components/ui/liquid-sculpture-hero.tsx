@@ -1,4 +1,4 @@
-liquid-sculpture-hero.tsx
+// @ts-nocheck — vendored WebGL component
 "use client"
 
 /**
