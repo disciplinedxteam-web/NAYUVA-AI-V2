@@ -66,7 +66,7 @@ export function CareTeamHome({ data, go, onPriority, onSelectBaby }: { data: Dat
   const count = (s: string) => rows.filter(r => r.status === s).length;
   const adherence = ranked.length ? Math.round(count('Active') / ranked.length * 100) : null;
   const reviewedPct = data.cards.length ? Math.round((data.cards.length - m.pending.length) / data.cards.length * 100) : null;
-  const ask = (text: string) => { if (!askBaby || !text.trim()) return; onSelectBaby(askBaby); sessionStorage.setItem('sutra-initial-query', text.trim()); void go('sutra'); };
+  const ask = (text: string) => { if (!askBaby || !text.trim()) return; onSelectBaby(askBaby); sessionStorage.setItem('sutra-initial-query', text.trim()); sessionStorage.setItem('sutra-baby', askBaby); void go('sutra'); };
   const apptRow = (a: (typeof m.upcoming)[number], isVideo: boolean) => <article className="bento-item" key={a.id}>
     <div className="bento-date"><strong>{fmtDay(a.starts_at)}</strong><span>{fmtMon(a.starts_at)}</span></div>
     <div className="bento-item-body"><div className="bento-item-top"><strong>{m.name(a.baby_id)}</strong><span className={`bento-pill ${a.status === 'Confirmed' ? 'ok' : ''}`}>{a.status}</span></div>

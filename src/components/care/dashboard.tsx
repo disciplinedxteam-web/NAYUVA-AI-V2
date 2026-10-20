@@ -1,6 +1,7 @@
 import { SearchToggle } from '@/components/ui/search-toggle';
 import { CareTicket } from './care-ticket';
 import { CaregiverHome } from './caregiver-home';
+import { CareTeamHome } from './care-team-home';
 import { TaalWorkspace } from './taal-workspace';
 import { parseCard } from '@/lib/care-card';
 import { useState,useEffect,useCallback,type ReactNode } from 'react';
@@ -44,7 +45,7 @@ export function Dashboard({role,section}:{role:DemoRole;section:Section}){
  { !['milan','lekha','sutra','taal'].includes(section) && <WorkspaceHeading title={section==='settings'?'Settings':title} description={section==='home'?'Your care, updates and next steps.':section==='updates'?'Caregiver updates for clinician review.':section==='care-plan'?'Personalized plans for connected care.':section==='svara'?'Scheduled updates for your care team.':section==='settings'?'Your facility and care contacts.':'Direct access to care contacts.'}/> }
  {notice&&<div className="dashboard-notice" role="status"><Check size={18}/><span>{notice}</span><Button variant="ghost" size="icon" aria-label="Dismiss message" onClick={()=>setNotice('')}>×</Button></div>}
  
- {section==='home'&&<DashboardHome data={data} baby={baby} role={role} go={go} onPriority={p=>{setPriorityFilter(p);void go('updates');}}/>}
+ {section==='home'&&<DashboardHome data={data} baby={baby} role={role} go={go} onPriority={p=>{setPriorityFilter(p);void go('updates');}} onSelectBaby={setSelected}/>}
  {section==='care-plan'&&<Plans babies={babies} busy={busy} run={run} onSelect={setSelected}/>}
  {section==='updates'&&<Updates data={data} initialFilter={priorityFilter} busy={busy} run={run} onMilan={id=>{setSelected(id);void go('milan');}} onEditPlan={id=>{setSelected(id);void go('care-plan');}}/>}
  {section==='svara'&&baby&&<Svara key={baby.id} baby={baby} cards={data.cards.filter(c=>c.baby_id===baby.id)} busy={busy} run={run}/>}
@@ -57,17 +58,9 @@ export function Dashboard({role,section}:{role:DemoRole;section:Section}){
  {section==='emergency'&&<Emergency settings={data.settings as Record<string,string>}/>}
  </>}</div></div></main>;
 }
-function DashboardHome({data,baby,role,go,onPriority}:{data:Data;baby?:Baby|undefined;role:DemoRole;go:(s:Section)=>unknown;onPriority:(p:string)=>void}){
+function DashboardHome({data,baby,role,go,onPriority,onSelectBaby}:{data:Data;baby?:Baby|undefined;role:DemoRole;go:(s:Section)=>unknown;onPriority:(p:string)=>void;onSelectBaby:(id:string)=>void}){
  const upcoming=data.appointments.filter(a=>!['Completed','Cancelled'].includes(a.status)&&new Date(a.starts_at).getTime()>=Date.now()); const awaiting=data.cards.filter(c=>!c.reviewed); const pendingNotes=data.appointments.filter(a=>a.status==='Completed'&&!data.notes.some(n=>n.appointment_id===a.id));
- return <>{role==='care-team'?<>
- <div className="workflow-categories">{['Priority Review','Review Needed','Routine'].map(p=><Button variant="outline" key={p} className={`workflow-category ${p==='Priority Review'?'priority-high':p==='Review Needed'?'priority-review':'priority-routine'}`} onClick={()=>onPriority(p)}><span>{priorityLabel(p)}</span><strong>{awaiting.filter(c=>c.priority===p).length}</strong><small>Awaiting review <ArrowRight size={14}/></small></Button>)}</div>
- <div className="home-columns"><section><h2>Outstanding actions</h2><Button className="home-row" variant="ghost" onClick={()=>go('updates')}><Activity/><span><strong>{awaiting.length} updates</strong><small>Awaiting care team review</small></span><ArrowRight/></Button><Button className="home-row" variant="ghost" onClick={()=>go('lekha')}><FileText/><span><strong>{pendingNotes.length} appointments</strong><small>Awaiting documentation</small></span><ArrowRight/></Button></section><section><h2>Care coordination</h2><Button className="home-row" variant="ghost" onClick={()=>go('milan')}><CalendarDays/><span><strong>{data.appointments.filter(a=>a.status==='Reschedule requested').length} reschedule requests</strong><small>Review preferred date and time</small></span><ArrowRight/></Button><Button className="home-row" variant="ghost" onClick={()=>go('care-plan')}><ClipboardList/><span><strong>{data.babies.length} Care Plans</strong><small>View or update connected profiles</small></span><ArrowRight/></Button></section></div>
- </>:<CaregiverHome data={data} baby={baby} go={go}/>}
- {role==='care-team'&&<>
- <div className="home-section-heading"><h2>Upcoming appointments</h2><Button variant="ghost" onClick={()=>go('milan')}>View all<ArrowRight/></Button></div>
- {upcoming.length?<div className="home-appointment-grid">{upcoming.slice(0,3).map(a=><article className="nv-card" key={a.id}><div className="nv-card-top"><span className="nv-tag"><CalendarDays/>Appointment</span><span className="nv-pill">{a.status}</span></div><h3>{a.reason}</h3><p className="nv-sub">{data.babies.find(b=>b.id===a.baby_id)?.baby_name}</p><div className="nv-row"><Clock/><div><strong>{formatDate(a.starts_at)}</strong><small>{(a.location as Record<string,string>)['facilityName']||'Location not configured'}</small></div></div><Button variant="outline" onClick={()=>go('milan')}>View appointment<ArrowRight/></Button></article>)}</div>:<p className="home-empty">No upcoming appointments.</p>}
- </>}
- </>;
+ return role==='care-team'?<CareTeamHome data={data} go={go} onPriority={onPriority} onSelectBaby={onSelectBaby}/>:<CaregiverHome data={data} baby={baby} go={go}/>;
 }
 function EmergencyCompact({settings}:{settings:Record<string,string>}){return <div className="home-shortcuts">{[['careTeamContact','Care Team'],['emergencyContact','Hospital Emergency'],['ambulanceNumber','Ambulance'],['afterHoursContact','After-hours contact']].map(([key,label])=>key&&settings[key]?<Button asChild variant="outline" size="sm" key={key}><a href={'tel:'+settings[key].replace(/[^\d+]/g,'')}><Phone/>{label}</a></Button>:null)}</div>;}
 function priorityLabel(v:string){return v==='Priority Review'?'Priority':v==='Review Needed'?'Review':v;}

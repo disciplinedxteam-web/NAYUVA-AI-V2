@@ -23,7 +23,7 @@ const date = (v:string) => new Date(v).toLocaleDateString('en-IN',{day:'numeric'
 const shortcuts = [{label:'Summarize the journey',question:'Summarize the reviewed care journey.',icon:RouteIcon},{label:'Last appointment',question:'When was the last completed appointment?',icon:CalendarDays},{label:'Recent care updates',question:'What do the latest reviewed care updates say?',icon:FileText},{label:'What’s coming up?',question:'What appointments and follow-ups are scheduled next?',icon:Clock}];
 export function SutraWorkspace({data,role}:{data:Data;role:DemoRole}) {
  const ask=useServerFn(askSutra), history=useServerFn(getSutraHistory), speak=useServerFn(speakText);
- const [babyId,setBabyId]=useState(role==='caregiver'?data.babies[0]?.id??'':''); const baby=data.babies.find(b=>b.id===babyId);
+ const [babyId,setBabyId]=useState(()=>{if(role==='caregiver')return data.babies[0]?.id??'';if(typeof window==='undefined')return '';const id=sessionStorage.getItem('sutra-baby')??'';sessionStorage.removeItem('sutra-baby');return data.babies.some(b=>b.id===id)?id:'';}); const baby=data.babies.find(b=>b.id===babyId);
  const [messages,setMessages]=useState<Msg[]>([]),[draft,setDraft]=useState(''),[busy,setBusy]=useState(false),[first,setFirst]=useState(false),[ready,setReady]=useState(false),[error,setError]=useState('');
  const [conversationId,setConversationId]=useState<string|undefined>(),[chats,setChats]=useState<Chat[]>([]),[historyOpen,setHistoryOpen]=useState(false),[loading,setLoading]=useState(false);
  const [journeyOpen,setJourneyOpen]=useState(false),[selected,setSelected]=useState<string[]>([]),[profileOpen,setProfileOpen]=useState(false),[search,setSearch]=useState('');
