@@ -41,3 +41,4 @@
 - Profile photo and display preferences live in per-browser storage only, so they never alter care records.
 
 - Subdirectories have their own `AGENTS.md`; read them before changing files there.
+- The homepage hero is the vendored WebGL SculptureHero (src/components/ui/liquid-sculpture-hero.tsx), tinted in-shader and configured via props, so brand changes stay in the route file.

@@ -17,7 +17,8 @@ import flowerB from "@/assets/flower-pink-left.png";
 import flowerLavender from "@/assets/flower-lavender.png";
 import flowerYellow from "@/assets/flower-yellow.png";
 import { CareGraphic } from "@/components/care-graphic";
-import { SiteHeader } from "@/components/site-header";
+import SculptureHero from "@/components/ui/liquid-sculpture-hero";
+import { LanguageMenu } from "@/components/language-provider";
 import { ProductOrb, type ProductState } from "@/components/product-orb";
 import { Mascot } from "@/components/care/mascot";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
@@ -69,7 +70,6 @@ function Logo() {
   );
 }
 
-function Nav() { return <SiteHeader logo={<Logo />} />; }
 
 function CTAs() {
   return (
@@ -93,39 +93,25 @@ function CTAs() {
 
 function Hero() {
   return (
-    <section className="hero-section relative">
-      <Flower src={flowerA} className="flower-edge flower-right hero-flower-right" />
-      <Flower src={flowerB} className="flower-edge flower-left hero-flower-left" />
-      <div className="mx-auto grid max-w-7xl items-center hero-layout gap-10 px-6 lg:grid-cols-[1.1fr_1fr] lg:px-10">
-        <div className="hero-copy relative z-10">
-          <div className="flex items-center gap-4">
-            <span className="h-px w-10 bg-primary/60" />
-            <span className="eyebrow">Newborn post-discharge care</span>
-          </div>
-          <h1 className="text-4xl font-bold leading-[1.1] md:text-5xl lg:text-[3.5rem]">
-            Continuous care for newborns,{" "}
-            <span className="font-light italic text-primary">beyond discharge.</span>
-          </h1>
-          <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Nayuva AI connects newborns, caregivers and care teams after discharge, helping
-            families stay guided and helping clinicians stay informed between visits.
-          </p>
-          <p className="max-w-md text-sm font-medium text-foreground/60">
-            A clinician-directed platform for newborn post-discharge care, follow-up and
-            continuity.
-          </p>
-          <CTAs />
-        </div>
-        <div className="relative flex justify-center">
-          
-          <img
-            src={baby.url}
-            alt="A newborn swaddled in pink, cradled in caring hands"
-            className="hero-baby relative w-full mix-blend-multiply"
-          />
-        </div>
-      </div>
-    </section>
+    <SculptureHero
+      brand={<span className="hero-brand"><img src={logo.url} alt="" width={32} height={32} /><span>NAYUVA AI</span></span>}
+      navLinks={[{ label: "Solution", href: "#solution" }, { label: "Products", href: "#products" }, { label: "Impact", href: "#impact" }, { label: "Team", href: "#team" }]}
+      navSlot={<LanguageMenu />}
+      themeToggle={false}
+      showCredit={false}
+      backdropText="Nayuva AI"
+      eyebrow="team baalak · Health-a-thon 2026"
+      headline={"From discharge to\nevery next step."}
+      headlineAccent="every next step."
+      body="Nayuva AI connects families and healthcare teams beyond hospital discharge, ensuring continuous newborn care and timely support throughout the journey."
+      primaryCta={{ label: "Continue as Care Team", href: "/care-team/home" }}
+      secondaryCta={{ label: "Continue as Caregiver", href: "/caregiver-entry" }}
+      background="#F8ECEF"
+      textColor="#3E1726"
+      accentColor="#9A2F55"
+      headingFont="'Manrope', 'Helvetica Neue', Arial, sans-serif"
+      bodyFont="'Manrope', 'Helvetica Neue', Arial, sans-serif"
+    />
   );
 }
 
@@ -361,19 +347,43 @@ function FinalCTA() {
 }
 
 function Footer() {
+  const cols = [
+    { title: "Platform", links: [["Svara", "#products"], ["Milan", "#products"], ["Lekha", "#products"], ["Sutra", "#products"]] },
+    { title: "Explore", links: [["Solution", "#solution"], ["Impact", "#impact"], ["Team", "#team"], ["Get started", "#cta"]] },
+  ];
   return (
-    <footer className="border-t border-primary/15">
-      <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-14 md:flex-row md:items-start md:justify-between lg:px-10">
-        <div className="space-y-3">
-          <Logo />
-          <p className="text-sm text-muted-foreground">Continuous newborn post-discharge care.</p>
+    <footer className="site-footer px-4 pb-4 md:px-6 md:pb-6">
+      <div className="site-footer-card mx-auto max-w-7xl rounded-3xl px-8 py-12 md:px-12 md:py-14">
+        <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr_1.2fr]">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <img src={logo.url} alt="Nayuva AI logo" width={40} height={40} className="site-footer-logo" />
+              <span className="text-lg font-semibold tracking-[0.18em]">NAYUVA AI</span>
+            </div>
+            <p className="max-w-xs text-sm leading-relaxed opacity-75">From discharge to every next step — continuous newborn care that keeps families and care teams connected.</p>
+          </div>
+          {cols.map((c) => (
+            <nav key={c.title} aria-label={c.title}>
+              <p className="site-footer-label">{c.title}</p>
+              <ul className="mt-4 space-y-2.5">
+                {c.links.map(([l, h]) => <li key={l}><a href={h} className="site-footer-link">{l}</a></li>)}
+              </ul>
+            </nav>
+          ))}
+          <div>
+            <p className="site-footer-label">Access the platform</p>
+            <div className="mt-4 flex flex-col gap-3">
+              <Link to="/care-team/$section" params={{ section: "home" }} className="site-footer-cta">Continue as Care Team <ArrowUpRight className="size-4" /></Link>
+              <Link to="/caregiver-entry" className="site-footer-cta site-footer-cta-ghost">Continue as Caregiver <ArrowUpRight className="size-4" /></Link>
+            </div>
+          </div>
         </div>
-        <p className="max-w-md text-xs leading-relaxed text-muted-foreground">
-          Nayuva supports communication, coordination and documentation. It does not diagnose,
-          recommend treatment, assess clinical risk or provide autonomous clinical advice.
-        </p>
+        <div className="site-footer-rule my-10" />
+        <div className="flex flex-col gap-4 text-xs md:flex-row md:items-start md:justify-between">
+          <p className="max-w-xl leading-relaxed opacity-65">Nayuva supports communication, coordination and documentation. It does not diagnose, recommend treatment, assess clinical risk or provide autonomous clinical advice.</p>
+          <p className="shrink-0 opacity-65">© {new Date().getFullYear()} Nayuva AI · team baalak · Health-a-thon 2026</p>
+        </div>
       </div>
-      <p className="pb-8 text-center text-xs text-muted-foreground">© {new Date().getFullYear()} Nayuva AI</p>
     </footer>
   );
 }
@@ -381,7 +391,6 @@ function Footer() {
 function Index() {
   return (
     <main className="page-shell">
-      <Nav />
       <Hero />
       <Solution />
       <Products />
