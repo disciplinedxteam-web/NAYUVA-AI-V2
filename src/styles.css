@@ -1600,3 +1600,32 @@ button.bento-item { cursor: pointer; align-items: center; transition: border-col
 .cp-error { margin-top: 12px; color: var(--destructive); font-size: 13px; }
 .cp-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border); }
 @media (max-width: 900px) { .cp-steps em { display: none; } .cp-row { grid-template-columns: 1fr; } .cp-q { border-left: 0; border-top: 1px solid var(--border); } .cp-review, .cp-grid { grid-template-columns: 1fr; } .cp-card { padding: 20px; } }
+
+/* Translate & Emergency: pill triggers styled like the glass toggle */
+.pill-trigger { display:inline-flex;align-items:center;gap:8px;height:44px;padding:4px 14px 4px 4px;border-radius:999px;border:1px solid var(--border);background:var(--glass-surface);backdrop-filter:blur(14px);box-shadow:var(--shadow-control);font-size:13px;font-weight:650;color:var(--foreground);cursor:pointer;transition:transform .2s ease, box-shadow .2s ease; }
+.pill-trigger:hover { transform:translateY(-1px); }
+.pill-trigger:focus-visible { outline:2px solid var(--ring);outline-offset:2px; }
+.pill-glider { display:grid;place-items:center;width:34px;height:34px;border-radius:999px;background:var(--gradient-rose);color:var(--primary-foreground);box-shadow:var(--shadow-control); }
+.pill-glider svg { width:16px;height:16px; }
+.pill-trigger > svg { color:var(--muted-foreground);transition:transform .25s ease; }
+.pill-trigger[data-state="open"] > svg { transform:rotate(180deg); }
+.pill-emergency .pill-glider { background:linear-gradient(135deg,var(--destructive),var(--primary-deep));animation:pill-pulse 2.4s ease-in-out infinite; }
+@keyframes pill-pulse { 0%,100%{box-shadow:0 0 0 0 color-mix(in oklab,var(--destructive) 40%,transparent)} 50%{box-shadow:0 0 0 6px color-mix(in oklab,var(--destructive) 0%,transparent)} }
+.pill-menu { min-width:var(--radix-dropdown-menu-trigger-width);border-radius:18px;padding:6px; }
+.pill-menu-note { font-size:11px;color:var(--muted-foreground);padding:6px 10px 8px;max-width:240px; }
+@media (prefers-reduced-motion: reduce) { .pill-emergency .pill-glider { animation:none; } .pill-trigger { transition:none; } }
+@media (max-width:639px) { .pill-label { display:none; } .pill-trigger { padding-right:8px; } }
+
+/* Profile settings */
+.account-photo { object-fit:cover; }
+.profile-settings { display:flex;flex-direction:column;gap:22px;padding:24px;border-radius:22px;background:var(--glass-surface);border:1px solid var(--border);backdrop-filter:blur(14px);margin-bottom:28px; }
+.ps-photo { display:flex;align-items:center;gap:18px; }
+.ps-photo > img, .ps-photo > span { width:84px;height:84px;border-radius:999px;object-fit:cover;display:grid;place-items:center;background:var(--gradient-rose);color:var(--primary-foreground);font-weight:700;font-size:26px;box-shadow:var(--shadow-control); }
+.ps-photo h2 { font-size:20px; } .ps-photo p { font-size:13px;color:var(--muted-foreground); }
+.ps-photo-actions { display:flex;gap:8px;margin-top:10px; }
+.ps-upload { display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--border);font-size:12px;font-weight:650;cursor:pointer;background:var(--card); }
+.ps-upload svg { width:15px;height:15px;color:var(--primary); }
+.ps-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px; }
+.ps-footer { display:flex;align-items:center;justify-content:space-between;gap:12px; } .ps-footer small { color:var(--muted-foreground);font-size:11px; }
+.bento-select { width:100%;height:38px;border-radius:12px;border:1px solid var(--border);background:var(--card);padding:0 10px;font-size:13px;margin-bottom:8px; }
+@media (max-width:700px) { .ps-grid { grid-template-columns:minmax(0,1fr); } }
