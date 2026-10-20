@@ -1741,9 +1741,3 @@ export default function SculptureHero(props: SculptureHeroProps) {
     </section>
   )
 }
-
-
-
-demo.tsx
-import SculptureHero from "@/components/ui/liquid-sculpture-hero";
-
