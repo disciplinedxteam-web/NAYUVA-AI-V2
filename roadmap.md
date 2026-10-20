@@ -1,5 +1,11 @@
 # Roadmap
 
+## Current: Lekha and Taal
+- [ ] Connect authorized persistent live/post-visit capture, consent, draft and approval
+- [ ] Redesign Lekha choices, chat capture, eight-topic checklist and quick-action drawers
+- [ ] Redesign surfaced Taal table and immediate activity detail dialog
+- [ ] Verify eligibility, persistence, controls and targeted tests; report Sarvam credit blocker
+
 ## Sutra redesign
 - [ ] Replace legacy Sutra layout with reference greeting, composer and single-row shortcuts
 - [ ] Implement character-led first-message motion and normal subsequent-message indicator
