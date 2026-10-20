@@ -1766,3 +1766,13 @@ button.bento-item { cursor: pointer; align-items: center; transition: border-col
 .lekha-meeting-dialog { width:calc(100vw - 60px)!important;max-width:1100px!important;background:var(--continuity-surface); }
 .lekha-meeting-dialog .daily-host { height:60svh;min-height:300px; }
 .lekha-studio:has(.lekha-action-drawer) .lekha-capture-layout { max-width:680px;margin-right:auto; }
+
+.dashboard-shell.sidebar-collapsed.lekha-focused { grid-template-columns:minmax(0,1fr); }
+.dashboard-shell.lekha-focused .dashboard-main { width:100%;padding-left:0; }
+.dashboard-shell.lekha-focused .dashboard-content { width:100%;padding:16px 28px; }
+.taal-detail-dialog { background:var(--continuity-surface)!important;opacity:1;top:24px!important;transform:translateX(-50%)!important;animation:none!important; }
+.lekha-action-drawer,.lekha-meeting-dialog { background:var(--continuity-surface)!important;animation:none!important; }
+body:has(.lekha-action-drawer) .lekha-studio { width:42%;margin-left:0;padding-right:0; }
+body:has(.lekha-action-drawer) .lekha-action-drawer { width:54vw!important; }
+body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr; }
+@media(max-width:700px) { body:has(.lekha-action-drawer) .lekha-studio { width:100%; }body:has(.lekha-action-drawer) .lekha-action-drawer { width:calc(100vw - 24px)!important;right:12px!important; } }

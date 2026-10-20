@@ -198,7 +198,7 @@ export const getLekhaCapture=createServerFn({method:'POST'}).inputValidator(z.ob
  if(!r.data)return {capture:null,segments:[]};
  // Daily supplies named remote/local speakers after its own two-party consent gate.
  const capture=r.data;
- if(capture.mode==='live'&&capture.consent_at&&(s.appointment.location as Record<string,unknown>)?.['mode']==='online'){
+ if(capture.mode==='live'&&capture.status==='capturing'&&capture.consent_at&&(s.appointment.location as Record<string,unknown>)?.['mode']==='online'){
   const t=await s.db.from('appointment_transcripts').select('*').eq('appointment_id',data.appointmentId);check(t.error);
   if(t.data?.length)check((await s.db.from('lekha_segments').upsert(t.data.map(x=>({capture_id:capture.id,event_key:x.id,speaker:x.speaker,content:x.content,spoken_at:x.spoken_at})),{onConflict:'capture_id,event_key',ignoreDuplicates:true})).error);
  }
