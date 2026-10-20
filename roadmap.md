@@ -1,10 +1,11 @@
 # Roadmap
 
 ## Current: Lekha and Taal
-- [ ] Connect authorized persistent live/post-visit capture, consent, draft and approval
-- [ ] Redesign Lekha choices, chat capture, eight-topic checklist and quick-action drawers
-- [ ] Redesign surfaced Taal table and immediate activity detail dialog
-- [ ] Verify eligibility, persistence, controls and targeted tests; report Sarvam credit blocker
+- [x] Connect authorized persistent live/post-visit capture, consent, draft and approval
+- [x] Redesign Lekha choices, chat capture, eight-topic checklist and quick-action drawers
+- [x] Redesign surfaced Taal table and immediate activity detail dialog
+- [x] Verify eligibility, saved-note resume, quick-action controls and targeted tests
+- [ ] Verify real Sarvam speech and generated-card approval end-to-end — needs available Sarvam credits and an actual consented conversation
 
 ## Sutra redesign
 - [ ] Replace legacy Sutra layout with reference greeting, composer and single-row shortcuts

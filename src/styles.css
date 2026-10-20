@@ -1781,3 +1781,8 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .taal-detail-dialog .glass-toggle button { font-size:10px;padding:6px 10px; }
 .taal-detail-calendar .taal-calendar > .day-complete { background:var(--success-soft);color:var(--workflow-routine); }
 .taal-detail-calendar .taal-calendar > .day-overdue { background:var(--workflow-priority-surface);color:var(--workflow-priority); }
+.taal-detail-dialog,.lekha-action-drawer { --tw-translate-x:0px!important;--tw-translate-y:0px!important;translate:0px 0px!important; }
+.taal-detail-dialog { padding:20px!important;gap:10px!important; }
+.taal-detail-calendar .taal-calendar > div { min-height:48px;padding:6px; }
+.taal-detail-metrics strong { font-size:22px;margin:5px 0 3px; }
+.taal-detail-events > div { padding:5px 0; }
