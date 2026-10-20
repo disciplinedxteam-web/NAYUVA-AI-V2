@@ -10,13 +10,12 @@ export const lekhaChecklist: ChecklistItem[] = [
   { key: 'assessment', title: 'Findings & assessment', hint: "Clinician's professional assessment", words: ['assess', 'impression', 'diagnos', 'finding', 'appears', 'consistent with', 'normal', 'stable', 'within range'] },
   { key: 'treatment', title: 'Treatment & advice', hint: 'Decisions, instructions and caregiver questions', words: ['advise', 'advice', 'continue', 'start', 'stop', 'treat', 'prescrib', 'recommend', 'instruct', 'feed every', 'asked', 'question', 'worried', 'worry', 'mother said', 'parent', 'caregiver', 'concerned about'] },
   { key: 'next', title: 'Next steps & follow-up', hint: 'Referrals, follow-up and planned actions', words: ['follow up', 'follow-up', 'next visit', 'review in', 'refer', 'come back', 'return', 'next week', 'schedule'] },
-  { key: 'files', title: 'Reports attached', hint: 'Scans, labs or prescriptions', words: [] },
 ];
 
 export function detectChecklist(text: string, fileCount: number): Set<string> {
   const t = text.toLowerCase();
   const done = new Set<string>();
   for (const item of lekhaChecklist) if (item.words.some(w => t.includes(w))) done.add(item.key);
-  if (fileCount > 0) done.add('files');
+  if (fileCount > 0) done.add('reports');
   return done;
 }

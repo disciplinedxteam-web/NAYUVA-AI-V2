@@ -2,6 +2,8 @@ import { createServerFn } from '@tanstack/react-start';
 import { getCookie,setCookie } from '@tanstack/react-start/server';
 import { z } from 'zod';
 import { planSchema,roleSchema,workflowPriority,permittedCategory,indiaTimestamp,nextCheckin,appointmentInputSchema } from './care-domain';
+import { canStartLekhaMode, lekhaEligible } from './lekha-domain';
+import { careCardSchema, cardText } from './care-card';
 import type { Json } from '@/integrations/supabase/types';
 const workspace='hackathon-demo';
 async function hash(value:string){const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value));return Array.from(new Uint8Array(bytes),x=>x.toString(16).padStart(2,'0')).join('');}
@@ -152,13 +154,20 @@ export const structureLekhaNote=createServerFn({method:'POST'}).inputValidator(z
 
 export const getTaalRoster=createServerFn({method:'GET'}).handler(async()=>{
  const {db}=await authorized('care-team');const now=Date.now(),start=new Date(now-14*86400000).toISOString();
- const {data:babies,error}=await db.from('care_profiles').select('*').eq('workspace',workspace);check(error);const ids=(babies??[]).map(b=>b.id);
- const [a,s,h]=await Promise.all([db.from('care_appointments').select('*').in('baby_id',ids).gte('starts_at',start).lte('starts_at',new Date(now).toISOString()).neq('status','Cancelled'),db.from('checkin_sessions').select('id,baby_id,scheduled_for,status').in('baby_id',ids).gte('scheduled_for',start),db.from('health_cards').select('baby_id,scheduled_for').in('baby_id',ids).gte('scheduled_for',start)]);[a,s,h].forEach(r=>check(r.error));
+ const b=await db.from('care_profiles').select('*').eq('workspace',workspace);check(b.error);const babies=b.data??[],ids=babies.map(x=>x.id);
+ if(!ids.length)return {now:new Date(now).toISOString(),rows:[]};
+ const [a,s,h,n]=await Promise.all([db.from('care_appointments').select('*').in('baby_id',ids),db.from('checkin_sessions').select('id,baby_id,scheduled_for,status,channel,completed_at,started_at').in('baby_id',ids),db.from('health_cards').select('baby_id,scheduled_for,priority,reviewed,created_at,category,session_id').in('baby_id',ids),db.from('clinical_notes').select('baby_id,appointment_id').in('baby_id',ids)]);[a,s,h,n].forEach(r=>check(r.error));
  const {scheduledWindow,summarizeActivity}=await import('./taal-domain');
- return {now:new Date(now).toISOString(),rows:(babies??[]).map(b=>{const p=b.plan as unknown as import('./care-domain').CarePlan;
- const effective=b.updated_at;const events:import('./taal-domain').TaalEvent[]=scheduledWindow(p,effective,now).map(t=>{const when=new Date(t).toISOString();const done=(s.data??[]).some(x=>x.baby_id===b.id&&x.scheduled_for===when&&x.status==='submitted')||(h.data??[]).some(x=>x.baby_id===b.id&&x.scheduled_for===when);return {id:when,when,kind:'Svara',complete:done,detail:done?'Submitted check-in':'Scheduled check-in overdue'};});
- for(const x of a.data??[])if(x.baby_id===b.id)events.push({id:x.id,when:x.starts_at,kind:'Appointment',complete:x.status==='Completed',detail:`${x.reason} · ${x.status}`});
- events.sort((a,b)=>a.when.localeCompare(b.when));return {id:b.id,baby:b.baby_name,caregiver:b.caregiver_name,mobile:p.mobile??'',effectiveAt:effective,...summarizeActivity(events),events};})};
+ return {now:new Date(now).toISOString(),rows:babies.map(b=>{const p=b.plan as unknown as import('./care-domain').CarePlan;const effective=b.updated_at;
+ const appointments=(a.data??[]).filter(x=>x.baby_id===b.id),sessions=(s.data??[]).filter(x=>x.baby_id===b.id),cards=(h.data??[]).filter(x=>x.baby_id===b.id);
+ const events:import('./taal-domain').TaalEvent[]=scheduledWindow(p,effective,now).map(t=>{const when=new Date(t).toISOString();const done=sessions.some(x=>x.scheduled_for===when&&x.status==='submitted')||cards.some(x=>x.scheduled_for===when);return {id:when,when,kind:'Svara',complete:done,detail:done?'Submitted check-in':'Scheduled check-in overdue'};});
+ for(const x of appointments)if(x.starts_at>=start&&Date.parse(x.starts_at)<=now&&x.status!=='Cancelled')events.push({id:x.id,when:x.starts_at,kind:'Appointment',complete:x.status==='Completed',detail:`${x.reason} · ${x.status}`});
+ events.sort((a,b)=>a.when.localeCompare(b.when));const checkins=events.filter(x=>x.kind==='Svara'),visits=events.filter(x=>x.kind==='Appointment'),recentCards=cards.filter(x=>x.created_at>=start);
+ const submitted=sessions.filter(x=>x.status==='submitted'),linked=new Set(submitted.map(x=>x.id));
+ const last=submitted.map(x=>x.completed_at??x.scheduled_for??x.started_at).filter((x):x is string=>!!x).sort().at(-1)??null;
+ const next=appointments.filter(x=>!['Cancelled','Completed'].includes(x.status)&&Date.parse(x.starts_at)>now).sort((x,y)=>x.starts_at.localeCompare(y.starts_at))[0];
+ return {id:b.id,baby:b.baby_name,caregiver:b.caregiver_name,mobile:p.mobile??'',language:p.language??'',relationship:p.relationship??'',effectiveAt:effective,...summarizeActivity(events),events,
+ metrics:{checkinsCompleted:checkins.filter(x=>x.complete).length,checkinsDue:checkins.length,appointmentsCompleted:visits.filter(x=>x.complete).length,appointmentsDue:visits.length,lifetimeCheckins:submitted.length+cards.filter(x=>!x.session_id||!linked.has(x.session_id)).length,lifetimeAppointments:appointments.filter(x=>x.status==='Completed').length,cards:recentCards.length,pendingReview:recentCards.filter(x=>!x.reviewed).length,documented:(n.data??[]).filter(x=>x.baby_id===b.id).length,web:submitted.filter(x=>x.channel==='website_voice').length,phone:submitted.filter(x=>x.channel==='phone').length,lastCheckin:last,latestCard:cards.sort((x,y)=>y.created_at.localeCompare(x.created_at))[0]??null,nextAppointment:next?{when:next.starts_at,reason:next.reason}:null,priority:recentCards.filter(x=>x.priority==='Priority Review').length,review:recentCards.filter(x=>x.priority==='Review Needed').length,routine:recentCards.filter(x=>x.priority==='Routine').length}};})};
 });
 
 async function onlineAccess(id:string){const auth=await authorized();const {data:a,error}=await auth.db.from('care_appointments').select('*').eq('id',id).single();check(error);if(!a)throw new Error('Appointment unavailable.');const baby=await babyAccess(auth.db,a.baby_id,auth.role);const {data:online}=await auth.db.from('online_appointments').select('*').eq('appointment_id',id).single();if(!online)throw new Error('This is not an online appointment.');return {...auth,appointment:a,baby,online};}
@@ -176,3 +185,63 @@ export const joinOnlineAppointment=createServerFn({method:'POST'}).inputValidato
 export const onlineConsentStatus=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{const s=await onlineAccess(data.id);const {data:c,error}=await s.db.from('online_participation').select('role').eq('appointment_id',data.id);check(error);return {bothConsented:(c??[]).some(x=>x.role==='care-team')&&(c??[]).some(x=>x.role==='caregiver')};});
 export const saveAppointmentTranscript=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid(),segments:z.array(z.object({key:z.string().min(1).max(180),speaker:z.string().min(1).max(100),text:z.string().trim().min(1).max(6000),when:z.string().datetime()})).max(30)})).handler(async({data})=>{const s=await onlineAccess(data.id);if(s.role!=='care-team')throw new Error('Only the care team can save the appointment transcript.');const {data:c}=await s.db.from('online_participation').select('role').eq('appointment_id',data.id);if(!c?.some(x=>x.role==='caregiver')||!c.some(x=>x.role==='care-team'))throw new Error('Both participants must consent first.');check((await s.db.from('appointment_transcripts').upsert(data.segments.map(x=>({appointment_id:data.id,event_key:x.key,speaker:x.speaker,content:x.text,spoken_at:x.when})),{onConflict:'appointment_id,event_key'})).error);return {ok:true};});
 export const getAppointmentTranscript=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{const s=await onlineAccess(data.id);if(s.role!=='care-team')throw new Error('Only the care team can access the original appointment transcript.');const {data:t,error}=await s.db.from('appointment_transcripts').select('speaker,content,spoken_at').eq('appointment_id',data.id).order('spoken_at');check(error);return (t??[]).map(x=>`${x.speaker}: ${x.content}`).join('\n');});
+
+
+async function lekhaAccess(appointmentId:string) {
+ const auth=await authorized('care-team');
+ const a=await auth.db.from('care_appointments').select('*').eq('id',appointmentId).single();check(a.error);
+ if(!a.data)throw new Error('Appointment unavailable.');
+ const baby=await babyAccess(auth.db,a.data.baby_id,'care-team');return {...auth,appointment:a.data,baby};
+}
+export const getLekhaCapture=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid()})).handler(async({data})=>{
+ const s=await lekhaAccess(data.appointmentId);const r=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.appointmentId).maybeSingle();check(r.error);
+ if(!r.data)return {capture:null,segments:[]};
+ // Daily supplies named remote/local speakers after its own two-party consent gate.
+ const capture=r.data;
+ if(capture.mode==='live'&&capture.status==='capturing'&&capture.consent_at&&(s.appointment.location as Record<string,unknown>)?.['mode']==='online'){
+  const t=await s.db.from('appointment_transcripts').select('*').eq('appointment_id',data.appointmentId);check(t.error);
+  if(t.data?.length)check((await s.db.from('lekha_segments').upsert(t.data.map(x=>({capture_id:capture.id,event_key:x.id,speaker:x.speaker,content:x.content,spoken_at:x.spoken_at})),{onConflict:'capture_id,event_key',ignoreDuplicates:true})).error);
+ }
+ const lines=await s.db.from('lekha_segments').select('event_key,speaker,content,spoken_at').eq('capture_id',r.data.id).order('spoken_at');check(lines.error);
+ return {capture:r.data,segments:lines.data??[]};
+});
+export const startLekhaCapture=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid(),mode:z.enum(['live','after']),consent:z.literal(true)})).handler(async({data})=>{
+ const s=await lekhaAccess(data.appointmentId);
+ const existing=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.appointmentId).maybeSingle();check(existing.error);
+ if(existing.data){if(existing.data.status==='approved')throw new Error('This appointment is already documented.');return existing.data;}
+ if(!canStartLekhaMode(s.appointment,data.mode))throw new Error(data.mode==='after'?'Mark the appointment done in Milan before documenting after the visit.':'Live capture is available for today’s open appointments.');
+ const n=await s.db.from('clinical_notes').select('id').eq('appointment_id',data.appointmentId);check(n.error);if(n.data?.length)throw new Error('This appointment is already documented.');
+ const r=await s.db.from('lekha_captures').upsert({appointment_id:data.appointmentId,baby_id:s.baby.id,mode:data.mode,consent_at:new Date().toISOString(),plan_snapshot:s.baby.plan},{onConflict:'appointment_id',ignoreDuplicates:true}).select().single();check(r.error);
+ if(!r.data)throw new Error('Capture already opened. Please reopen this appointment.');return r.data;
+});
+export const saveLekhaProgress=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid(),notes:z.string().max(12000),revision:z.number().int().min(0),status:z.enum(['capturing','paused','ended'])})).handler(async({data})=>{
+ const s=await lekhaAccess(data.appointmentId);const r=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.appointmentId).single();check(r.error);
+ if(!r.data||['approved','review'].includes(r.data.status))throw new Error('This capture is already awaiting review or approved.');
+ if(data.status==='ended'&&!data.notes.trim())throw new Error('Add notes or capture a conversation before ending.');
+ if(s.appointment.status==='Cancelled')throw new Error('The appointment was cancelled.');
+ const saved=await s.db.from('lekha_captures').update({edited_notes:data.notes,status:data.status,revision:data.revision+1,updated_at:new Date().toISOString(),...(data.status==='ended'?{ended_at:new Date().toISOString()}:{})}).eq('id',r.data.id).eq('revision',data.revision).select().single();
+ if(saved.error||!saved.data)throw new Error('This appointment changed in another window. Reopen it to continue safely.');
+ if(data.status==='ended'&&s.appointment.status!=='Completed')check((await s.db.from('care_appointments').update({status:'Completed'}).eq('id',data.appointmentId).neq('status','Cancelled')).error);
+ return saved.data;
+});
+export const transcribeLekhaSegment=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid(),key:z.string().uuid(),audio:z.string().min(100).max(3_000_000),language:z.enum(sttLangs).default('unknown')})).handler(async({data})=>{
+ const s=await lekhaAccess(data.appointmentId);const r=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.appointmentId).single();check(r.error);
+ if(!r.data?.consent_at||!['capturing','paused'].includes(r.data.status))throw new Error('Start a consented capture first.');
+ const existing=await s.db.from('lekha_segments').select('*').eq('capture_id',r.data.id).eq('event_key',data.key).maybeSingle();check(existing.error);if(existing.data)return existing.data;
+ const {sarvamTranscribe}=await import('./sarvam.server');const bytes=Uint8Array.from(atob(data.audio),c=>c.charCodeAt(0));
+ const recognized=await sarvamTranscribe(new Blob([bytes],{type:'audio/wav'}),'conversation.wav',data.language);
+ if(!recognized.transcript.trim())return null;
+ const saved=await s.db.from('lekha_segments').upsert({capture_id:r.data.id,event_key:data.key,speaker:r.data.mode==='after'?'Clinician':'Conversation',content:recognized.transcript},{onConflict:'capture_id,event_key',ignoreDuplicates:true}).select().single();check(saved.error);return saved.data;
+});
+export const generateLekhaDraft=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid()})).handler(async({data})=>{
+ const s=await lekhaAccess(data.appointmentId);const r=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.appointmentId).single();check(r.error);
+ if(!r.data||!['ended','review'].includes(r.data.status)||!r.data.edited_notes.trim())throw new Error('End the appointment and save the notes first.');
+ if(r.data.status==='review'&&r.data.draft_card)return careCardSchema.parse(r.data.draft_card);
+ const {sarvamChat,parseJsonObject}=await import('./sarvam.server');const {normalizeCard}=await import('./care-card');
+ const out=await sarvamChat([{role:'system',content:'You are Lekha, a silent documentation assistant. Summarize only the supplied appointment notes. Separate caregiver-reported statements from clinician observations and decisions. Never infer speaker identity, diagnoses, advice, treatment or normal findings from absence. Preserve measurements and clinician decisions exactly. Make concise topic findings up to 80 characters. Include only discussed topics. Status is Normal only if explicitly described as normal; Concern only for an explicitly stated concern; otherwise Not discussed. Missing category must be Review Needed. Never assess clinical risk or invent care decisions. Output JSON: {"topics":[{"title":"topic","finding":"summary","status":"Normal|Concern|Not discussed","quote":"exact evidence"}],"priority":"Priority Review|Review Needed|Routine","priorityReason":"brief reason"}. Category is for human review; Routine only for explicitly unremarkable, complete documentation.'},{role:'user',content:JSON.stringify({appointmentReason:s.appointment.reason,plan:r.data.plan_snapshot,notes:r.data.edited_notes}).slice(0,24000)}],{maxTokens:1500});
+ const card=normalizeCard(parseJsonObject(out));check((await s.db.from('lekha_captures').update({draft_card:card as Json,status:'review',updated_at:new Date().toISOString()}).eq('id',r.data.id).eq('status','ended')).error);return card;
+});
+export const approveLekhaDraft=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid(),card:careCardSchema,approved:z.literal(true)})).handler(async({data})=>{
+ const s=await lekhaAccess(data.appointmentId);const r=await s.db.from('lekha_captures').select('id').eq('appointment_id',data.appointmentId).single();check(r.error);if(!r.data)throw new Error('Draft unavailable.');
+ const result=await s.db.rpc('approve_lekha_capture',{p_capture:r.data.id,p_card:data.card as Json,p_decision:cardText(data.card),p_followup:data.card.topics.find(t=>/follow/i.test(t.title))?.finding??''});check(result.error);return {noteId:result.data};
+});

@@ -39,3 +39,5 @@
 - Workspace search is the shared SearchToggle that expands over its toggle, so every list keeps one consistent search pattern.
 - Care Team Home reuses the caregiver bento widget grid in its own component with a separate saved layout key, so both roles share one look while widgets stay role-specific.
 - Profile photo and display preferences live in per-browser storage only, so they never alter care records.
+
+- Subdirectories have their own `AGENTS.md`; read them before changing files there.

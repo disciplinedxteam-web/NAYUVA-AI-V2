@@ -557,6 +557,113 @@ export type Database = {
           },
         ]
       }
+      lekha_captures: {
+        Row: {
+          appointment_id: string
+          approved_at: string | null
+          approved_card: Json | null
+          baby_id: string
+          consent_at: string | null
+          draft_card: Json | null
+          edited_notes: string
+          ended_at: string | null
+          id: string
+          mode: string
+          original_segments: Json
+          plan_snapshot: Json
+          revision: number
+          started_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          approved_at?: string | null
+          approved_card?: Json | null
+          baby_id: string
+          consent_at?: string | null
+          draft_card?: Json | null
+          edited_notes?: string
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          original_segments?: Json
+          plan_snapshot?: Json
+          revision?: number
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          approved_at?: string | null
+          approved_card?: Json | null
+          baby_id?: string
+          consent_at?: string | null
+          draft_card?: Json | null
+          edited_notes?: string
+          ended_at?: string | null
+          id?: string
+          mode?: string
+          original_segments?: Json
+          plan_snapshot?: Json
+          revision?: number
+          started_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lekha_captures_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "care_appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lekha_captures_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lekha_segments: {
+        Row: {
+          capture_id: string
+          content: string
+          event_key: string
+          id: string
+          speaker: string
+          spoken_at: string
+        }
+        Insert: {
+          capture_id: string
+          content: string
+          event_key: string
+          id?: string
+          speaker?: string
+          spoken_at?: string
+        }
+        Update: {
+          capture_id?: string
+          content?: string
+          event_key?: string
+          id?: string
+          speaker?: string
+          spoken_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lekha_segments_capture_id_fkey"
+            columns: ["capture_id"]
+            isOneToOne: false
+            referencedRelation: "lekha_captures"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       online_appointments: {
         Row: {
           appointment_id: string
@@ -853,6 +960,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_lekha_capture: {
+        Args: {
+          p_capture: string
+          p_card: Json
+          p_decision: string
+          p_followup: string
+        }
+        Returns: string
+      }
       confirm_svara_card: {
         Args: { p_baby: string; p_session: string; p_summary: string }
         Returns: string
