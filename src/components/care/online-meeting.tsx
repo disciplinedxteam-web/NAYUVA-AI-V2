@@ -27,6 +27,7 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
   const [lines, setLines] = useState<Line[]>([]), [card, setCard] = useState<CareCard | null>(null), [ending, setEnding] = useState(false), [ended, setEnded] = useState(false);
   const localVideo = useRef<HTMLVideoElement>(null), remoteVideo = useRef<HTMLVideoElement>(null);
   const local = useRef<MediaStream | null>(null), pc = useRef<RTCPeerConnection | null>(null), chan = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const pendingIce = useRef<RTCIceCandidateInit[]>([]);
   const audio = useRef<{ ctx: AudioContext; proc: ScriptProcessorNode } | null>(null), buf = useRef<Float32Array[]>([]), count = useRef(0), mutedRef = useRef(false), connectedRef = useRef(false), started = useRef(Date.now());
 
   function cleanup() {
@@ -41,7 +42,7 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
   function send(s: Omit<Signal, 'from'>, role: string) { void chan.current?.send({ type: 'broadcast', event: 'signal', payload: { ...s, from: role } }); }
   function newPeer(role: string) {
     pc.current?.close();
-    const p = new RTCPeerConnection(ICE); pc.current = p; setPeer('connecting');
+    pendingIce.current = []; const p = new RTCPeerConnection(ICE); pc.current = p; setPeer('connecting');
     local.current?.getTracks().forEach(t => p.addTrack(t, local.current!));
     p.onicecandidate = e => { if (e.candidate) send({ type: 'ice', candidate: e.candidate.toJSON() }, role); };
     p.ontrack = e => { if (remoteVideo.current && e.streams[0]) remoteVideo.current.srcObject = e.streams[0]; };
@@ -86,9 +87,9 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
             const p = newPeer(r.role); const offer = await p.createOffer(); await p.setLocalDescription(offer); send({ type: 'offer', sdp: offer }, r.role); return;
           }
           if (r.role === 'caregiver' && s.type === 'hello') { send({ type: 'ready' }, r.role); return; }
-          if (s.type === 'offer' && s.sdp) { const p = newPeer(r.role); await p.setRemoteDescription(s.sdp); const ans = await p.createAnswer(); await p.setLocalDescription(ans); send({ type: 'answer', sdp: ans }, r.role); return; }
-          if (s.type === 'answer' && s.sdp && pc.current?.signalingState === 'have-local-offer') { await pc.current.setRemoteDescription(s.sdp); return; }
-          if (s.type === 'ice' && s.candidate && pc.current?.remoteDescription) await pc.current.addIceCandidate(s.candidate);
+          if (s.type === 'offer' && s.sdp) { const p = newPeer(r.role); await p.setRemoteDescription(s.sdp); for (const c of pendingIce.current.splice(0)) await p.addIceCandidate(c); const ans = await p.createAnswer(); await p.setLocalDescription(ans); send({ type: 'answer', sdp: ans }, r.role); return; }
+          if (s.type === 'answer' && s.sdp && pc.current?.signalingState === 'have-local-offer') { await pc.current.setRemoteDescription(s.sdp); for (const c of pendingIce.current.splice(0)) await pc.current.addIceCandidate(c); return; }
+          if (s.type === 'ice' && s.candidate) { if (pc.current?.remoteDescription) await pc.current.addIceCandidate(s.candidate); else pendingIce.current.push(s.candidate); }
         } catch { /* a later offer renegotiates */ }
       }).subscribe(st => { if (st === 'SUBSCRIBED') send({ type: 'hello' }, r.role); });
     } catch (e) { setError(e instanceof Error ? e.message : 'The appointment could not be joined.'); cleanup(); setInfo(null); }
