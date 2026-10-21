@@ -20,6 +20,7 @@ import { CareGraphic } from "@/components/care-graphic";
 import { SiteHeader } from "@/components/site-header";
 import { ProductOrb, type ProductState } from "@/components/product-orb";
 import { Mascot } from "@/components/care/mascot";
+import { AwardBadge } from "@/components/ui/award-badge";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
 import rajeev from "@/assets/rajeev-portrait.png.asset.json";
 import charmi from "@/assets/charmi-portrait.png.asset.json";
@@ -96,6 +97,9 @@ function Hero() {
     <section className="hero-section relative">
       <Flower src={flowerA} className="flower-edge flower-right hero-flower-right" />
       <Flower src={flowerB} className="flower-edge flower-left hero-flower-left" />
+      <div className="relative z-10 flex w-full justify-center px-6 pb-6 pt-4">
+        <AwardBadge eyebrow="TEAM BAALAK" title="Health-a-thon 2026" />
+      </div>
       <div className="mx-auto grid max-w-7xl items-center hero-layout gap-10 px-6 lg:grid-cols-[1.1fr_1fr] lg:px-10">
         <div className="hero-copy relative z-10">
           <div className="flex items-center gap-4">
