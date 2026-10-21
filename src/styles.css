@@ -1833,3 +1833,4 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .vroom .spin { animation:spin 1s linear infinite; }
 @media (max-width: 900px) { .vroom.has-panel .vroom-body { grid-template-columns:1fr; } .vroom-panel { max-height:280px; } }
 @media (prefers-reduced-motion: reduce) { .vroom-dot.is-connected::before,.vroom .spin { animation:none; } }
+@keyframes spin { to { transform:rotate(360deg); } }
