@@ -216,7 +216,7 @@ async function lekhaAccess(appointmentId:string) {
 export const getLekhaCapture=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid()})).handler(async({data})=>{
  const s=await lekhaAccess(data.appointmentId);const r=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.appointmentId).maybeSingle();check(r.error);
  if(!r.data)return {capture:null,segments:[]};
- // Daily supplies named remote/local speakers after its own two-party consent gate.
+ // Online visits supply speaker-labelled segments from each participant's own microphone after two-party consent.
  const capture=r.data;
  if(capture.mode==='live'&&capture.status==='capturing'&&capture.consent_at&&(s.appointment.location as Record<string,unknown>)?.['mode']==='online'){
   const t=await s.db.from('appointment_transcripts').select('*').eq('appointment_id',data.appointmentId);check(t.error);
