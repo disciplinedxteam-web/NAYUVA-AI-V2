@@ -174,13 +174,36 @@ export const joinOnlineAppointment=createServerFn({method:'POST'}).inputValidato
  if(['Completed','Cancelled'].includes(a.status))throw new Error('This appointment is closed.');
  const start=Date.parse(a.starts_at),end=a.ends_at?Date.parse(a.ends_at):start+3600000;
  if(Date.now()<start-15*60000||Date.now()>end+3600000)throw new Error('Join opens 15 minutes before your appointment and closes one hour after its end.');
- if(s.online.status!=='ready')throw new Error(s.online.failure_message||'The video room is not ready.');
+ let channel=s.online.room_url;
+ if(!channel.startsWith('rtc:')){channel=`rtc:${crypto.randomUUID()}`;check((await s.db.from('online_appointments').update({room_url:channel,status:'ready',failure_message:null}).eq('appointment_id',a.id)).error);}
  check((await s.db.from('online_participation').upsert({appointment_id:a.id,role:s.role,profile_id:s.role==='caregiver'?s.baby.id:null,consent_at:new Date().toISOString()},{onConflict:'appointment_id,role'})).error);
- const {dailyRequest}=await import('./daily.server');const token=await dailyRequest('meeting-tokens',{properties:{room_name:s.online.room_name,is_owner:s.role==='care-team',user_name:s.role==='care-team'?'Care Team':s.baby.caregiver_name,user_id:s.role==='care-team'?'care-team':s.baby.id,exp:Math.floor((end+3600000)/1000),eject_at_token_exp:true}});
- if(typeof token['token']!=='string')throw new Error('Daily did not issue meeting access.');return {url:s.online.room_url,token:token['token'],role:s.role};
+ const caregiver=`${s.baby.caregiver_name||'Caregiver'} (caregiver)`;
+ return {channel:`nayuva-${channel.slice(4)}`,role:s.role,selfName:s.role==='care-team'?'Care Team':caregiver,peerName:s.role==='care-team'?caregiver:'Care Team',babyName:s.baby.baby_name,reason:a.reason};
 });
+function speakerFor(s:{role:string;baby:{caregiver_name:string|null}}){return s.role==='care-team'?'Care Team':`${s.baby.caregiver_name||'Caregiver'} (caregiver)`;}
 export const onlineConsentStatus=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{const s=await onlineAccess(data.id);const {data:c,error}=await s.db.from('online_participation').select('role').eq('appointment_id',data.id);check(error);return {bothConsented:(c??[]).some(x=>x.role==='care-team')&&(c??[]).some(x=>x.role==='caregiver')};});
-export const saveAppointmentTranscript=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid(),segments:z.array(z.object({key:z.string().min(1).max(180),speaker:z.string().min(1).max(100),text:z.string().trim().min(1).max(6000),when:z.string().datetime()})).max(30)})).handler(async({data})=>{const s=await onlineAccess(data.id);if(s.role!=='care-team')throw new Error('Only the care team can save the appointment transcript.');const {data:c}=await s.db.from('online_participation').select('role').eq('appointment_id',data.id);if(!c?.some(x=>x.role==='caregiver')||!c.some(x=>x.role==='care-team'))throw new Error('Both participants must consent first.');check((await s.db.from('appointment_transcripts').upsert(data.segments.map(x=>({appointment_id:data.id,event_key:x.key,speaker:x.speaker,content:x.text,spoken_at:x.when})),{onConflict:'appointment_id,event_key'})).error);return {ok:true};});
+// Each participant transcribes only its own microphone, so the speaker label comes from the server-verified role, never AI guessing.
+export const transcribeOnlineSegment=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid(),key:z.string().uuid(),audio:z.string().min(100).max(3_000_000),when:z.string().datetime()})).handler(async({data})=>{
+ const s=await onlineAccess(data.id);if(['Completed','Cancelled'].includes(s.appointment.status))throw new Error('This appointment is closed.');
+ const {data:c}=await s.db.from('online_participation').select('role').eq('appointment_id',data.id);if(!c?.some(x=>x.role==='caregiver')||!c.some(x=>x.role==='care-team'))throw new Error('Both participants must consent first.');
+ const {sarvamTranscribe}=await import('./sarvam.server');const bytes=Uint8Array.from(atob(data.audio),ch=>ch.charCodeAt(0));
+ const r=await sarvamTranscribe(new Blob([bytes],{type:'audio/wav'}),'consultation.wav','unknown');const text=r.transcript.trim();if(!text)return null;
+ check((await s.db.from('appointment_transcripts').upsert({appointment_id:data.id,event_key:data.key,speaker:speakerFor(s),content:text.slice(0,6000),spoken_at:data.when},{onConflict:'appointment_id,event_key',ignoreDuplicates:true})).error);return {ok:true};
+});
+export const getOnlineTranscript=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{const s=await onlineAccess(data.id);if(s.role!=='care-team')return [];const {data:t,error}=await s.db.from('appointment_transcripts').select('event_key,speaker,content,spoken_at').eq('appointment_id',data.id).order('spoken_at');check(error);return t??[];});
+// Ends the visit and hands the attributed transcript to Lekha; the draft card still requires clinician approval.
+export const finishOnlineConsultation=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{
+ const s=await onlineAccess(data.id);if(s.role!=='care-team')throw new Error('Only the care team can end and document the consultation.');
+ const {data:t,error}=await s.db.from('appointment_transcripts').select('speaker,content').eq('appointment_id',data.id).order('spoken_at');check(error);
+ const notes=(t??[]).map(x=>`${x.speaker}: ${x.content}`).join('\n').slice(0,12000);if(!notes)throw new Error('No conversation was transcribed yet, so there is nothing to summarise.');
+ const n=await s.db.from('clinical_notes').select('id').eq('appointment_id',data.id);check(n.error);if(n.data?.length)throw new Error('This appointment is already documented.');
+ const ex=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.id).maybeSingle();check(ex.error);
+ if(ex.data&&['review','approved'].includes(ex.data.status))return {ok:true};
+ if(ex.data)check((await s.db.from('lekha_captures').update({edited_notes:notes,status:'ended',revision:ex.data.revision+1,ended_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',ex.data.id)).error);
+ else check((await s.db.from('lekha_captures').insert({appointment_id:data.id,baby_id:s.baby.id,mode:'live',consent_at:new Date().toISOString(),plan_snapshot:s.baby.plan,edited_notes:notes,status:'ended',ended_at:new Date().toISOString()})).error);
+ if(s.appointment.status!=='Completed')check((await s.db.from('care_appointments').update({status:'Completed'}).eq('id',data.id).neq('status','Cancelled')).error);
+ return {ok:true};
+});
 export const getAppointmentTranscript=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{const s=await onlineAccess(data.id);if(s.role!=='care-team')throw new Error('Only the care team can access the original appointment transcript.');const {data:t,error}=await s.db.from('appointment_transcripts').select('speaker,content,spoken_at').eq('appointment_id',data.id).order('spoken_at');check(error);return (t??[]).map(x=>`${x.speaker}: ${x.content}`).join('\n');});
 
 
