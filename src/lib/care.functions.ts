@@ -22,11 +22,8 @@ export const createAppointment=createServerFn({method:'POST'}).inputValidator(ap
  const id=crypto.randomUUID();const starts=indiaTimestamp(data.date,data.time),ends=data.endTime?indiaTimestamp(data.date,data.endTime):null;
  check((await db.from('care_appointments').insert({id,baby_id:data.babyId,starts_at:starts,ends_at:ends,reason:data.reason,location:{...location,mode:data.mode}})).error);
  if(data.mode==='online'){
-   const roomName=`nv-${id}`;check((await db.from('online_appointments').insert({appointment_id:id,room_name:roomName})).error);
-   try{const {dailyRequest}=await import('./daily.server');const room=await dailyRequest('rooms',{name:roomName,privacy:'private',properties:{exp:Math.floor(((ends?Date.parse(ends):Date.parse(starts)+3600000)+86400000)/1000),enable_recording:false,enable_prejoin_ui:true,enable_transcription_storage:false}});
-    if(typeof room['url']!=='string')throw new Error('Daily did not return a meeting room.');
-    check((await db.from('online_appointments').update({room_url:room['url'],status:'ready'}).eq('appointment_id',id)).error);
-   }catch(e){await db.from('online_appointments').update({status:'failed',failure_message:e instanceof Error?e.message:'Room unavailable'}).eq('appointment_id',id);throw new Error(`Appointment saved, but the video room is unavailable: ${e instanceof Error?e.message:'Daily unavailable'}. Do not schedule it again.`);}
+   // Native 1-on-1 WebRTC room: room_url stores an unguessable signaling channel issued only to authorized participants.
+   check((await db.from('online_appointments').insert({appointment_id:id,room_name:`nv-${id}`,room_url:`rtc:${crypto.randomUUID()}`,status:'ready'})).error);
  }
  check((await db.from('care_events').insert({baby_id:data.babyId,kind:'Appointment',summary:`${data.mode==='online'?'Online':'In-person'} ${data.reason} scheduled for ${data.date} at ${data.time}`})).error);return {ok:true,id};
 });
