@@ -14,7 +14,7 @@ type Session = Awaited<ReturnType<typeof prepareSvaraSession>>;
 type Stage = 'choose' | 'web' | 'phone' | 'generating' | 'review' | 'success';
 const STEPS = ['Reading your conversation with Svara', 'Matching each answer to your Care Plan topics', 'Writing short, clear findings per topic', 'Suggesting a review category for your care team', 'Laying out your Health Card'];
 const ACTIVE = ['initiating', 'call_placed', 'in_progress'];
-const CALL_TEXT: Record<string, string> = { initiating: 'Placing your call…', call_placed: 'Your phone is ringing. Please answer to begin.', in_progress: 'You are speaking with Svara.', completed: 'Call ended. Preparing your Health Card…', completed_no_transcript: 'The call ended before any answers were recorded.', no_answer: 'The call was not answered.', busy: 'Your line was busy.', failed: 'The call could not be completed.' };
+const CALL_TEXT: Record<string, string> = { initiating: 'Placing your call…', call_placed: 'Your phone is ringing. Please answer to begin.', in_progress: "Thanks for picking up the call. I'll record everything that you say, just so I can convert it into a structured health card that can be sent to the care team.", completed: 'Call ended. Preparing your Health Card…', completed_no_transcript: 'The call ended too early, so no Health Card was created.', no_answer: 'The call was not answered.', busy: 'Your line was busy.', failed: 'The call could not be completed.' };
 export const formatMobile = (d: string) => (d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d);
 
 export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => void }) {
@@ -35,11 +35,11 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   useEffect(() => {
     if (stage !== 'phone' || !session) return;
     const t = setInterval(() => { void callStatusFn({ data: { sessionId: session.sessionId } }).then((r) => {
-      if (r.status === 'awaiting_confirmation' && r.draft) { const draft = r.draft; setCall('completed'); setSummary(draft); setStage('review'); return; }
+      if (r.status === 'submitted') { onSaved(); setStage('success'); return; }
       setCall(r.callStatus);
     }).catch(() => {}); }, 4000);
     return () => clearInterval(t);
-  }, [stage, session, callStatusFn]);
+  }, [stage, session, callStatusFn, onSaved]);
 
   const onTranscript = useCallback((v: Line[]) => { lines.current = v; }, []);
   useEffect(() => { if (stage !== 'web' || !session) return; const t = setInterval(() => { if (lines.current.length) void persist({ data: { sessionId: session.sessionId, lines: lines.current } }).catch(() => {}); }, 5000); return () => clearInterval(t); }, [stage, session, persist]);
@@ -115,9 +115,9 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     {stage === 'phone' && <div className="svara-stage-center">
       <div className="svara-hero-orb"><SvaraAnimation state="idle" /></div>
       <h1 className="svara-title">Svara is on the phone with you</h1>
-      <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>
+      {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT['in_progress']}</p> : <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>}
       {call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) && <div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}><PhoneCall />Call me again</Button><Button variant="ghost" onClick={() => setStage('choose')}>Back</Button></div>}
-      {call && ACTIVE.includes(call) && <p className="svara-lede small">Keep this page open. Your Health Card appears here when the call ends.</p>}
+      {call && ACTIVE.includes(call) && <p className="svara-lede small">When the call ends, your Health Card goes to the care team automatically. You do not need to come back here.</p>}
     </div>}
 
     {stage === 'generating' && <CardGeneration assistant="svara" title="Preparing your Health Card" phases={STEPS} />}

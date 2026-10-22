@@ -132,7 +132,7 @@ export function AwardBadge({ eyebrow, title }: AwardBadgeProps) {
       ref={ref}
       role="img"
       aria-label={`${eyebrow} — ${title}`}
-      className="award-badge block h-auto w-[220px] cursor-pointer sm:w-[280px]"
+      className="award-badge block h-auto w-[200px] cursor-pointer sm:w-[230px]"
       onMouseMove={onMove}
       onMouseLeave={onLeave}
       onMouseEnter={onEnter}

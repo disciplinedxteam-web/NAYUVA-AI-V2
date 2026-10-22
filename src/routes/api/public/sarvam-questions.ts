@@ -24,6 +24,8 @@ export const Route = createFileRoute('/api/public/sarvam-questions')({
         const { data: s } = await db.from('checkin_sessions').select('id,baby_id,status,created_at,plan_snapshot,question_ids').eq('id', id).maybeSingle();
         // Only live, recent sessions are a valid capability.
         if (!s || s.status === 'submitted' || Date.now() - new Date(s.created_at).getTime() > 2 * 86400000) return json({ error: 'check-in not found' }, 404);
+        // A tool call proves the caregiver answered: show the live state on screen.
+        await db.from('checkin_sessions').update({ call_status: 'in_progress' }).eq('id', s.id).in('call_status', ['initiating', 'call_placed']);
         const { data: b } = await db.from('care_profiles').select('baby_name,caregiver_name,plan,plan_version').eq('id', s.baby_id).single();
         if (!b) return json({ error: 'check-in not found' }, 404);
         const plan = (s.plan_snapshot ?? b.plan ?? {}) as Record<string, unknown>;
