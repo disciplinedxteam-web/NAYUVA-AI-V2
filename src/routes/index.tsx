@@ -97,7 +97,7 @@ function Hero() {
     <section className="hero-section relative">
       <Flower src={flowerA} className="flower-edge flower-right hero-flower-right" />
       <Flower src={flowerB} className="flower-edge flower-left hero-flower-left" />
-      <div className="relative z-10 flex w-full justify-center px-6 pb-6 pt-4">
+      <div className="hero-badge relative z-10 flex w-full justify-center px-6">
         <AwardBadge eyebrow="TEAM BAALAK" title="Health-a-thon 2026" />
       </div>
       <div className="mx-auto grid max-w-7xl items-center hero-layout gap-10 px-6 lg:grid-cols-[1.1fr_1fr] lg:px-10">
