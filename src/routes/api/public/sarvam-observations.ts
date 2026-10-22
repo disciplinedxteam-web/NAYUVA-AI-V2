@@ -22,6 +22,8 @@ export const Route = createFileRoute('/api/public/sarvam-observations')({
         const { supabaseAdmin: db } = await import('@/integrations/supabase/client.server');
         const { data: s } = await db.from('checkin_sessions').select('id,baby_id,status,created_at').eq('id', r.data.check_in_id).maybeSingle();
         if (!s || s.status === 'submitted' || Date.now() - new Date(s.created_at).getTime() > 2 * 86400000) return Response.json({ saved: false, error: 'check-in not found' }, { status: 404 });
+        // A tool call proves the caregiver answered: show the live state on screen.
+        await db.from('checkin_sessions').update({ call_status: 'in_progress' }).eq('id', s.id).in('call_status', ['initiating', 'call_placed']);
         const { data: q } = await db.from('question_bank').select('topic').eq('id', r.data.question_id).maybeSingle();
         const topic = q?.topic ?? r.data.topic ?? (r.data.question_id === 'q_final_concerns' ? 'concerns' : r.data.question_id.replace(/^topic_/, ''));
         // Idempotent per question: a repeated answer replaces the earlier one.

@@ -43,12 +43,17 @@ export const Route = createFileRoute('/api/public/sarvam-webhook')({
 
         const status = mapStatus(p.status);
         const lines = (p.interaction_transcript ?? []).map((t) => ({ role: t.role === 'user' ? 'user' : 'bot', content: (t.en_text ?? t.text ?? t.content ?? '').trim().slice(0, 6000) })).filter((l) => l.content);
-        const hasCaregiver = lines.some((l) => l.role === 'user');
+        const { data: answers } = await db.from('caregiver_responses').select('topic,original_text').eq('session_id', s.id).order('created_at');
+        const confirmed = (answers ?? []).filter((a) => a.original_text);
+        const { isConversationComplete } = await import('@/lib/svara-agent-contract');
+        // Same rule as the website: a call that ends too early never becomes a card.
+        const hasCaregiver = confirmed.length >= 2 || isConversationComplete(lines);
+        const evidence = lines.some((l) => l.role === 'user') ? lines : confirmed.flatMap((a) => [{ role: 'bot', content: `[${a.topic}]` }, { role: 'user', content: String(a.original_text) }]);
         const summaryJson = { provider_status: p.status ?? null, duration_seconds: p.duration ?? null, final_agent_variables: (p.final_agent_variables ?? null) as Json, received_at: new Date().toISOString() };
         await db.from('checkin_sessions').update({
           call_status: status === 'completed' && !hasCaregiver ? 'completed_no_transcript' : status,
           failure_code: status === 'completed' ? (hasCaregiver ? null : 'no_caregiver_transcript') : (p.status ?? 'unknown'),
-          transcript: lines.length ? (lines as Json) : s.transcript,
+          transcript: evidence.length ? (evidence as Json) : s.transcript,
           summary: summaryJson as Json,
           completed_at: new Date().toISOString(),
           status: status === 'completed' && hasCaregiver ? s.status : 'incomplete',
@@ -57,8 +62,7 @@ export const Route = createFileRoute('/api/public/sarvam-webhook')({
         if (status !== 'completed' || !hasCaregiver) return Response.json({ ok: true, draft: false });
         // Draft only: the caregiver must review and confirm before anything reaches the care team.
         // Prefer the answers Svara confirmed during the call (saved via the observations tool); add the transcript as context.
-        const { data: answers } = await db.from('caregiver_responses').select('topic,original_text').eq('session_id', s.id).order('created_at');
-        const qa = (answers ?? []).filter((a) => a.original_text).flatMap((a) => [{ role: 'bot', content: `[${a.topic}]` }, { role: 'user', content: String(a.original_text) }]);
+        const qa = confirmed.flatMap((a) => [{ role: 'bot', content: `[${a.topic}]` }, { role: 'user', content: String(a.original_text) }]);
         const source = qa.length ? [...qa, ...lines] : lines;
         let draft: Record<string, unknown> | null = null;
         const { draftSvaraSummary } = await import('@/lib/care.functions');
@@ -69,13 +73,24 @@ export const Route = createFileRoute('/api/public/sarvam-webhook')({
         if (!draft) {
           // Structured fallback (never a paragraph): one topic per confirmed answer, queued for review.
           const { normalizeCard } = await import('@/lib/care-card');
-          const items = (answers ?? []).filter((a) => a.original_text);
+          const items = confirmed;
           if (!items.length) { await db.from('checkin_sessions').update({ failure_code: 'summary_unavailable' }).eq('id', s.id); return Response.json({ ok: true, draft: false }); }
           const card = normalizeCard({ topics: items.map((a) => ({ title: a.topic, finding: String(a.original_text).split(/\s+/).slice(0, 6).join(' '), status: 'Not discussed', quote: a.original_text })), priority: 'Review Needed', priorityReason: 'Automatic summary unavailable; please review' });
           draft = { summary: JSON.stringify(card), card, source: 'confirmed_answers_fallback' };
         }
         await db.from('checkin_sessions').update({ status: 'awaiting_confirmation', summary: { ...summaryJson, ...draft } as Json }).eq('id', s.id).neq('status', 'submitted');
-        return Response.json({ ok: true, draft: true });
+        // Phone callers should not need the website: deliver the card to the care team automatically (idempotent).
+        const text = String(draft['summary'] ?? '');
+        const { data: cardId, error: saveError } = await db.rpc('confirm_svara_card', { p_session: s.id, p_baby: s.baby_id, p_summary: text });
+        if (saveError) { console.error('svara auto-submit failed', saveError.message); return Response.json({ ok: true, draft: true, submitted: false }); }
+        const { parseCard, cardText } = await import('@/lib/care-card');
+        const card = parseCard(text);
+        if (card && cardId) {
+          const category = card.topics.filter((t) => t.status !== 'Not discussed').map((t) => t.title).join(', ').slice(0, 100) || 'Check-in';
+          await db.from('health_cards').update({ priority: card.priority, category, observation: card.topics.some((t) => t.status === 'Concern') ? 'Clinician attention requested' : 'Caregiver reported', scoring_result: { source: 'sarvam_llm', priority: card.priority, reason: card.priorityReason, note: 'AI-suggested category; care team confirms.' } as Json }).eq('id', cardId as unknown as string);
+          await db.from('care_events').update({ summary: cardText(card).slice(0, 2000) }).eq('baby_id', s.baby_id).eq('summary', text);
+        }
+        return Response.json({ ok: true, draft: true, submitted: true });
       },
     },
   },
