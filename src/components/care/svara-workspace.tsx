@@ -115,7 +115,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     {stage === 'phone' && <div className="svara-stage-center">
       <div className="svara-hero-orb"><SvaraAnimation state="idle" /></div>
       <h1 className="svara-title">Svara is on the phone with you</h1>
-      {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT.in_progress}</p> : <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>}
+      {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT['in_progress']}</p> : <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>}
       {call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) && <div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}><PhoneCall />Call me again</Button><Button variant="ghost" onClick={() => setStage('choose')}>Back</Button></div>}
       {call && ACTIVE.includes(call) && <p className="svara-lede small">When the call ends, your Health Card goes to the care team automatically. You do not need to come back here.</p>}
     </div>}
