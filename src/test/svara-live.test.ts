@@ -22,3 +22,13 @@ describe('phone number entry', () => {
     expect(formatMobile('98802')).toBe('98802');
   });
 });
+
+describe('Svara opening greeting', () => {
+  it('shows the greeting first even when its words arrive after the caregiver replies', () => {
+    let l = applyMessage([], { type: 'greeting_start' });
+    l = applyMessage(l, { type: 'server.event.user_speech_start' });
+    l = applyMessage(l, { type: 'server.event.transcription', role: 'user', content: 'Yes, now is fine' });
+    l = applyMessage(l, { type: 'server.event.transcription', role: 'bot', content: "Hi, I'm Svara" });
+    expect(l.map((x) => [x.role, x.content])).toEqual([['bot', "Hi, I'm Svara"], ['user', 'Yes, now is fine']]);
+  });
+});
