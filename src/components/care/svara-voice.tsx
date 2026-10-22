@@ -21,11 +21,15 @@ export function transcriptText(v: unknown, depth = 0): string {
 export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] {
   const type = String(m['type'] ?? '').toLowerCase();
   const last = lines[lines.length - 1];
-  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...lines.map((l) => ({ ...l, live: false })), { role: 'user', content: '', live: true }];
+  // Svara's opening bubble opens as soon as she speaks; its words often arrive only after the caregiver replies, so keep that slot open.
+  if (type === 'greeting_start') return lines.some((l) => l.role === 'bot') ? lines : [{ role: 'bot', content: '', live: true }, ...lines];
+  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...lines.map((l) => (l.role === 'bot' && !l.content ? l : { ...l, live: false })), { role: 'user', content: '', live: true }];
   if (type.includes('transcription')) {
     const content = transcriptText(m['content'] ?? m['text']).trim().slice(0, 6000); if (!content) return lines;
     const role: Line['role'] = String(m['role'] ?? '').toLowerCase() === 'user' ? 'user' : 'bot';
     const i = findLast(lines, (l) => l.role === role && !!l.live);
+    const slot = role === 'bot' ? lines.findIndex((l) => l.role === 'bot' && l.live && !l.content) : -1;
+    if (slot >= 0) return lines.map((l, k) => (k === slot ? { role, content } : l));
     if (i >= 0) return lines.map((l, k) => (k === i ? { role, content } : l));
     if (last && last.role === role && last.content === content) return lines;
     return [...lines, { role, content }];
@@ -80,7 +84,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
           },
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
-          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; setState(value); },
+          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (value === 'SPEAKING') void ingest({ type: 'greeting_start' }); setState(value); },
           endCallback: async () => { if (cancelled || ended.current) return; if (ready.current && isConversationComplete(latestLines.current)) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
         agent.current = a;
