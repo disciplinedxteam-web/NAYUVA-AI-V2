@@ -36,6 +36,8 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     if (stage !== 'phone' || !session) return;
     const t = setInterval(() => { void callStatusFn({ data: { sessionId: session.sessionId } }).then((r) => {
       if (r.status === 'submitted') { onSaved(); setStage('success'); return; }
+      // Automatic delivery failed but a draft exists: let the caregiver send it.
+      if (r.draft && r.callStatus === 'completed') { setSummary(r.draft); setApproved(false); setStage('review'); return; }
       setCall(r.callStatus);
     }).catch(() => {}); }, 4000);
     return () => clearInterval(t);
