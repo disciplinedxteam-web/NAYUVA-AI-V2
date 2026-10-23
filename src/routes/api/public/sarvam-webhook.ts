@@ -42,7 +42,7 @@ export const Route = createFileRoute('/api/public/sarvam-webhook')({
         if (s.status === 'submitted') return Response.json({ ok: true, duplicate: true });
 
         const status = mapStatus(p.status);
-        const lines = (p.interaction_transcript ?? []).map((t) => ({ role: t.role === 'user' ? 'user' : 'bot', content: (t.en_text ?? t.text ?? t.content ?? '').trim().slice(0, 6000) })).filter((l) => l.content);
+        const lines = (p.interaction_transcript ?? []).map((t) => { const who = String(t.role ?? (t as Record<string, unknown>)['speaker'] ?? '').toLowerCase(); return { role: ['user', 'caregiver', 'customer', 'human'].includes(who) ? 'user' : 'bot', content: String(t.en_text ?? t.text ?? t.content ?? '').trim().slice(0, 6000) }; }).filter((l) => l.content);
         const { data: answers } = await db.from('caregiver_responses').select('topic,original_text').eq('session_id', s.id).order('created_at');
         const confirmed = (answers ?? []).filter((a) => a.original_text);
         const { isConversationComplete } = await import('@/lib/svara-agent-contract');
