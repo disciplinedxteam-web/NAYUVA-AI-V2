@@ -14,7 +14,7 @@ const payload = z.object({
 
 function mapStatus(s: string | undefined) {
   const v = (s ?? '').toLowerCase();
-  if (['connected', 'completed', 'success'].includes(v)) return 'completed';
+  if (['connected', 'completed', 'complete', 'success', 'successful', 'answered', 'ended', 'call_ended', 'hangup', 'hung_up', 'finished'].includes(v)) return 'completed';
   if (['no_answer', 'not_answered', 'unanswered'].includes(v)) return 'no_answer';
   if (v === 'busy') return 'busy';
   return 'failed';

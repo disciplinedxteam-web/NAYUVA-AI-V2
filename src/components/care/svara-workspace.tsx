@@ -113,11 +113,12 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     </div>}
 
     {stage === 'phone' && <div className="svara-stage-center">
-      <div className="svara-hero-orb"><SvaraAnimation state="idle" /></div>
-      <h1 className="svara-title">Svara is on the phone with you</h1>
-      {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT['in_progress']}</p> : <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>}
+      <div className="svara-hero-orb"><SvaraAnimation state={call === 'in_progress' ? 'listening' : 'idle'} /></div>
+      {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT['in_progress']}</p> : <>
+        <h1 className="svara-title">{call === 'completed' ? 'Preparing your Health Card' : 'Svara is calling you'}</h1>
+        <p className="svara-lede">{call && ACTIVE.includes(call) ? <>Calling <strong>+91 {formatMobile(digits)}</strong>. </> : null}{CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>
+      </>}
       {call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) && <div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}><PhoneCall />Call me again</Button><Button variant="ghost" onClick={() => setStage('choose')}>Back</Button></div>}
-      {call && ACTIVE.includes(call) && <p className="svara-lede small">When the call ends, your Health Card goes to the care team automatically. You do not need to come back here.</p>}
     </div>}
 
     {stage === 'generating' && <CardGeneration assistant="svara" title="Preparing your Health Card" phases={STEPS} />}
