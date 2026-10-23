@@ -36,6 +36,8 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     if (stage !== 'phone' || !session) return;
     const t = setInterval(() => { void callStatusFn({ data: { sessionId: session.sessionId } }).then((r) => {
       if (r.status === 'submitted') { onSaved(); setStage('success'); return; }
+      // Automatic delivery failed but a draft exists: let the caregiver send it.
+      if (r.draft && r.callStatus === 'completed') { setSummary(r.draft); setApproved(false); setStage('review'); return; }
       setCall(r.callStatus);
     }).catch(() => {}); }, 4000);
     return () => clearInterval(t);
@@ -79,8 +81,15 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const onAbandoned = useCallback(() => {
     const s = session;
     if (s && lines.current.length) void persist({ data: { sessionId: s.sessionId, lines: lines.current, interrupted: true } }).catch(() => {});
-    setStage('choose'); setError('The conversation ended before it was complete, so no Health Card was created. Start again when you are ready.');
+    setStage('choose'); setOpen('web'); setError('The conversation ended too early, so no Health Card was created. Start again when you are ready.');
   }, [session, persist]);
+
+  // Caregiver rejects the draft: discard it and talk to Svara again from a fresh transcript.
+  async function redo() {
+    if (!session) return; setBusy(true); setError('');
+    try { await persist({ data: { sessionId: session.sessionId, lines: [], interrupted: true } }); setSummary(''); setApproved(false); setStage('choose'); setOpen('web'); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Could not restart. Please try again.'); } finally { setBusy(false); }
+  }
 
   if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} onCancel={onAbandoned} />;
 
@@ -113,11 +122,12 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     </div>}
 
     {stage === 'phone' && <div className="svara-stage-center">
-      <div className="svara-hero-orb"><SvaraAnimation state="idle" /></div>
-      <h1 className="svara-title">Svara is on the phone with you</h1>
-      {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT['in_progress']}</p> : <p className="svara-lede">Calling <strong>+91 {formatMobile(digits)}</strong>. {CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>}
+      <div className="svara-hero-orb"><SvaraAnimation state={call === 'in_progress' ? 'listening' : 'idle'} /></div>
+      {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT['in_progress']}</p> : <>
+        <h1 className="svara-title">{call === 'completed' ? 'Preparing your Health Card' : 'Svara is calling you'}</h1>
+        <p className="svara-lede">{call && ACTIVE.includes(call) ? <>Calling <strong>+91 {formatMobile(digits)}</strong>. </> : null}{CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>
+      </>}
       {call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) && <div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}><PhoneCall />Call me again</Button><Button variant="ghost" onClick={() => setStage('choose')}>Back</Button></div>}
-      {call && ACTIVE.includes(call) && <p className="svara-lede small">When the call ends, your Health Card goes to the care team automatically. You do not need to come back here.</p>}
     </div>}
 
     {stage === 'generating' && <CardGeneration assistant="svara" title="Preparing your Health Card" phases={STEPS} />}
