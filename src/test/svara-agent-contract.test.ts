@@ -9,13 +9,16 @@ describe('published Sarvam variable contract', () => {
     expect(hasCaregiverAnswer([{ role: 'bot', content: 'Hello' }, { role: 'user', content: ' ' }])).toBe(false);
     expect(hasCaregiverAnswer([{ role: 'user', content: 'Fed four times' }])).toBe(true);
   });
-  it('only treats a conversation as complete when the caregiver answered and Svara closed', () => {
+  it('creates no card when nothing is spoken', () => {
+    expect(isConversationComplete([{ role: 'bot', content: 'Hello!' }, { role: 'user', content: '  ' }])).toBe(false);
+  });
+  it('creates no card when the call ends too early (one answer)', () => {
     expect(isConversationComplete([{ role: 'bot', content: 'How is feeding?' }, { role: 'user', content: 'Fed four times' }])).toBe(false);
-    expect(isConversationComplete([{ role: 'user', content: 'Fed four times' }, { role: 'user', content: 'Sleeps well' }])).toBe(false);
+  });
+  it('creates a draft card after two answers even if the caregiver spoke last', () => {
     expect(isConversationComplete([
       { role: 'bot', content: 'How is feeding?' }, { role: 'user', content: 'Fed four times' },
-      { role: 'bot', content: 'And sleep?' }, { role: 'user', content: 'Sleeps well' },
-      { role: 'bot', content: 'Thank you, take care.' },
+      { role: 'bot', content: 'Anything else?' }, { role: 'user', content: 'No, that is all' },
     ])).toBe(true);
   });
 });
