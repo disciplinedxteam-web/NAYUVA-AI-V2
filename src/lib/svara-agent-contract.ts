@@ -11,10 +11,12 @@ export function hasCaregiverAnswer(lines: { role: string; content: string }[]) {
   return lines.some(line => line.role === 'user' && line.content.trim().length > 0);
 }
 
-/** A check-in only becomes a Health Card when the conversation genuinely completed:
- * the caregiver answered more than once and Svara spoke last (its closing). */
+/** Minimum caregiver answers before a (possibly partial) conversation becomes a draft Health Card. */
+export const MIN_CAREGIVER_ANSWERS = 2;
+
+/** A check-in becomes a draft Health Card when the caregiver gave at least two real answers,
+ * regardless of who spoke last. No speech or an early hang-up (fewer answers) never creates a card;
+ * topics that were not reached are marked "Not discussed" on the card. */
 export function isConversationComplete(lines: { role: string; content: string }[]) {
-  const filled = lines.filter(line => line.content.trim().length > 0);
-  const answers = filled.filter(line => line.role === 'user').length;
-  return answers >= 2 && filled[filled.length - 1]?.role === 'bot';
+  return lines.filter(line => line.role === 'user' && line.content.trim().length > 0).length >= MIN_CAREGIVER_ANSWERS;
 }
