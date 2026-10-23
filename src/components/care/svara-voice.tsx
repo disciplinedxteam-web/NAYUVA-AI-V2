@@ -39,6 +39,9 @@ export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] 
     const chunk = type.includes('chunk');
     const done = String(m['status'] ?? '').toLowerCase() === 'completed';
     if (last?.role === 'bot' && last.live) return [...lines.slice(0, -1), { role: 'bot', content: (chunk ? last.content + t : t).slice(0, 6000), live: !done && chunk }];
+    // Svara's greeting text can arrive after the caregiver starts talking: fill the reserved opening bubble.
+    const greet = lines.findIndex((l) => l.role === 'bot' && l.live && !l.content);
+    if (greet >= 0) return lines.map((l, k) => (k === greet ? { role: 'bot' as const, content: t.slice(0, 6000), live: chunk && !done } : l));
     return [...lines.map((l) => (l.role === 'user' && l.live && !l.content ? null : l)).filter(Boolean) as Line[], { role: 'bot', content: t.slice(0, 6000), live: chunk && !done }];
   }
   return lines;
