@@ -81,8 +81,15 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const onAbandoned = useCallback(() => {
     const s = session;
     if (s && lines.current.length) void persist({ data: { sessionId: s.sessionId, lines: lines.current, interrupted: true } }).catch(() => {});
-    setStage('choose'); setError('The conversation ended before it was complete, so no Health Card was created. Start again when you are ready.');
+    setStage('choose'); setOpen('web'); setError('The conversation ended too early, so no Health Card was created. Start again when you are ready.');
   }, [session, persist]);
+
+  // Caregiver rejects the draft: discard it and talk to Svara again from a fresh transcript.
+  async function redo() {
+    if (!session) return; setBusy(true); setError('');
+    try { await persist({ data: { sessionId: session.sessionId, lines: [], interrupted: true } }); setSummary(''); setApproved(false); setStage('choose'); setOpen('web'); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Could not restart. Please try again.'); } finally { setBusy(false); }
+  }
 
   if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} onCancel={onAbandoned} />;
 
