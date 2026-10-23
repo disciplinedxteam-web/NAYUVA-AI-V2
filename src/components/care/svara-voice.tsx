@@ -84,8 +84,8 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
           },
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
-          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (value === 'SPEAKING') void ingest({ type: 'greeting_start' }); setState(value); },
-          endCallback: async () => { if (cancelled || ended.current) return; if (ready.current && isConversationComplete(latestLines.current)) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
+          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start' }); setState(value); },
+          endCallback: async () => { if (cancelled || ended.current) return; if (ready.current) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
         agent.current = a;
         await a.start();
@@ -107,7 +107,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
         {!lines.length && !error && <p className="svara-live-hint">Svara will greet you in a moment. Speak naturally — your words appear here as you talk.</p>}
         {lines.map((l, i) => l.role === 'user'
           ? <div key={i} className="live-turn user"><p className={l.live && !l.content ? 'is-typing' : ''}>{l.content || <><span /><span /><span /></>}</p></div>
-          : <div key={i} className="live-turn bot"><div className="live-bot-card"><span className="live-bot-name">Svara</span><p>{l.content}{l.live && <span className="live-caret" aria-hidden="true" />}</p></div></div>)}
+          : <div key={i} className="live-turn bot"><div className="live-bot-card"><span className="live-bot-name">Svara</span>{l.content ? <p>{l.content}{l.live && <span className="live-caret" aria-hidden="true" />}</p> : <p className="is-typing" aria-label="Svara is greeting you"><span /><span /><span /></p>}</div></div>)}
         {error && <p className="svara-live-error" role="alert">{error}</p>}
       </div>
     </div>
