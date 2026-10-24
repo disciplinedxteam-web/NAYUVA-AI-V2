@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, History, X } from 'lucide-react';
+import { Bell, History } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { parseCard } from '@/lib/care-card';
@@ -40,7 +40,7 @@ export function SvaraHistory({ cards }: { cards: Card[] }) {
   return <>
     <button type="button" className="svara-history-btn" aria-label="Svara history" title="Past Health Cards" onClick={() => setOpen(true)}><History /></button>
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="svara-history-dialog">
-      <div className="flex items-center justify-between"><DialogTitle>Your past Health Cards</DialogTitle><button type="button" aria-label="Close" onClick={() => setOpen(false)}><X /></button></div>
+      <DialogTitle>Your past Health Cards</DialogTitle>
       <div className="svara-history-list">{cards.length ? cards.map(c => { const card = parseCard(c.summary_text ?? ''); return <div key={c.id}>
         {card ? <CareTicket source="Svara" title={c.category} subtitle={c.reviewed ? 'Reviewed by care team' : 'Awaiting care team review'} date={when(c.created_at)} card={card} stamp={c.reviewed ? 'Reviewed' : null} stub={false} /> : <p className="vroom-muted">{when(c.created_at)} · {(c.summary_text ?? c.category)}</p>}
         {c.reviewed && c.review_note ? <p className="svara-history-note"><b>Care team note:</b> {c.review_note}</p> : null}

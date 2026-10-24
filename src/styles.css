@@ -1896,3 +1896,4 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .svara-history-dialog { max-width:720px!important;max-height:85svh;overflow:hidden;display:flex;flex-direction:column;gap:14px;border-radius:24px; }
 .svara-history-list { display:flex;flex-direction:column;gap:16px;overflow:auto; }
 .svara-history-note { font-size:13px;margin-top:6px;color:var(--muted-foreground); }
+.notify-menu [role=menuitem] span { display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
