@@ -1859,3 +1859,23 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .caregiver-entry .entry-story-label { color:var(--primary); letter-spacing:.08em; }
 .caregiver-entry .entry-signature small { color:var(--muted-foreground); }
 @media (max-width:700px) { .caregiver-entry .entry-access-card { grid-template-columns:minmax(0,1fr); padding:10px; border-radius:22px; min-height:0; } .caregiver-entry .entry-selection { padding:28px 22px; border-radius:16px; } .caregiver-entry .entry-story { padding:26px 18px; } .caregiver-entry .entry-story > p { font-size:17px; } }
+
+/* Full-screen consultation room with side-by-side drawer (no blur over video) */
+.vroom-full { position:fixed;inset:0;z-index:80;display:grid;grid-template-columns:minmax(0,1fr);gap:14px;padding:14px;background:color-mix(in oklab,var(--primary) 30%,var(--foreground) 85%);transition:grid-template-columns .3s ease; }
+.vroom-full.has-drawer { grid-template-columns:minmax(0,1fr) 360px; }
+.vroom-full .vroom-stage { min-height:0;height:100%;border-radius:24px; }
+.vroom-head { position:absolute;left:16px;top:16px;display:flex;gap:8px;align-items:center;z-index:2; }
+.vroom-full .vroom-head .vroom-tag { position:static; }
+.vroom-full .vroom-peer { top:auto;bottom:24px;left:16px; }
+.vroom-full .vroom-dot { background:color-mix(in oklab,var(--foreground) 45%,transparent);color:var(--primary-foreground);border-color:transparent; }
+.vroom-dock button.is-on { background:var(--primary-foreground);color:var(--primary); }
+.vroom-alert { position:absolute;left:50%;top:16px;transform:translateX(-50%);padding:8px 14px;border-radius:14px;font-size:13px;background:var(--destructive);color:var(--primary-foreground); }
+.vroom-drawer { display:flex;flex-direction:column;gap:10px;min-height:0;padding:18px;border-radius:24px;background:var(--card);color:var(--card-foreground);border:1px solid var(--border);overflow:hidden; }
+.vroom-drawer-top { display:flex;justify-content:space-between;align-items:center; }
+.vroom-drawer h3 { font-size:15px;font-weight:700; } .vroom-drawer h4 { font-size:13px;font-weight:700;margin-top:6px; }
+.vroom-actions { display:grid;gap:8px; }
+.vroom-actions a { display:flex;gap:10px;align-items:center;padding:11px 14px;border-radius:16px;font-size:13px;font-weight:600;background:color-mix(in oklab,var(--primary) 9%,transparent);color:var(--foreground); }
+.vroom-actions a:hover { background:color-mix(in oklab,var(--primary) 16%,transparent); }
+.vroom-actions svg { width:16px;height:16px;color:var(--primary); }
+.vroom-drawer .vroom-lines { flex:1;min-height:0; }
+@media (max-width:860px){ .vroom-full.has-drawer { grid-template-columns:1fr;grid-template-rows:1fr 45%; } .vroom-full .vroom-dock .vroom-doc { padding:0 12px; } }
