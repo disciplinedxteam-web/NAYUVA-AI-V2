@@ -1879,3 +1879,20 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .vroom-actions svg { width:16px;height:16px;color:var(--primary); }
 .vroom-drawer .vroom-lines { flex:1;min-height:0; }
 @media (max-width:860px){ .vroom-full.has-drawer { grid-template-columns:1fr;grid-template-rows:1fr 45%; } .vroom-full .vroom-dock .vroom-doc { padding:0 12px; } }
+
+/* Notifications and Svara history */
+.notify-bell { position:relative;display:grid;place-items:center;width:40px;height:40px;border-radius:999px;background:color-mix(in oklab,var(--card) 70%,transparent);border:1px solid var(--border);color:var(--primary);backdrop-filter:blur(14px); }
+.notify-bell svg { width:18px;height:18px; }
+.notify-bell span { position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;font-size:10px;font-weight:700;display:grid;place-items:center;background:var(--primary);color:var(--primary-foreground); }
+.notify-menu { width:320px;max-height:420px;overflow:auto; }
+.notify-menu [role=menuitem] > div { display:flex;flex-direction:column;gap:2px;font-size:12px; }
+.notify-menu [role=menuitem] b { font-size:11px;color:var(--primary); }
+.notify-menu [role=menuitem] small { color:var(--muted-foreground);font-size:11px; }
+.notify-menu .is-new { background:color-mix(in oklab,var(--primary) 8%,transparent); }
+.notify-empty { padding:12px;font-size:12px;color:var(--muted-foreground); }
+.svara-history-wrap { display:flex;justify-content:flex-end;margin-bottom:-44px;position:relative;z-index:2; }
+.svara-history-btn { display:grid;place-items:center;width:44px;height:44px;border-radius:999px;background:color-mix(in oklab,var(--card) 75%,transparent);border:1px solid var(--border);color:var(--primary);backdrop-filter:blur(14px);box-shadow:0 10px 24px -14px color-mix(in oklab,var(--primary) 60%,transparent); }
+.svara-history-btn:hover { background:color-mix(in oklab,var(--primary) 12%,var(--card)); }
+.svara-history-dialog { max-width:720px!important;max-height:85svh;overflow:hidden;display:flex;flex-direction:column;gap:14px;border-radius:24px; }
+.svara-history-list { display:flex;flex-direction:column;gap:16px;overflow:auto; }
+.svara-history-note { font-size:13px;margin-top:6px;color:var(--muted-foreground); }

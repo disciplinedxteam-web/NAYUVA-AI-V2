@@ -42,7 +42,7 @@ export function SvaraHistory({ cards }: { cards: Card[] }) {
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="svara-history-dialog">
       <div className="flex items-center justify-between"><DialogTitle>Your past Health Cards</DialogTitle><button type="button" aria-label="Close" onClick={() => setOpen(false)}><X /></button></div>
       <div className="svara-history-list">{cards.length ? cards.map(c => { const card = parseCard(c.summary_text); return <div key={c.id}>
-        {card ? <CareTicket source="Svara" title={c.category} subtitle={c.reviewed ? 'Reviewed by care team' : 'Awaiting care team review'} date={when(c.created_at)} card={card} stamp={c.reviewed ? 'Reviewed' : null} /> : <p className="vroom-muted">{when(c.created_at)} · {c.summary_text.slice(0, 200)}</p>}
+        {card ? <CareTicket source="Svara" title={c.category} subtitle={c.reviewed ? 'Reviewed by care team' : 'Awaiting care team review'} date={when(c.created_at)} card={card} stamp={c.reviewed ? 'Reviewed' : null} stub={false} /> : <p className="vroom-muted">{when(c.created_at)} · {c.summary_text.slice(0, 200)}</p>}
         {c.reviewed && c.review_note ? <p className="svara-history-note"><b>Care team note:</b> {c.review_note}</p> : null}
       </div>; }) : <p className="vroom-muted">No Health Cards yet. Your check-ins will appear here.</p>}</div>
     </DialogContent></Dialog>
