@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
-import { Mic, Phone, ArrowRight, Check, ChevronDown, Loader2, PhoneCall } from 'lucide-react';
+import { Mic, Phone, ArrowRight, Check, ChevronDown, Loader2, PhoneCall, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SvaraVoice, type Line } from './svara-voice';
 import { CareTicket } from './care-ticket';
@@ -137,10 +137,11 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       <p className="svara-lede">Check each topic. Approve when it matches what you shared, then send it to your care team.</p>
       {error && <p role="alert" className="svara-error">{error}</p>}
       {card ? <CareTicket source="Svara" title={session?.babyName ?? 'Health Card'} subtitle="Check-in summary" date={new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} card={card} stamp={approved ? 'Approved' : null} stubLabel="Caregiver" action={{ label: 'Approve card', onClick: () => setApproved(true) }} />
-        : <p className="svara-error">This card could not be displayed. Please start the check-in again.</p>}
+        : <p className="svara-error">This earlier draft could not be opened. Start a fresh check-in with Svara below.</p>}
       <div className="svara-review-actions">
         {approved && <Button variant="ghost" onClick={() => setApproved(false)}>Undo approval</Button>}
-        <Button size="lg" disabled={!approved || busy || !card} onClick={() => void send()}>{busy ? <Loader2 className="animate-spin" /> : null}Send to Care Team<ArrowRight /></Button>
+        {!approved && <Button variant="outline" size="lg" disabled={busy} onClick={() => void redo()}><RotateCcw />Converse with Svara again</Button>}
+        {card && <Button size="lg" disabled={!approved || busy} onClick={() => void send()}>{busy ? <Loader2 className="animate-spin" /> : null}Send to Care Team<ArrowRight /></Button>}
       </div>
     </div>}
 
