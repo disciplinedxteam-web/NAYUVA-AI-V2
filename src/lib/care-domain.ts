@@ -39,3 +39,5 @@ export function classifyStatement(quote:string,approved:string[]) {
 
 /** Topics covered by the Day 1–42 framework; stored so legacy topic-based views keep working. */
 export const PROTOCOL_CATEGORIES=['Feeding','Urination','Stool','Temperature','Breathing observations','Caregiver-reported jaundice observations','Sleep and behaviour','Weight and growth','Caregiver concerns'] as CarePlan['categories'];
+/** Online visit join window: opens 1 hour before start, stays open until 5 hours after start, never beyond 24 hours. */
+export function onlineJoinState(startsAt:string,now=Date.now()):'early'|'open'|'expired'{const s=Date.parse(startsAt);if(now<s-3600000)return 'early';if(now>s+5*3600000)return 'expired';return 'open';}
