@@ -172,8 +172,8 @@ export const getOnlineAppointments=createServerFn({method:'GET'}).handler(async(
 export const joinOnlineAppointment=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid(),consent:z.literal(true)})).handler(async({data})=>{
  const s=await onlineAccess(data.id);const a=s.appointment;
  if(['Completed','Cancelled'].includes(a.status))throw new Error('This appointment is closed.');
- const start=Date.parse(a.starts_at),end=a.ends_at?Date.parse(a.ends_at):start+3600000;
- if(Date.now()<start-15*60000||Date.now()>end+3600000)throw new Error('Join opens 15 minutes before your appointment and closes one hour after its end.');
+ const {onlineJoinState}=await import('./care-domain');const w=onlineJoinState(a.starts_at);
+ if(w==='early')throw new Error('You can join from 1 hour before the scheduled time.');if(w==='expired')throw new Error('This appointment link has expired. Links stay open until 5 hours after the scheduled time.');
  let channel=s.online.room_url;
  if(!channel.startsWith('rtc:')){channel=`rtc:${crypto.randomUUID()}`;check((await s.db.from('online_appointments').update({room_url:channel,status:'ready',failure_message:null}).eq('appointment_id',a.id)).error);}
  check((await s.db.from('online_participation').upsert({appointment_id:a.id,role:s.role,profile_id:s.role==='caregiver'?s.baby.id:null,consent_at:new Date().toISOString()},{onConflict:'appointment_id,role'})).error);

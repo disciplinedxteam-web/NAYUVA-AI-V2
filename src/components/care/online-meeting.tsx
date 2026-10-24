@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowLeft, Mic, MicOff, PhoneOff, Video, VideoOff, FileText, Loader2, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, PhoneOff, Video, VideoOff, FileText, Loader2, ShieldCheck, PanelRight, X, ClipboardList, GitBranch, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { finishOnlineConsultation, generateLekhaDraft, getOnlineTranscript, joinOnlineAppointment, transcribeOnlineSegment } from '@/lib/care.functions';
@@ -24,10 +25,11 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
   const join = useServerFn(joinOnlineAppointment), transcribe = useServerFn(transcribeOnlineSegment), transcript = useServerFn(getOnlineTranscript), finish = useServerFn(finishOnlineConsultation), draft = useServerFn(generateLekhaDraft);
   const [consent, setConsent] = useState(false), [info, setInfo] = useState<Join | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [peer, setPeer] = useState<'waiting' | 'connecting' | 'connected'>('waiting'), [muted, setMuted] = useState(false), [camOff, setCamOff] = useState(false);
-  const [lines, setLines] = useState<Line[]>([]), [card, setCard] = useState<CareCard | null>(null), [ending, setEnding] = useState(false), [ended, setEnded] = useState(false);
+  const [lines, setLines] = useState<Line[]>([]), [card, setCard] = useState<CareCard | null>(null), [ending, setEnding] = useState(false), [ended, setEnded] = useState(false), [drawer, setDrawer] = useState(false);
   const localVideo = useRef<HTMLVideoElement>(null), remoteVideo = useRef<HTMLVideoElement>(null);
   const local = useRef<MediaStream | null>(null), pc = useRef<RTCPeerConnection | null>(null), chan = useRef<ReturnType<typeof supabase.channel> | null>(null);
-  const pendingIce = useRef<RTCIceCandidateInit[]>([]);
+  const pendingIce = useRef<RTCIceCandidateInit[]>([]), remoteStream = useRef<MediaStream | null>(null);
+  useEffect(() => { if (localVideo.current && local.current && localVideo.current.srcObject !== local.current) localVideo.current.srcObject = local.current; if (remoteVideo.current && remoteStream.current && remoteVideo.current.srcObject !== remoteStream.current) remoteVideo.current.srcObject = remoteStream.current; });
   const audio = useRef<{ ctx: AudioContext; proc: ScriptProcessorNode } | null>(null), buf = useRef<Float32Array[]>([]), count = useRef(0), mutedRef = useRef(false), connectedRef = useRef(false), started = useRef(Date.now());
 
   function cleanup() {
@@ -45,7 +47,7 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
     pendingIce.current = []; const p = new RTCPeerConnection(ICE); pc.current = p; setPeer('connecting');
     local.current?.getTracks().forEach(t => p.addTrack(t, local.current!));
     p.onicecandidate = e => { if (e.candidate) send({ type: 'ice', candidate: e.candidate.toJSON() }, role); };
-    p.ontrack = e => { if (remoteVideo.current && e.streams[0]) remoteVideo.current.srcObject = e.streams[0]; };
+    p.ontrack = e => { const st = e.streams[0] ?? new MediaStream([e.track]); remoteStream.current = st; if (remoteVideo.current) { remoteVideo.current.srcObject = st; void remoteVideo.current.play().catch(() => undefined); } };
     p.onconnectionstatechange = () => {
       const st = p.connectionState; connectedRef.current = st === 'connected';
       setPeer(st === 'connected' ? 'connected' : st === 'failed' || st === 'disconnected' || st === 'closed' ? 'waiting' : 'connecting');
@@ -133,25 +135,33 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
   </section>;
 
   const team = info.role === 'care-team';
-  return <section className={`vroom ${team ? 'has-panel' : ''}`}>
-    <header className="vroom-top"><div><h2>{info.babyName} · {info.reason}</h2><p>{peer === 'connected' ? `Connected with ${info.peerName}` : peer === 'connecting' ? 'Connecting…' : `Waiting for ${info.peerName} to join…`}</p></div><span className={`vroom-dot is-${peer}`}>{peer === 'connected' ? 'Live' : 'Waiting'}</span></header>
-    <div className="vroom-body">
-      <div className="vroom-stage">
-        <video ref={remoteVideo} autoPlay playsInline className="vroom-remote" />
-        {peer !== 'connected' && <div className="vroom-empty"><Loader2 className="spin" /><span>{info.peerName} will appear here</span></div>}
-        <span className="vroom-tag">{info.peerName}</span>
-        <div className="vroom-self"><video ref={localVideo} autoPlay playsInline muted />{camOff && <span>Camera off</span>}<em>You</em></div>
-        <div className="vroom-dock">
-          <Button variant="ghost" aria-label={muted ? 'Unmute' : 'Mute'} className={muted ? 'is-off' : ''} onClick={toggleMic}>{muted ? <MicOff /> : <Mic />}</Button>
-          <Button variant="ghost" aria-label={camOff ? 'Camera on' : 'Camera off'} className={camOff ? 'is-off' : ''} onClick={toggleCam}>{camOff ? <VideoOff /> : <Video />}</Button>
-          {team && <Button variant="ghost" className="vroom-doc" disabled={ending} onClick={() => void endAndDocument()}><FileText />End & summarise</Button>}
-          <Button variant="ghost" aria-label="Leave" className="vroom-leave" onClick={leave}><PhoneOff /></Button>
-        </div>
+  const base = team ? '/care-team' : '/caregiver';
+  const room = <section className={`vroom-full ${drawer ? 'has-drawer' : ''}`} aria-label="Online appointment">
+    <div className="vroom-stage">
+      <video ref={remoteVideo} autoPlay playsInline className="vroom-remote" />
+      {peer !== 'connected' && <div className="vroom-empty"><Loader2 className="spin" /><span>Waiting for {info.peerName} to join…</span></div>}
+      <div className="vroom-head"><span className={`vroom-dot is-${peer}`}>{peer === 'connected' ? 'Live' : peer === 'connecting' ? 'Connecting' : 'Waiting'}</span><span className="vroom-tag">{info.babyName} · {info.reason}</span></div>
+      <span className="vroom-tag vroom-peer">{info.peerName}</span>
+      <div className="vroom-self"><video ref={localVideo} autoPlay playsInline muted />{camOff && <span>Camera off</span>}<em>You</em></div>
+      <div className="vroom-dock">
+        <Button variant="ghost" aria-label={muted ? 'Unmute' : 'Mute'} className={muted ? 'is-off' : ''} onClick={toggleMic}>{muted ? <MicOff /> : <Mic />}</Button>
+        <Button variant="ghost" aria-label={camOff ? 'Camera on' : 'Camera off'} className={camOff ? 'is-off' : ''} onClick={toggleCam}>{camOff ? <VideoOff /> : <Video />}</Button>
+        <Button variant="ghost" aria-label="Open side panel" className={drawer ? 'is-on' : ''} onClick={() => setDrawer(!drawer)}><PanelRight /></Button>
+        {team && <Button variant="ghost" className="vroom-doc" disabled={ending} onClick={() => void endAndDocument()}><FileText />End & summarise</Button>}
+        <Button variant="ghost" aria-label="Leave" className="vroom-leave" onClick={leave}><PhoneOff /></Button>
       </div>
-      {team && <aside className="vroom-panel"><h3>Live transcript</h3><p>Labelled by each participant’s own microphone.</p>
-        <div className="vroom-lines">{lines.length ? lines.map(l => <div key={l.event_key} className={`vroom-line ${l.speaker === 'Care Team' ? 'is-me' : ''}`}><b>{l.speaker}</b><span>{l.content}</span></div>) : <p className="vroom-muted">Transcript lines appear here as you both speak.</p>}</div>
-      </aside>}
+      {error && <p role="alert" className="vroom-alert">{error}</p>}
     </div>
-    {error && <p role="alert" className="svara-error">{error}</p>}
+    {drawer && <aside className="vroom-drawer">
+      <div className="vroom-drawer-top"><h3>{team ? 'Consultation panel' : 'Quick actions'}</h3><Button variant="ghost" size="icon" aria-label="Close panel" onClick={() => setDrawer(false)}><X /></Button></div>
+      <div className="vroom-actions">
+        {team && <a href={`${base}/care-plan`} target="_blank" rel="noreferrer"><ClipboardList />Open Care Plan</a>}
+        <a href={`${base}/sutra`} target="_blank" rel="noreferrer"><GitBranch />Ask Sutra</a>
+        <a href={`${base}/milan`} target="_blank" rel="noreferrer"><CalendarDays />{team ? 'Schedule follow-up' : 'My appointments'}</a>
+      </div>
+      {team && <><h4>Live transcript</h4><p className="vroom-muted">Visible only to the care team. Labelled by each person’s own microphone.</p>
+        <div className="vroom-lines">{lines.length ? lines.map(l => <div key={l.event_key} className={`vroom-line ${l.speaker === 'Care Team' ? 'is-me' : ''}`}><b>{l.speaker}</b><span>{l.content}</span></div>) : <p className="vroom-muted">Lines appear here a few seconds after each person speaks.</p>}</div></>}
+    </aside>}
   </section>;
+  return typeof document === 'undefined' ? room : createPortal(room, document.body);
 }
