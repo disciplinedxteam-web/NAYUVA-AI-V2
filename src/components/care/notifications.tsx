@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Bell, History } from 'lucide-react';
+import { Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { HistoryButton, HistoryScreen } from './history-screen';
+import { SearchToggle } from '@/components/ui/search-toggle';
+import { GlassToggle } from '@/components/ui/glass-toggle';
 import { parseCard } from '@/lib/care-card';
 import { CareTicket } from './care-ticket';
 
@@ -36,15 +38,17 @@ export function NotificationBell({ role, events, onOpen }: { role: string; event
 }
 
 export function SvaraHistory({ cards }: { cards: Card[] }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false), [tab, setTab] = useState('all'), [search, setSearch] = useState('');
+  const counts = { all: cards.length, reviewed: cards.filter(c => c.reviewed).length, awaiting: cards.filter(c => !c.reviewed).length };
+  const list = cards.filter(c => tab === 'all' || (tab === 'reviewed') === c.reviewed).filter(c => `${c.category} ${c.summary_text ?? ''}`.toLowerCase().includes(search.toLowerCase()));
   return <>
-    <button type="button" className="svara-history-btn" aria-label="Svara history" title="Past Health Cards" onClick={() => setOpen(true)}><History /></button>
-    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="svara-history-dialog">
-      <DialogTitle>Your past Health Cards</DialogTitle>
-      <div className="svara-history-list">{cards.length ? cards.map(c => { const card = parseCard(c.summary_text ?? ''); return <div key={c.id}>
+    <HistoryButton label="Svara history" onClick={() => setOpen(true)} />
+    {open && <HistoryScreen title="Svara history" description="Your past check-ins and Health Cards." onClose={() => setOpen(false)}>
+      <div className="ws-bar"><SearchToggle label="Search your Health Cards" placeholder="Search topics" value={search} onChange={setSearch}><GlassToggle value={tab} onChange={setTab} options={[{ key: 'all', label: 'All', count: counts.all }, { key: 'awaiting', label: 'Awaiting review', count: counts.awaiting }, { key: 'reviewed', label: 'Reviewed', count: counts.reviewed }]} /></SearchToggle></div>
+      {list.length ? <div className="ticket-list">{list.map(c => { const card = parseCard(c.summary_text ?? ''); return <div key={c.id}>
         {card ? <CareTicket source="Svara" title={c.category} subtitle={c.reviewed ? 'Reviewed by care team' : 'Awaiting care team review'} date={when(c.created_at)} card={card} stamp={c.reviewed ? 'Reviewed' : null} stub={false} /> : <p className="vroom-muted">{when(c.created_at)} · {(c.summary_text ?? c.category)}</p>}
         {c.reviewed && c.review_note ? <p className="svara-history-note"><b>Care team note:</b> {c.review_note}</p> : null}
-      </div>; }) : <p className="vroom-muted">No Health Cards yet. Your check-ins will appear here.</p>}</div>
-    </DialogContent></Dialog>
+      </div>; })}</div> : <div className="care-empty"><p>{cards.length ? 'No Health Cards match.' : 'No Health Cards yet. Your check-ins will appear here.'}</p></div>}
+    </HistoryScreen>}
   </>;
 }

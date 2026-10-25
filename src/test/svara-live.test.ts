@@ -32,3 +32,12 @@ describe('Svara opening greeting', () => {
     expect(l.map((x) => [x.role, x.content])).toEqual([['bot', "Hi, I'm Svara"], ['user', 'Yes, now is fine']]);
   });
 });
+
+describe('Svara opening line prefill', () => {
+  it('shows the scripted opening immediately, then replaces it with the real greeting', () => {
+    let l = applyMessage([], { type: 'greeting_start', text: 'Today is day 3 for Asha.' });
+    expect(l[0]?.content).toBe('Today is day 3 for Asha.');
+    l = applyMessage(l, { type: 'server.event.transcription', role: 'bot', content: 'Hello, today is day 3 for Asha.' });
+    expect(l.map((x) => x.content)).toEqual(['Hello, today is day 3 for Asha.']);
+  });
+});

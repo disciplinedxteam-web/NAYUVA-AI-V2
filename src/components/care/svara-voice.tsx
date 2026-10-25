@@ -4,7 +4,7 @@ import { registeredSvaraVariables, isConversationComplete } from '@/lib/svara-ag
 import { Button } from '@/components/ui/button';
 import { SvaraAnimation } from './svara-animation';
 
-export type Line = { role: 'user' | 'bot'; content: string; live?: boolean };
+export type Line = { role: 'user' | 'bot'; content: string; live?: boolean; pending?: boolean };
 type Agent = { stop: () => Promise<void>; mute: () => void; unmute: () => void; isMuted: () => boolean };
 
 /** Sarvam transcript payloads may be strings or nested objects; always reduce to plain text so React never renders an object. */
@@ -21,15 +21,16 @@ export function transcriptText(v: unknown, depth = 0): string {
 export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] {
   const type = String(m['type'] ?? '').toLowerCase();
   const last = lines[lines.length - 1];
-  // Svara's opening bubble opens as soon as she speaks; its words often arrive only after the caregiver replies, so keep that slot open.
-  if (type === 'greeting_start') return lines.some((l) => l.role === 'bot') ? lines : [{ role: 'bot', content: '', live: true }, ...lines];
-  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...lines.map((l) => (l.role === 'bot' && !l.content ? l : { ...l, live: false })), { role: 'user', content: '', live: true }];
+  // Svara's opening bubble opens as soon as she connects, pre-filled with the scripted opening line; real greeting text replaces it when it arrives.
+  if (type === 'greeting_start') return lines.some((l) => l.role === 'bot') ? lines : [{ role: 'bot', content: transcriptText(m['text']).slice(0, 6000), live: true, pending: true }, ...lines];
+  const isSlot = (l: Line) => l.role === 'bot' && (!!l.pending || (!!l.live && !l.content));
+  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...lines.map((l) => (isSlot(l) ? l : { ...l, live: false })), { role: 'user', content: '', live: true }];
   if (type.includes('transcription')) {
     const content = transcriptText(m['content'] ?? m['text']).trim().slice(0, 6000); if (!content) return lines;
     const role: Line['role'] = String(m['role'] ?? '').toLowerCase() === 'user' ? 'user' : 'bot';
-    const i = findLast(lines, (l) => l.role === role && !!l.live);
-    const slot = role === 'bot' ? lines.findIndex((l) => l.role === 'bot' && l.live && !l.content) : -1;
+    const slot = role === 'bot' ? lines.findIndex(isSlot) : -1;
     if (slot >= 0) return lines.map((l, k) => (k === slot ? { role, content } : l));
+    const i = findLast(lines, (l) => l.role === role && !!l.live);
     if (i >= 0) return lines.map((l, k) => (k === i ? { role, content } : l));
     if (last && last.role === role && last.content === content) return lines;
     return [...lines, { role, content }];
@@ -38,10 +39,10 @@ export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] 
     const t = transcriptText(m['text'] ?? m['content']); if (!t) return lines;
     const chunk = type.includes('chunk');
     const done = String(m['status'] ?? '').toLowerCase() === 'completed';
+    // Svara's greeting text can arrive after the caregiver starts talking: fill the reserved opening bubble first.
+    const greet = lines.findIndex(isSlot);
+    if (greet >= 0) { const g = lines[greet]!; const base = g.pending ? '' : g.content; return lines.map((l, k) => (k === greet ? { role: 'bot' as const, content: (chunk ? base + t : t).slice(0, 6000), live: chunk && !done } : l)); }
     if (last?.role === 'bot' && last.live) return [...lines.slice(0, -1), { role: 'bot', content: (chunk ? last.content + t : t).slice(0, 6000), live: !done && chunk }];
-    // Svara's greeting text can arrive after the caregiver starts talking: fill the reserved opening bubble.
-    const greet = lines.findIndex((l) => l.role === 'bot' && l.live && !l.content);
-    if (greet >= 0) return lines.map((l, k) => (k === greet ? { role: 'bot' as const, content: t.slice(0, 6000), live: chunk && !done } : l));
     return [...lines.map((l) => (l.role === 'user' && l.live && !l.content ? null : l)).filter(Boolean) as Line[], { role: 'bot', content: t.slice(0, 6000), live: chunk && !done }];
   }
   return lines;
@@ -87,7 +88,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
           },
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
-          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start' }); setState(value); },
+          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start', text: context['opening_line'] ?? '' }); setState(value); },
           endCallback: async () => { if (cancelled || ended.current) return; if (ready.current) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
         agent.current = a;
