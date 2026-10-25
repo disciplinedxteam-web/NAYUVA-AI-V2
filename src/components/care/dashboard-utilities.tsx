@@ -1,7 +1,6 @@
-import { ChevronDown, Phone, Siren } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { EmergencyToggle } from './emergency-toggle';
 import { LanguageMenu } from '@/components/language-provider';
 import { NotificationBell } from './notifications';
 export function DashboardUtilities({role,settings,events,onOpen}:{role:string;settings:Record<string,string>;events:{id:string;kind:string;summary:string;created_at:string}[];onOpen:(s:string)=>void}) {
-  return <div className="dashboard-utilities">{role==='caregiver'&&<DropdownMenu><DropdownMenuTrigger asChild><button type="button" className="pill-trigger pill-emergency" aria-label="Emergency contacts"><span className="pill-glider"><Siren/></span><span className="pill-label">Emergency</span><ChevronDown size={14}/></button></DropdownMenuTrigger><DropdownMenuContent align="end" sideOffset={8} className="nv-select-menu pill-menu"><p className="pill-menu-note">Direct contacts only — Nayuva does not assess emergencies.</p>{[['careTeamContact','Care Team'],['emergencyContact','Hospital Emergency'],['ambulanceNumber','Ambulance'],['afterHoursContact','After-hours contact']].map(([key,label])=>key&&<DropdownMenuItem key={key} disabled={!settings[key]} asChild={!!settings[key]}>{settings[key]?<a href={'tel:'+settings[key].replace(/[^\d+]/g,'')}><Phone/>{label}</a>:<span>{label} · Unavailable</span>}</DropdownMenuItem>)}</DropdownMenuContent></DropdownMenu>}<LanguageMenu/><NotificationBell role={role} events={events} onOpen={onOpen}/></div>;
+  return <div className="dashboard-utilities">{role==='caregiver'&&<EmergencyToggle settings={settings}/>}<LanguageMenu/><NotificationBell role={role} events={events} onOpen={onOpen}/></div>;
 }
