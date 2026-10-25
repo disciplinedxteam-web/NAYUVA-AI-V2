@@ -26,6 +26,8 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const [digits, setDigits] = useState(''), [consent, setConsent] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [summary, setSummary] = useState(''), [approved, setApproved] = useState(false), [call, setCall] = useState<string | null>(null);
   const lines = useRef<Line[]>([]);
+  const [last, setLast] = useState<'web' | 'phone' | null>(null), [callSince, setCallSince] = useState(0), [tick, setTick] = useState(0);
+  useEffect(() => { if (stage !== 'phone') return; const t = setInterval(() => setTick((n) => n + 1), 5000); return () => clearInterval(t); }, [stage]);
 
   // Resume a check-in that already has a draft card awaiting the caregiver.
   useEffect(() => { if (!due) return; void prepare({ data: { channel: 'website_voice' } }).then((s) => { const sm = (s.summary ?? {}) as Record<string, unknown>; if (s.context['check_in_status'] === 'awaiting_confirmation' && typeof sm['summary'] === 'string') { setSession(s); setSummary(sm['summary']); setStage('review'); } else if (s.phone) setDigits(s.phone.replace(/\D/g, '').slice(-10)); }).catch(() => {}); // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,13 +49,13 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   useEffect(() => { if (stage !== 'web' || !session) return; const t = setInterval(() => { if (lines.current.length) void persist({ data: { sessionId: session.sessionId, lines: lines.current } }).catch(() => {}); }, 5000); return () => clearInterval(t); }, [stage, session, persist]);
 
   async function startWeb() {
-    setBusy(true); setError('');
+    setBusy(true); setError(''); setLast('web');
     try { const s = await prepare({ data: { channel: 'website_voice' } }); setSession(s); lines.current = []; setStage('web'); }
     catch (e) { setError(e instanceof Error ? e.message : 'Check-in unavailable.'); } finally { setBusy(false); }
   }
   async function startPhone() {
-    setBusy(true); setError('');
-    try { const s = await prepare({ data: { channel: 'phone' } }); setSession(s); const r = await phoneSave({ data: { sessionId: s.sessionId, phone: `+91${digits}`, consent: true } }); setCall(r.status); setStage('phone'); }
+    setBusy(true); setError(''); setLast('phone');
+    try { const s = await prepare({ data: { channel: 'phone' } }); setSession(s); const r = await phoneSave({ data: { sessionId: s.sessionId, phone: `+91${digits}`, consent: true } }); setCall(r.status); setCallSince(Date.now()); setStage('phone'); }
     catch (e) { setError(e instanceof Error ? e.message : 'The call could not be placed.'); } finally { setBusy(false); }
   }
   const onEnded = useCallback(() => { void (async () => {
@@ -98,7 +100,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       <div className="svara-hero-orb"><SvaraAnimation state="greeting" /></div>
       <h1 className="svara-title">Your check-in with Svara</h1>
       <p className="svara-lede">Choose how you would like to talk. Svara asks only the questions in your baby’s Care Plan.{due ? '' : ' Your next scheduled check-in is not due yet, but you can talk to Svara anytime.'}</p>
-      {error && <p role="alert" className="svara-error">{error}</p>}
+      {error && <div className="svara-retry"><p role="alert" className="svara-error">{error}</p>{last && <Button size="lg" disabled={busy || (last === 'phone' && !(phoneValid && consent))} onClick={() => void (last === 'web' ? startWeb() : startPhone())}>{busy ? <Loader2 className="animate-spin" /> : <RotateCcw />}{last === 'web' ? 'Talk to Svara again' : 'Call me again'}</Button>}</div>}
       <div className="svara-ctas">
         <div className={`svara-cta-group ${open === 'web' ? 'open' : ''}`}>
           <Button type="button" variant="ghost" className="svara-cta primary" disabled={busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></Button>
@@ -127,7 +129,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
         <h1 className="svara-title">{call === 'completed' ? 'Preparing your Health Card' : 'Svara is calling you'}</h1>
         <p className="svara-lede">{call && ACTIVE.includes(call) ? <>Calling <strong>+91 {formatMobile(digits)}</strong>. </> : null}{CALL_TEXT[call ?? 'initiating'] ?? 'Connecting…'}</p>
       </>}
-      {call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) && <div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}><PhoneCall />Call me again</Button><Button variant="ghost" onClick={() => setStage('choose')}>Back</Button></div>}
+      {(call && ['no_answer', 'busy', 'failed', 'completed_no_transcript'].includes(call) || (call !== 'completed' && tick >= 0 && Date.now() - callSince > (call === 'in_progress' ? 15 * 60_000 : 45_000))) && <div className="flex flex-col items-center gap-2">{call && ACTIVE.includes(call) && <p className="svara-lede">Didn’t get the call, or it dropped? You can try again.</p>}<div className="flex gap-3"><Button onClick={() => void startPhone()} disabled={busy}>{busy ? <Loader2 className="animate-spin" /> : <PhoneCall />}Call me again</Button><Button variant="outline" onClick={() => { setStage('choose'); setOpen('web'); }}><Mic />Talk on website instead</Button></div></div>}
     </div>}
 
     {stage === 'generating' && <CardGeneration assistant="svara" title="Preparing your Health Card" phases={STEPS} />}

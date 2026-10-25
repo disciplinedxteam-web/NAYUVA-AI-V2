@@ -88,11 +88,12 @@ export const saveSvaraTranscript=createServerFn({method:'POST'}).inputValidator(
 export const saveSvaraPhone=createServerFn({method:'POST'}).inputValidator(z.object({sessionId:z.string().uuid(),phone:z.string().trim().regex(/^\+91[6-9]\d{9}$/,'Enter an Indian mobile number as +91XXXXXXXXXX'),consent:z.literal(true)})).handler(async({data})=>{
  const auth=await authorized('caregiver');const {data:s,error}=await auth.db.from('checkin_sessions').select('*').eq('id',data.sessionId).eq('baby_id',auth.caregiverProfileId??'').single();check(error);if(!s||s.status==='submitted')throw new Error('Check-in unavailable.');
  const active=['initiating','call_placed','in_progress'];
- if(s.call_status&&active.includes(s.call_status)&&s.started_at&&Date.now()-new Date(s.started_at).getTime()<10*60*1000)return {status:s.call_status,message:'A call is already on its way. Please wait for it.'};
+ // Only a near-simultaneous double tap is ignored; any later request is an explicit retry and always places a fresh call.
+ if(s.call_status&&active.includes(s.call_status)&&s.started_at&&Date.now()-new Date(s.started_at).getTime()<20*1000)return {status:s.call_status,message:'A call is already on its way. Please wait for it.'};
  const key=process.env['SARVAM_API_KEY'];if(!key)throw new Error('Phone calling is not configured.');
  const {data:baby}=await auth.db.from('care_profiles').select('baby_name,caregiver_name,plan').eq('id',s.baby_id).single();const bp=(baby?.plan??{}) as Record<string,unknown>;
  const now=new Date().toISOString();
- const {data:locked}=await auth.db.from('checkin_sessions').update({destination_phone:data.phone,consent_at:now,channel:'phone',call_status:'initiating',failure_code:null,started_at:now}).eq('id',s.id).or('call_status.is.null,call_status.not.in.(initiating,call_placed,in_progress)').select('id');
+ const {data:locked}=await auth.db.from('checkin_sessions').update({destination_phone:data.phone,consent_at:now,channel:'phone',call_status:'initiating',failure_code:null,started_at:now,attempt_id:null,transcript:[],status:'in_progress'}).eq('id',s.id).or(`call_status.is.null,call_status.not.in.(initiating,call_placed,in_progress),started_at.lt.${new Date(Date.now()-20*1000).toISOString()}`).select('id');
  if(!locked?.length)return {status:'initiating',message:'A call is already on its way. Please wait for it.'};
  const {registeredSvaraVariables}=await import('./svara-agent-contract');const {buildSvaraVariables}=await import('./svara-context.server');const dayVars=await buildSvaraVariables(auth.db as never,s.baby_id,s.id,{...bp,babyName:baby?.baby_name});
  const {webhookToken}=await import('./svara-webhook-auth');const token=await webhookToken(s.id,key);
