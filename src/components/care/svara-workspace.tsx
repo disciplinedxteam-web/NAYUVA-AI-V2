@@ -124,6 +124,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     </div>}
 
     {stage === 'phone' && <div className="svara-stage-center">
+      {error && <p role="alert" className="svara-error">{error}</p>}
       <div className="svara-hero-orb"><SvaraAnimation state={call === 'in_progress' ? 'listening' : 'idle'} /></div>
       {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT['in_progress']}</p> : <>
         <h1 className="svara-title">{call === 'completed' ? 'Preparing your Health Card' : 'Svara is calling you'}</h1>
