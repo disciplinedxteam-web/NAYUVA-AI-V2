@@ -88,7 +88,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
           },
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
-          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start' }); setState(value); },
+          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start', text: context['opening_line'] ?? '' }); setState(value); },
           endCallback: async () => { if (cancelled || ended.current) return; if (ready.current) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
         agent.current = a;
