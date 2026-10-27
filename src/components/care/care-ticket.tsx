@@ -12,17 +12,18 @@ type Action = { label: string; onClick: () => void; disabled?: boolean };
  * Svara, Lekha, Milan and Sutra at a fixed universal size. When more than
  * four detail tags exist, the tag area scrolls with a visible hint.
  */
-export function CareTicket({ source, title, subtitle, date, card, fields, stamp, action, stub = true, children }: {
+export function CareTicket({ source, title, subtitle, date, card, fields, stamp, action, stub = true, children, footer, variant }: {
   source: 'Svara' | 'Lekha' | 'Milan' | string; title: string; subtitle?: string | undefined; date?: string | undefined;
   card?: CareCard | null; fields?: TicketField[] | undefined; quote?: string | undefined; stamp?: string | null | undefined;
-  action?: Action; stub?: boolean; stubLabel?: string; children?: ReactNode;
+  action?: Action; stub?: boolean; stubLabel?: string; children?: ReactNode; footer?: ReactNode; variant?: 'appointment';
 }) {
   const done = !!stamp;
   const items = card
     ? card.topics.map((t) => ({ label: t.title, value: t.finding || t.status, status: t.status }))
     : (fields ?? []).map((f) => ({ ...f, status: '' }));
   const priority = card?.priority;
-  const scrollable = items.length > 4;
+  const tone = priority ? priority.split(' ')[0]!.toLowerCase() : '';
+  const scrollable = variant !== 'appointment' && items.length > 4;
 
   const listRef = useRef<HTMLDivElement>(null);
   const [atEnd, setAtEnd] = useState(false);
@@ -36,7 +37,7 @@ export function CareTicket({ source, title, subtitle, date, card, fields, stamp,
   }, [scrollable, items.length]);
 
   return (
-    <div className="shine-border">
+    <div className={`shine-border ${tone ? `tone-${tone}` : ''} ${variant === 'appointment' ? 'is-appointment' : ''}`}>
       <article className="care-ticket shine-inner" data-no-translate>
         <header className="ticket-head">
           <span className="ticket-source"><HeartPulse aria-hidden="true" />{source} · {source === 'Milan' ? 'Appointment' : 'Care record'}</span>
