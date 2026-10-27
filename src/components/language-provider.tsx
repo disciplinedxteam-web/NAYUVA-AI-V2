@@ -35,7 +35,7 @@ export function LanguageProvider({children}:{children:ReactNode}) {
       let node=walker.nextNode();
       while(node){
         const text=node as Text; const parent=text.parentElement;
-        if(parent&&!parent.closest('script,style,[data-no-translate],.profile-results,.profile-selected,.chat-bubble,blockquote')){
+        if(parent&&!parent.closest('script,style,[data-no-translate],.profile-results,.profile-selected,.profile-pill,.chat-bubble,blockquote')){
           const old=originals.get(text); const source=old&&text.data===old.translated?old.source:text.data;
           const translated=translate(source); if(translated!==text.data)text.data=translated;
           originals.set(text,{source,translated});
