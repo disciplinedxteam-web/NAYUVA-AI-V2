@@ -15,7 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { GlassToggle } from '@/components/ui/glass-toggle';
 import { TopicCards } from './topic-cards';
 import { cardText, parseCard, type CareCard } from '@/lib/care-card';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { RescheduleDialog } from './reschedule-dialog';
 import { useServerFn } from '@tanstack/react-start';
 import { ArrowLeft, ArrowRight, ArrowUp, ChevronDown, ChevronUp, Volume2, CalendarDays, Video, Check, ChevronLeft, ChevronRight, Clock, FileText, HeartPulse, MapPin, Mic, Paperclip, Plus, Search, Send, Sparkles, Square, Stethoscope, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -103,7 +104,7 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
             ? [{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Requested', value: reqLabel }, { label: 'Mode', value: isOnline ? 'Online video' : 'In-person' }]
             : [{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Appointment', value: a.status }, { label: 'Mode', value: isOnline ? 'Online video' : 'In-person' }];
           const cta = (label: string, onClick: () => void, disabled = false) => <Button type="button" className="ticket-cta" disabled={disabled} onClick={onClick}>{label}<ArrowRight size={15} aria-hidden="true" /></Button>;
-          let footer: React.ReactNode;
+          let footer: ReactNode;
           if (role === 'care-team') {
             if (tab === 'requests' && pending) footer = <>{cta('Approve', () => void run(async () => { await change({ data: { id: a.id, status: 'Reschedule approved' } }); setTab('upcoming'); }, 'Reschedule approved. It is now in Upcoming.'), busy)}<Button type="button" variant="outline" className="ticket-cta-alt" disabled={busy} onClick={() => void run(async () => { await change({ data: { id: a.id, status: 'Reschedule declined' } }); setTab('upcoming'); }, 'Request declined. The original time is kept.')}>Decline</Button></>;
             else if (a.status === 'Completed') footer = cta(documented ? 'View in Lekha' : 'Document', onDocument);
