@@ -69,46 +69,60 @@ function useSpeech(onText: (t: string) => void, current = '') {
 export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Data; role: DemoRole; busy: boolean; run: Run; onDocument: () => void }) {
   const change = useServerFn(updateAppointment);
   const [search,setSearch]=useState(''),[meeting,setMeeting]=useState('');
-  const getOnline=useServerFn(getOnlineAppointments);const online=useQuery({queryKey:['online-appointments',role],queryFn:getOnline});
-  const [tab, setTab] = useState('upcoming'); const [scheduling, setScheduling] = useState(false); const [request, setRequest] = useState<string | null>(null); const [rDate, setRDate] = useState(''); const [rTime, setRTime] = useState('');
-  const isPast = (a: Appointment) => closed.includes(a.status) || new Date(a.starts_at).getTime() < Date.now();
-  const upcoming = data.appointments.filter(a => !isPast(a)).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
-  const past = data.appointments.filter(isPast).sort((a, b) => b.starts_at.localeCompare(a.starts_at));
-  const list = (tab === 'upcoming' ? upcoming : past).filter(a=>{const b=data.babies.find(x=>x.id===a.baby_id);return `${b?.baby_name??''} ${b?.caregiver_name??''}`.toLowerCase().includes(search.toLowerCase());});
+  const getOnline=useServerFn(getOnlineAppointments);const online=useQuery({queryKey:['online-appointments',role],queryFn:getOnline,refetchInterval:60_000});
+  const [tab, setTab] = useState('upcoming'); const [scheduling, setScheduling] = useState(false); const [request, setRequest] = useState<Appointment | null>(null);
+  const isPast = (a: Appointment) => closed.includes(a.status) || (a.status !== 'Reschedule requested' && new Date(a.ends_at ?? a.starts_at).getTime() < Date.now());
+  const isRequest = (a: Appointment) => a.status === 'Reschedule requested' && !closed.includes(a.status);
+  const requests = role === 'care-team' ? data.appointments.filter(isRequest).sort((a, b) => a.starts_at.localeCompare(b.starts_at)) : [];
+  const upcoming = data.appointments.filter(a => !isPast(a) && !(role === 'care-team' && isRequest(a))).sort((a, b) => a.starts_at.localeCompare(b.starts_at));
+  const past = data.appointments.filter(a => isPast(a) && !(role === 'care-team' && isRequest(a))).sort((a, b) => b.starts_at.localeCompare(a.starts_at));
+  const source = tab === 'requests' ? requests : tab === 'past' ? past : upcoming;
+  const list = source.filter(a=>{const b=data.babies.find(x=>x.id===a.baby_id);return `${b?.baby_name??''} ${b?.caregiver_name??''}`.toLowerCase().includes(search.toLowerCase());});
   const babyOf = (id: string) => data.babies.find(b => b.id === id);
+  const tabs = [{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, ...(role === 'care-team' ? [{ key: 'requests', label: 'Reschedule requests', count: requests.length }] : []), { key: 'past', label: 'Past', count: past.length }];
   if(meeting)return <OnlineMeeting id={meeting} onClose={()=>setMeeting('')}/>;
+  const reqBaby = request ? babyOf(request.baby_id) : undefined;
   return <>
     <WorkspaceHeading title="Milan" description="Appointments and coordinated follow-up care." />
     {scheduling ? <Scheduler data={data} busy={busy} run={run} onDone={() => setScheduling(false)} /> : <>
       <div className="ws-bar">
         <div className="ws-bar-cluster">
-          <SearchToggle label="Filter Milan by baby" value={search} onChange={setSearch}><Toggle value={tab} onChange={setTab} options={[{ key: 'upcoming', label: 'Upcoming', count: upcoming.length }, { key: 'past', label: 'Past', count: past.length }]} /></SearchToggle>
+          <SearchToggle label="Filter Milan by baby" value={search} onChange={setSearch}><Toggle value={tab} onChange={setTab} options={tabs} /></SearchToggle>
           {role === 'care-team' && <Button className="ws-bar-action" onClick={() => setScheduling(true)} disabled={!data.babies.length}><Plus />Schedule Appointment</Button>}
         </div>
       </div>
-      {!list.length ? <EmptyState>{tab === 'upcoming' ? 'No upcoming appointments.' : 'No past appointments yet.'}</EmptyState> :
+      {!list.length ? <EmptyState>{tab === 'upcoming' ? 'No upcoming appointments.' : tab === 'requests' ? 'No reschedule requests waiting for review.' : 'No past appointments yet.'}</EmptyState> :
         <div className="ws-grid">{list.map(a => {
-          const b = babyOf(a.baby_id); const l = loc(a); const resched = a.reschedule as { date: string; time: string } | null;
+          const b = babyOf(a.baby_id); const l = loc(a); const resched = a.reschedule as { date: string; time: string; note?: string } | null;
           const documented = data.notes.some(n => (n as { appointment_id?: string }).appointment_id === a.id);
-          return <CareTicket key={a.id} source="Milan" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={fmtDay(a.starts_at)} stamp={null} stub={false} fields={[
-            { label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Time · IST', value: `${fmtTime(a.starts_at)}${a.ends_at ? ` – ${fmtTime(a.ends_at)}` : ''}` },
-            { label: 'Status', value: a.status }, { label: 'Mode', value: l['mode']==='online'?'Online video':'In-person' }, { label: 'Location', value: l['mode']==='online'?'Private Nayuva consultation':l['facilityName'] || 'Not configured' }, { label: 'Address', value: l['address'] || 'Not recorded' },
-            { label: 'Documentation', value: documented ? 'Reviewed in Lekha' : a.status === 'Completed' ? 'Awaiting documentation' : 'Not yet due' },
-          ]}>
-            {resched && a.status === 'Reschedule requested' && <p className="nv-sub">Requested: {resched.date} at {resched.time}</p>}
-            {request === a.id ? <form className="nv-card-actions" onSubmit={e => { e.preventDefault(); void run(async () => { await change({ data: { id: a.id, status: 'Reschedule requested', preferredDate: rDate, preferredTime: rTime } }); setRequest(null); }, 'Reschedule request sent. Your original appointment time has not changed.'); }}>
-              <input className="ws-input" type="date" required value={rDate} onChange={e => setRDate(e.target.value)} aria-label="Preferred date" />
-              <input className="ws-input" type="time" required value={rTime} onChange={e => setRTime(e.target.value)} aria-label="Preferred time" />
-              <Button type="submit" disabled={busy}>Send</Button><Button type="button" variant="ghost" onClick={() => setRequest(null)}>Cancel</Button>
-            </form> : <div className="nv-card-actions">
-              {l['mode']==='online'&&!closed.includes(a.status)&&<><Button variant="outline" onClick={()=>setMeeting(a.id)} disabled={online.data?.find(x=>x.appointment_id===a.id)?.status!=='ready'}><Video/>Join online</Button><Button variant="ghost" size="icon-sm" aria-label="Share appointment link" onClick={()=>void navigator.clipboard.writeText(`${window.location.origin}/${role==='care-team'?'caregiver':'care-team'}/milan?appointment=${a.id}`)}><Paperclip/></Button></>}
-              {!isPast(a) && role === 'caregiver' && <><Button disabled={busy || a.status === 'Confirmed'} onClick={() => void run(() => change({ data: { id: a.id, status: 'Confirmed' } }), 'Appointment confirmed.')}>Confirm</Button><Button variant="outline" onClick={() => setRequest(a.id)}>Reschedule</Button></>}
-              {!closed.includes(a.status) && role === 'care-team' && <><Button disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Completed' } }), 'Marked as done. It is now waiting in Lekha.')}><Check />Mark done</Button><Button variant="ghost" disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Cancelled' } }), 'Appointment cancelled.')}>Cancel</Button></>}
-              {role === 'care-team' && a.status === 'Completed' && <Button variant="outline" onClick={onDocument}><FileText />{documented ? 'View in Lekha' : 'Document in Lekha'}</Button>}
-              {l['mapsLink']?.startsWith('https://') && <Button asChild variant="ghost"><a href={l['mapsLink']} target="_blank" rel="noreferrer"><MapPin />Map</a></Button>}
-            </div>}
+          const isOnline = l['mode'] === 'online'; const joinable = isOnline && !closed.includes(a.status) && online.data?.find(x=>x.appointment_id===a.id)?.status==='ready';
+          const pending = a.status === 'Reschedule requested' && !!resched;
+          const requested = pending ? new Date(`${resched.date}T${resched.time}:00+05:30`) : null;
+          const reqLabel = requested ? `${requested.toLocaleDateString('en-IN',{day:'numeric',month:'short',...tz})}, ${requested.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',...tz})}` : '';
+          const fields = tab === 'requests' && pending
+            ? [{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Requested', value: reqLabel }, { label: 'Mode', value: isOnline ? 'Online video' : 'In-person' }]
+            : [{ label: 'Caregiver', value: b?.caregiver_name ?? '—' }, { label: 'Appointment', value: a.status }, { label: 'Mode', value: isOnline ? 'Online video' : 'In-person' }];
+          const cta = (label: string, onClick: () => void, disabled = false) => <Button type="button" className="ticket-cta" disabled={disabled} onClick={onClick}>{label}<ArrowRight size={15} aria-hidden="true" /></Button>;
+          let footer: React.ReactNode;
+          if (role === 'care-team') {
+            if (tab === 'requests' && pending) footer = <>{cta('Approve', () => void run(async () => { await change({ data: { id: a.id, status: 'Reschedule approved' } }); setTab('upcoming'); }, 'Reschedule approved. It is now in Upcoming.'), busy)}<Button type="button" variant="outline" className="ticket-cta-alt" disabled={busy} onClick={() => void run(async () => { await change({ data: { id: a.id, status: 'Reschedule declined' } }); setTab('upcoming'); }, 'Request declined. The original time is kept.')}>Decline</Button></>;
+            else if (a.status === 'Completed') footer = cta(documented ? 'View in Lekha' : 'Document', onDocument);
+            else if (a.status === 'Cancelled') footer = <span className="ticket-foot-note">Appointment cancelled</span>;
+            else if (joinable) footer = <>{cta('Join online', () => setMeeting(a.id))}<Button type="button" variant="outline" size="icon" className="ticket-cta-icon" aria-label="Copy appointment link" onClick={()=>void navigator.clipboard.writeText(`${window.location.origin}/caregiver/milan?appointment=${a.id}`)}><Paperclip/></Button></>;
+            else footer = <>{cta('Mark done', () => void run(() => change({ data: { id: a.id, status: 'Completed' } }), 'Marked as done. It is now waiting in Lekha.'), busy)}<Button type="button" variant="outline" size="icon" className="ticket-cta-icon" aria-label="Cancel appointment" disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Cancelled' } }), 'Appointment cancelled.')}><X/></Button></>;
+          } else {
+            if (closed.includes(a.status) || isPast(a)) footer = <span className="ticket-foot-note">{a.status === 'Cancelled' ? 'Appointment cancelled' : 'Appointment completed'}</span>;
+            else if (pending) footer = <Button type="button" className="ticket-cta" disabled>Awaiting care team review</Button>;
+            else if (joinable) footer = <>{cta('Join online', () => setMeeting(a.id))}<Button type="button" variant="outline" className="ticket-cta-alt" onClick={() => setRequest(a)}>Reschedule</Button></>;
+            else if (a.status === 'Confirmed') footer = <>{cta('Reschedule', () => setRequest(a))}</>;
+            else footer = <>{cta('Confirm', () => void run(() => change({ data: { id: a.id, status: 'Confirmed' } }), 'Appointment confirmed.'), busy)}<Button type="button" variant="outline" className="ticket-cta-alt" onClick={() => setRequest(a)}>Reschedule</Button></>;
+          }
+          return <CareTicket key={a.id} variant="appointment" source="Milan" title={b?.baby_name ?? 'Appointment'} subtitle={a.reason} date={`${new Date(a.starts_at).toLocaleDateString('en-IN',{day:'numeric',month:'short',...tz})}, ${fmtTime(a.starts_at)}`} stamp={null} fields={fields} footer={footer}>
+            {tab === 'requests' && pending && resched.note ? <p className="ticket-note">“{resched.note}”</p> : null}
           </CareTicket>;
         })}</div>}
+      <RescheduleDialog open={!!request} onOpenChange={v => { if (!v) setRequest(null); }} babyName={reqBaby?.baby_name ?? ''} currentStart={request?.starts_at ?? new Date().toISOString()} busy={busy}
+        onSubmit={v => { const a = request; if (!a) return; void run(async () => { await change({ data: { id: a.id, status: 'Reschedule requested', preferredDate: v.date, preferredTime: v.time, note: v.note } }); setRequest(null); }, 'Reschedule request sent. Your original appointment time has not changed.'); }} />
     </>}
   </>;
 }
