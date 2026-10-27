@@ -64,7 +64,7 @@ export function CareTicket({ source, title, subtitle, date, card, fields, stamp,
         </div>
         {children && <div className="ticket-controls">{children}</div>}
         <footer className="ticket-foot">
-          {done ? (
+          {footer ? <div className="ticket-foot-actions">{footer}</div> : done ? (
             <span className="ticket-done" role="status"><Check size={14} aria-hidden="true" />{stamp}</span>
           ) : action && stub ? (
             <Button type="button" className="ticket-cta" disabled={action.disabled} onClick={action.onClick}>
