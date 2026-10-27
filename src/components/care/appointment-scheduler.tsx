@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowLeft, ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Search, User } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Search, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassToggle } from '@/components/ui/glass-toggle';
 import { useLanguage } from '@/components/language-provider';
