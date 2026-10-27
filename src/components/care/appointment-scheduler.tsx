@@ -10,12 +10,16 @@ import { CareTicket } from './care-ticket';
 type Data = Awaited<ReturnType<typeof getCareData>>;
 type Run = (action: () => Promise<unknown>, message: string) => Promise<void>;
 export function ProfileSearch({ babies, value, onSelect }: { babies: Data['babies']; value: string; onSelect: (id: string) => void }) {
-  const [search, setSearch] = useState(''); const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState(''); const [open, setOpen] = useState(false); const [focusNext, setFocusNext] = useState(false);
   const selected = babies.find(b => b.id === value);
   const matches = search.trim() ? babies.filter(b => (b.baby_name + ' ' + b.caregiver_name).toLowerCase().includes(search.toLowerCase())).slice(0, 8) : [];
-  return <div className="profile-search"><div className="search-field"><Search size={16} /><input className="ws-input" aria-label="Search baby or caregiver" placeholder={selected ? `${selected.baby_name} · ${selected.caregiver_name}` : 'Search baby or caregiver'} value={search} onFocus={() => setOpen(true)} onChange={e => { setSearch(e.target.value); setOpen(true); }} /></div>
-    {open && search.trim() && <div className="profile-results">{matches.map(b => <Button variant="ghost" type="button" key={b.id} onClick={() => { onSelect(b.id); setSearch(''); setOpen(false); }}><User size={16} /><span><strong>{b.baby_name}</strong><small>{b.caregiver_name}</small></span>{b.id === value && <Check size={16} />}</Button>)}{!matches.length && <p>No matching profiles.</p>}</div>}
-    {selected && <div className="profile-selected"><Check size={14} /><span>{selected.baby_name} · {selected.caregiver_name}</span></div>}
+  if (selected) return <div className="profile-search"><div className="profile-pill" role="group" aria-label="Selected profile">
+    <span className="profile-pill-avatar"><User size={15} aria-hidden="true" /></span>
+    <span className="profile-pill-text"><strong>{selected.baby_name}</strong><small>{selected.caregiver_name}</small></span>
+    <button type="button" className="profile-pill-clear" aria-label="Change profile" onClick={() => { onSelect(''); setSearch(''); setFocusNext(true); setOpen(true); }}><X size={14} /></button>
+  </div></div>;
+  return <div className="profile-search"><div className="search-field"><Search size={16} /><input className="ws-input" autoFocus={focusNext} aria-label="Search baby or caregiver" placeholder="Search baby or caregiver" value={search} onFocus={() => setOpen(true)} onChange={e => { setSearch(e.target.value); setOpen(true); }} /></div>
+    {open && search.trim() && <div className="profile-results">{matches.map(b => <Button variant="ghost" type="button" key={b.id} onClick={() => { onSelect(b.id); setSearch(''); setOpen(false); }}><User size={16} /><span><strong>{b.baby_name}</strong><small>{b.caregiver_name}</small></span></Button>)}{!matches.length && <p>No matching profiles.</p>}</div>}
   </div>;
 }
 export function Scheduler({ data, busy, run, onDone, initialBabyId = '' }: { data: Data; busy: boolean; run: Run; onDone: () => void; initialBabyId?: string }) {
