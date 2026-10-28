@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, Download, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { CareCard } from '@/lib/care-card';
 
-type Meta = { babyName: string; caregiverName: string; dob?: string; gestation?: string; reason: string; when: string; clinician: string };
+type Meta = { babyName: string; caregiverName: string; dob?: string | undefined; gestation?: string | undefined; reason: string; when: string; clinician: string };
 const FIRST = 5, NEXT = 9;
 /** Splits topics into fixed-capacity A4 sheets so no sheet ever scrolls. */
 export function paginateTopics<T>(topics: T[]): T[][] {
