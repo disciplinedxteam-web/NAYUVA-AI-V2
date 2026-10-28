@@ -20,7 +20,7 @@ export const consultPanels = [
 /** Inline quick-action panel shared by Lekha live/after and online consultations, so work never leaves the visit. */
 export function ConsultToolsPanel({ panel, data, babyId, busy, run, note, onClose }: { panel: ConsultPanel; data: Data | null; babyId: string; busy: boolean; run: Run; note: string; onClose: () => void }) {
   const save = useServerFn(savePlan);
-  const baby = data?.profiles.find(p => p.id === babyId);
+  const baby = data?.babies.find(p => p.id === babyId);
   const label = consultPanels.find(x => x.key === panel)?.label;
   return <aside className="lekha-live-panel" aria-label={label}>
     <header><div><h2>{label}</h2><small>{baby?.baby_name ?? ''} · {note}</small></div><Button variant="ghost" size="icon" aria-label="Close panel" onClick={onClose}><X /></Button></header>
