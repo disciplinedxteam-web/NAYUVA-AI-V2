@@ -1,14 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { canStartLekhaMode, lekhaEligible } from '@/lib/lekha-domain';
+import { canStartLekhaMode, lekhaEligible, lekhaLiveTooShort } from '@/lib/lekha-domain';
 const now = Date.parse('2026-10-20T08:12:00Z');
 describe('Lekha documentation eligibility', () => {
-  it('includes appointments today in India before completion', () => expect(lekhaEligible({ status: 'Confirmed', starts_at: '2026-10-20T14:00:00Z' }, now)).toBe(true));
+  it('includes scheduled appointments on a future day', () => expect(lekhaEligible({ status: 'Scheduled', starts_at: '2026-10-25T14:00:00Z' }, now)).toBe(true));
   it('includes completed visits from previous days', () => expect(lekhaEligible({ status: 'Completed', starts_at: '2026-10-01T14:00:00Z' }, now)).toBe(true));
-  it('excludes cancelled appointments today', () => expect(lekhaEligible({ status: 'Cancelled', starts_at: '2026-10-20T14:00:00Z' }, now)).toBe(false));
-  it('excludes scheduled appointments tomorrow', () => expect(lekhaEligible({ status: 'Scheduled', starts_at: '2026-10-21T14:00:00Z' }, now)).toBe(false));
-  it('requires a completed appointment for after-visit documentation', () => expect(canStartLekhaMode({ status: 'Scheduled', starts_at: '2026-10-20T14:00:00Z' }, 'after', now)).toBe(false));
-  it('uses the India date across the UTC day boundary', () => expect(lekhaEligible({ status: 'Scheduled', starts_at: '2026-10-19T20:00:00Z' }, now)).toBe(true));
-});import { isOnlineAppointment, lekhaReadyToSummarize } from '@/lib/lekha-domain';
+  it('excludes cancelled appointments', () => expect(lekhaEligible({ status: 'Cancelled', starts_at: '2026-10-20T14:00:00Z' }, now)).toBe(false));
+  it('allows after-visit documentation without marking done', () => expect(canStartLekhaMode({ status: 'Scheduled', starts_at: '2026-10-20T14:00:00Z' }, 'after', now)).toBe(true));
+  it('allows live capture after the appointment time has passed', () => expect(canStartLekhaMode({ status: 'Confirmed', starts_at: '2026-10-01T14:00:00Z' }, 'live', now)).toBe(true));
+  it('blocks capture for cancelled appointments', () => expect(canStartLekhaMode({ status: 'Cancelled', starts_at: '2026-10-20T14:00:00Z' }, 'live', now)).toBe(false));
+  it('treats 19 recorded words as too short', () => expect(lekhaLiveTooShort(19)).toBe(true));
+  it('accepts 20 recorded words', () => expect(lekhaLiveTooShort(20)).toBe(false));
+});
+import { isOnlineAppointment, lekhaReadyToSummarize } from '@/lib/lekha-domain';
 describe('Lekha after-visit rules', () => {
   it('excludes online appointments from Lekha', () => expect(isOnlineAppointment({ location: { mode: 'online' } })).toBe(true));
   it('keeps in-person appointments in Lekha', () => expect(isOnlineAppointment({ location: { mode: 'offline' } })).toBe(false));
