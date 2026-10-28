@@ -67,7 +67,7 @@ function useSpeech(onText: (t: string) => void, current = '') {
 }
 
 /* ---------------- Milan ---------------- */
-export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Data; role: DemoRole; busy: boolean; run: Run; onDocument: () => void }) {
+export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Data; role: DemoRole; busy: boolean; run: Run; onDocument: (id?: string) => void }) {
   const change = useServerFn(updateAppointment);
   const [search,setSearch]=useState(''),[meeting,setMeeting]=useState('');
   const getOnline=useServerFn(getOnlineAppointments);const online=useQuery({queryKey:['online-appointments',role],queryFn:getOnline,refetchInterval:60_000});
@@ -107,10 +107,10 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
           let footer: ReactNode;
           if (role === 'care-team') {
             if (tab === 'requests' && pending) footer = <>{cta('Approve', () => void run(async () => { await change({ data: { id: a.id, status: 'Reschedule approved' } }); setTab('upcoming'); }, 'Reschedule approved. It is now in Upcoming.'), busy)}<Button type="button" variant="outline" className="ticket-cta-alt" disabled={busy} onClick={() => void run(async () => { await change({ data: { id: a.id, status: 'Reschedule declined' } }); setTab('upcoming'); }, 'Request declined. The original time is kept.')}>Decline</Button></>;
-            else if (a.status === 'Completed') footer = cta(documented ? 'View in Lekha' : 'Document', onDocument);
+            else if (a.status === 'Completed') footer = cta(documented ? 'View in Lekha' : 'Document in Lekha', () => onDocument(documented ? undefined : a.id));
             else if (a.status === 'Cancelled') footer = <span className="ticket-foot-note">Appointment cancelled</span>;
             else if (joinable) footer = <>{cta('Join online', () => setMeeting(a.id))}<Button type="button" variant="outline" size="icon" className="ticket-cta-icon" aria-label="Copy appointment link" onClick={()=>void navigator.clipboard.writeText(`${window.location.origin}/caregiver/milan?appointment=${a.id}`)}><Paperclip/></Button></>;
-            else footer = <>{cta('Mark done', () => void run(() => change({ data: { id: a.id, status: 'Completed' } }), 'Marked as done. It is now waiting in Lekha.'), busy)}<Button type="button" variant="outline" size="icon" className="ticket-cta-icon" aria-label="Cancel appointment" disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Cancelled' } }), 'Appointment cancelled.')}><X/></Button></>;
+            else footer = <>{isOnline ? <span className="ticket-foot-note">Online room opening soon</span> : cta('Document in Lekha', () => onDocument(a.id))}<Button type="button" variant="outline" size="icon" className="ticket-cta-icon" aria-label="Cancel appointment" disabled={busy} onClick={() => void run(() => change({ data: { id: a.id, status: 'Cancelled' } }), 'Appointment cancelled.')}><X/></Button></>;
           } else {
             if (closed.includes(a.status) || isPast(a)) footer = <span className="ticket-foot-note">{a.status === 'Cancelled' ? 'Appointment cancelled' : 'Appointment completed'}</span>;
             else if (pending) footer = <Button type="button" className="ticket-cta" disabled>Awaiting care team review</Button>;

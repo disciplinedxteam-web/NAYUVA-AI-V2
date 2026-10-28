@@ -53,7 +53,7 @@ export function Dashboard({role,section}:{role:DemoRole;section:Section}){
  {section==='care-plan'&&<Plans babies={babies} busy={busy} run={run} onSelect={setSelected}/>}
  {section==='updates'&&<Updates data={data} initialFilter={priorityFilter} busy={busy} run={run} onMilan={id=>{setSelected(id);void go('milan');}} onEditPlan={id=>{setSelected(id);void go('care-plan');}}/>}
  {section==='svara'&&baby&&<Svara key={baby.id} baby={baby} cards={data.cards.filter(c=>c.baby_id===baby.id)} busy={busy} run={run}/>}
- {section==='milan'&&<MilanWorkspace data={data} role={role} busy={busy} run={run} onDocument={()=>void go('lekha')}/>}
+ {section==='milan'&&<MilanWorkspace data={data} role={role} busy={busy} run={run} onDocument={id=>{if(id)sessionStorage.setItem('lekha-appointment',id);void go('lekha');}}/>}
  {section==='lekha'&&role==='care-team'&&<LekhaWorkspace data={data} busy={busy} run={run} onFocus={setLekhaFocus}/>}{section==='lekha'&&role==='caregiver'&&<CaregiverLekha data={data}/>}
  {section==='taal'&&role==='care-team'&&<TaalWorkspace/>}
  {section==='sutra'&&<SutraWorkspace data={data} role={role}/>}
