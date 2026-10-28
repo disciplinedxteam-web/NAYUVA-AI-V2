@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowLeft, Mic, MicOff, PhoneOff, Video, VideoOff, FileText, Loader2, ShieldCheck, PanelRight, X, ClipboardList, GitBranch, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, PhoneOff, Video, VideoOff, FileText, Loader2, ShieldCheck, PanelRight, X, GitBranch, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { approveLekhaDraft, getCareData, finishOnlineConsultation, generateLekhaDraft, getOnlineTranscript, joinOnlineAppointment, transcribeOnlineSegment } from '@/lib/care.functions';
@@ -130,10 +130,16 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
     finally { setEnding(false); }
   }
 
+  async function runTool(action: () => Promise<unknown>, _message: string) { setToolBusy(true); setError(''); try { await action(); if (info) setCareData(await loadData()); } catch (e) { setError(e instanceof Error ? e.message : 'That action could not be completed.'); } finally { setToolBusy(false); } }
+  function openTool(k: ConsultPanel) { setTool(tool === k ? null : k); setDrawer(false); if (!careData) void loadData().then(setCareData).catch(() => setError('Care details could not be loaded.')); }
+
   if (ended) return <section className="vroom vroom-done">
-    <header className="vroom-top"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button><h2><FileText />Consultation summary</h2></header>
-    {ending ? <div className="vroom-wait"><Loader2 className="spin" /><p>Lekha is organising the conversation into a care card…</p></div>
-      : card ? <><p className="vroom-note">Draft only — review, edit and approve it in Lekha before it reaches the Sutra journey.</p><TopicCards card={card} /></>
+    <header className="vroom-top"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button><h2><FileText />Consultation document</h2></header>
+    {ending ? <div className="vroom-wait"><Loader2 className="spin" /><p>Lekha is working out who said what and organising it into your A4 consultation document…</p></div>
+      : approved ? <div className="vroom-wait"><Check /><p>Signed and saved. The document is now part of {info?.babyName}’s journey in Sutra.</p><Button onClick={onClose}>Back to appointments</Button></div>
+      : card && info ? <LekhaDocument meta={{ babyName: info.babyName, caregiverName: info.caregiverName, dob: info.dob, gestation: info.gestation, reason: `${info.reason} · Online`, when: new Date(info.startsAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }), clinician: 'Dr. Ananya Rao' }} card={card} approved={false} busy={toolBusy}
+          onEdit={(i, v) => setCard(c => c ? { ...c, topics: c.topics.map((t, j) => j === i ? { ...t, finding: v } : t) } : c)}
+          onApprove={() => { setToolBusy(true); setError(''); void approve({ data: { appointmentId: id, card, approved: true } }).then(() => setApproved(true)).catch(e => setError(e instanceof Error ? e.message : 'Approval failed.')).finally(() => setToolBusy(false)); }} />
       : <p className="vroom-note">{error ? '' : 'Consultation ended.'}</p>}
     {error && <p role="alert" className="svara-error">{error}</p>}
   </section>;
@@ -152,9 +158,10 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
 
   const team = info.role === 'care-team';
   const base = team ? '/care-team' : '/caregiver';
-  const room = <section className={`vroom-full ${drawer ? 'has-drawer' : ''}`} aria-label="Online appointment">
+  const room = <section className={`vroom-full ${drawer || tool ? 'has-drawer' : ''}`} aria-label="Online appointment">
     <div className="vroom-stage">
       <video ref={remoteVideo} autoPlay playsInline className="vroom-remote" />
+      {needTap && <button type="button" className="vroom-tap" onClick={() => { const v = remoteVideo.current; if (v) { v.muted = false; void v.play(); } setNeedTap(false); }}>Tap to turn on sound</button>}
       {peer !== 'connected' && <div className="vroom-empty"><Loader2 className="spin" /><span>Waiting for {info.peerName} to join…</span></div>}
       <div className="vroom-head"><span className={`vroom-dot is-${peer}`}>{peer === 'connected' ? 'Live' : peer === 'connecting' ? 'Connecting' : 'Waiting'}</span><span className="vroom-tag">{info.babyName} · {info.reason}</span></div>
       <span className="vroom-tag vroom-peer">{info.peerName}</span>
@@ -162,18 +169,19 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
       <div className="vroom-dock">
         <Button variant="ghost" aria-label={muted ? 'Unmute' : 'Mute'} className={muted ? 'is-off' : ''} onClick={toggleMic}>{muted ? <MicOff /> : <Mic />}</Button>
         <Button variant="ghost" aria-label={camOff ? 'Camera on' : 'Camera off'} className={camOff ? 'is-off' : ''} onClick={toggleCam}>{camOff ? <VideoOff /> : <Video />}</Button>
-        <Button variant="ghost" aria-label="Open side panel" className={drawer ? 'is-on' : ''} onClick={() => setDrawer(!drawer)}><PanelRight /></Button>
+        {team && consultPanels.map(x => <Button key={x.key} variant="ghost" aria-label={x.label} title={x.label} className={tool === x.key ? 'is-on' : ''} onClick={() => openTool(x.key)}><x.icon /></Button>)}
+        <Button variant="ghost" aria-label={team ? 'Live transcript' : 'Quick actions'} title={team ? 'Live transcript' : 'Quick actions'} className={drawer ? 'is-on' : ''} onClick={() => { setDrawer(!drawer); setTool(null); }}><PanelRight /></Button>
         {team && <Button variant="ghost" className="vroom-doc" disabled={ending} onClick={() => void endAndDocument()}><FileText />End & summarise</Button>}
         <Button variant="ghost" aria-label="Leave" className="vroom-leave" onClick={leave}><PhoneOff /></Button>
       </div>
       {error && <p role="alert" className="vroom-alert">{error}</p>}
     </div>
+    {tool && team && <ConsultToolsPanel panel={tool} data={careData} babyId={info.babyId} busy={toolBusy} run={runTool} note="The call continues while you work" onClose={() => setTool(null)} />}
     {drawer && <aside className="vroom-drawer">
-      <div className="vroom-drawer-top"><h3>{team ? 'Consultation panel' : 'Quick actions'}</h3><Button variant="ghost" size="icon" aria-label="Close panel" onClick={() => setDrawer(false)}><X /></Button></div>
+      <div className="vroom-drawer-top"><h3>{team ? 'Live transcript' : 'Quick actions'}</h3><Button variant="ghost" size="icon" aria-label="Close panel" onClick={() => setDrawer(false)}><X /></Button></div>
       <div className="vroom-actions">
-        {team && <a href={`${base}/care-plan`} target="_blank" rel="noreferrer"><ClipboardList />Open Care Plan</a>}
-        <a href={`${base}/sutra`} target="_blank" rel="noreferrer"><GitBranch />Ask Sutra</a>
-        <a href={`${base}/milan`} target="_blank" rel="noreferrer"><CalendarDays />{team ? 'Schedule follow-up' : 'My appointments'}</a>
+        {!team && <a href={`${base}/sutra`} target="_blank" rel="noreferrer"><GitBranch />Ask Sutra</a>}
+        {!team && <a href={`${base}/milan`} target="_blank" rel="noreferrer"><CalendarDays />My appointments</a>}
       </div>
       {team && <><h4>Live transcript</h4><p className="vroom-muted">Visible only to the care team. Labelled by each person’s own microphone.</p>
         <div className="vroom-lines">{lines.length ? lines.map(l => <div key={l.event_key} className={`vroom-line ${l.speaker === 'Care Team' ? 'is-me' : ''}`}><b>{l.speaker}</b><span>{l.content}</span></div>) : <p className="vroom-muted">Lines appear here a few seconds after each person speaks.</p>}</div></>}
