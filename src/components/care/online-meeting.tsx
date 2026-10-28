@@ -4,9 +4,11 @@ import { useServerFn } from '@tanstack/react-start';
 import { ArrowLeft, Mic, MicOff, PhoneOff, Video, VideoOff, FileText, Loader2, ShieldCheck, PanelRight, X, ClipboardList, GitBranch, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { finishOnlineConsultation, generateLekhaDraft, getOnlineTranscript, joinOnlineAppointment, transcribeOnlineSegment } from '@/lib/care.functions';
+import { approveLekhaDraft, getCareData, finishOnlineConsultation, generateLekhaDraft, getOnlineTranscript, joinOnlineAppointment, transcribeOnlineSegment } from '@/lib/care.functions';
 import type { CareCard } from '@/lib/care-card';
-import { TopicCards } from './topic-cards';
+import { LekhaDocument } from './lekha-document';
+import { ConsultToolsPanel, consultPanels, type ConsultPanel } from './consult-tools';
+import { Check } from 'lucide-react';
 
 type Join = Awaited<ReturnType<typeof joinOnlineAppointment>>;
 type Line = { event_key: string; speaker: string; content: string; spoken_at: string };
@@ -25,7 +27,9 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
   const join = useServerFn(joinOnlineAppointment), transcribe = useServerFn(transcribeOnlineSegment), transcript = useServerFn(getOnlineTranscript), finish = useServerFn(finishOnlineConsultation), draft = useServerFn(generateLekhaDraft);
   const [consent, setConsent] = useState(false), [info, setInfo] = useState<Join | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [peer, setPeer] = useState<'waiting' | 'connecting' | 'connected'>('waiting'), [muted, setMuted] = useState(false), [camOff, setCamOff] = useState(false);
-  const [lines, setLines] = useState<Line[]>([]), [card, setCard] = useState<CareCard | null>(null), [ending, setEnding] = useState(false), [ended, setEnded] = useState(false), [drawer, setDrawer] = useState(false);
+  const [lines, setLines] = useState<Line[]>([]), [card, setCard] = useState<CareCard | null>(null), [ending, setEnding] = useState(false), [ended, setEnded] = useState(false), [drawer, setDrawer] = useState(false), [needTap, setNeedTap] = useState(false);
+  const [tool, setTool] = useState<ConsultPanel | null>(null), [careData, setCareData] = useState<Awaited<ReturnType<typeof getCareData>> | null>(null), [toolBusy, setToolBusy] = useState(false), [approved, setApproved] = useState(false);
+  const loadData = useServerFn(getCareData), approve = useServerFn(approveLekhaDraft);
   const localVideo = useRef<HTMLVideoElement>(null), remoteVideo = useRef<HTMLVideoElement>(null);
   const local = useRef<MediaStream | null>(null), pc = useRef<RTCPeerConnection | null>(null), chan = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const pendingIce = useRef<RTCIceCandidateInit[]>([]), remoteStream = useRef<MediaStream | null>(null);
@@ -43,13 +47,20 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
 
   function send(s: Omit<Signal, 'from'>, role: string) { void chan.current?.send({ type: 'broadcast', event: 'signal', payload: { ...s, from: role } }); }
   function newPeer(role: string) {
-    pc.current?.close();
+    pc.current?.close(); remoteStream.current = null;
     pendingIce.current = []; const p = new RTCPeerConnection(ICE); pc.current = p; setPeer('connecting');
     local.current?.getTracks().forEach(t => p.addTrack(t, local.current!));
     p.onicecandidate = e => { if (e.candidate) send({ type: 'ice', candidate: e.candidate.toJSON() }, role); };
-    p.ontrack = e => { const st = e.streams[0] ?? new MediaStream([e.track]); remoteStream.current = st; if (remoteVideo.current) { remoteVideo.current.srcObject = st; void remoteVideo.current.play().catch(() => undefined); } };
+    p.ontrack = e => {
+      // Audio and video arrive as separate events: gather both into one stream so neither replaces the other.
+      const st = remoteStream.current ?? new MediaStream(); remoteStream.current = st;
+      if (!st.getTracks().some(t => t.id === e.track.id)) st.addTrack(e.track);
+      e.track.onended = () => st.removeTrack(e.track);
+      const v = remoteVideo.current; if (v) { if (v.srcObject !== st) v.srcObject = st; void v.play().catch(() => { v.muted = true; void v.play().catch(() => undefined); setNeedTap(true); }); }
+    };
     p.onconnectionstatechange = () => {
       const st = p.connectionState; connectedRef.current = st === 'connected';
+      if (st === 'failed') { if (role === 'care-team') void p.restartIce?.(); send({ type: 'ready' }, role); }
       setPeer(st === 'connected' ? 'connected' : st === 'failed' || st === 'disconnected' || st === 'closed' ? 'waiting' : 'connecting');
     };
     return p;
@@ -76,7 +87,12 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
     setError(''); setBusy(true);
     try {
       const r = await join({ data: { id, consent: true } });
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: { width: 1280, height: 720 } }).catch(() => navigator.mediaDevices.getUserMedia({ audio: true }));
+      const audioC = { echoCancellation: true, noiseSuppression: true, autoGainControl: true };
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: audioC, video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' } })
+        .catch(() => navigator.mediaDevices.getUserMedia({ audio: audioC, video: true }))
+        .catch(() => navigator.mediaDevices.getUserMedia({ audio: audioC }))
+        .catch(() => { throw new Error('Allow microphone (and camera) access in your browser to join.'); });
+      if (!stream.getVideoTracks().length) setCamOff(true);
       local.current = stream; setInfo(r); started.current = Date.now();
       requestAnimationFrame(() => { if (localVideo.current) localVideo.current.srcObject = stream; });
       startCapture(stream);
@@ -84,7 +100,7 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
       channel.on('broadcast', { event: 'signal' }, async ({ payload }) => {
         const s = payload as Signal; if (s.from === r.role) return;
         try {
-          if (s.type === 'bye') { pc.current?.close(); pc.current = null; connectedRef.current = false; setPeer('waiting'); if (remoteVideo.current) remoteVideo.current.srcObject = null; return; }
+          if (s.type === 'bye') { pc.current?.close(); pc.current = null; connectedRef.current = false; setPeer('waiting'); remoteStream.current = null; if (remoteVideo.current) remoteVideo.current.srcObject = null; return; }
           if (r.role === 'care-team' && (s.type === 'hello' || s.type === 'ready')) {
             const p = newPeer(r.role); const offer = await p.createOffer(); await p.setLocalDescription(offer); send({ type: 'offer', sdp: offer }, r.role); return;
           }
