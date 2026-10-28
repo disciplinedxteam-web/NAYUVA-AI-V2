@@ -2062,3 +2062,73 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 }
 @media(max-width:700px) { .lekha-doc-viewer { grid-template-columns:1fr; }.lekha-doc-arrow { display:none; }.lekha-a4 { height:auto; width:100%; }.lekha-review-actions { flex-direction:column; align-items:stretch; } }
 @media(prefers-reduced-motion:reduce) { .lekha-wave i,.lekha-bubble,.lekha-voice-stage,.lekha-bubble.is-pending i { animation:none!important; }.lekha-wave i { transform:scaleY(.55); } }
+
+/* Lekha true-A4 viewer with right control dock */
+.lekha-doc-viewer { flex:1; min-height:0; display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:minmax(0,1fr); gap:16px; align-items:stretch; }
+.lekha-doc-stage { min-height:0; min-width:0; display:flex; justify-content:center; align-items:flex-start; overflow:auto; scrollbar-width:none; }
+.lekha-doc-stage::-webkit-scrollbar { display:none; }
+.lekha-doc-frame { flex:none; margin:auto; border-radius:4px; box-shadow:0 22px 60px -28px color-mix(in oklab,var(--primary-deep) 55%,transparent),0 0 0 1px color-mix(in oklab,var(--primary) 12%,transparent); overflow:hidden; }
+.lekha-a4 { width:794px; height:1123px; max-height:none; max-width:none; aspect-ratio:auto; border-radius:0; box-shadow:none; padding:60px 68px 48px; gap:18px; font-size:13.5px; }
+.lekha-a4-head { padding-bottom:14px; }
+.lekha-a4-head img { width:34px; height:34px; }
+.lekha-a4-head strong { font-size:22px; }
+.lekha-a4-head small { font-size:11.5px; }
+.lekha-a4-head span { font-size:14px; }
+.lekha-a4-meta { padding:14px 18px; gap:12px 20px; }
+.lekha-a4-meta dt { font-size:10.5px; }
+.lekha-a4-meta dd { font-size:13.5px; }
+.lekha-a4-review { padding:10px 14px; font-size:13px; gap:10px; }
+.lekha-a4-body { gap:14px; }
+.lekha-a4-topic { padding-bottom:12px; }
+.lekha-a4-topic h3 { font-size:15px; }
+.lekha-a4-topic p,.lekha-a4-topic textarea { font-size:13.5px; line-height:1.6; }
+.lekha-a4-topic textarea { border-color:oklch(0.88 0.03 20); background:oklch(0.99 0.006 20); }
+.lekha-a4-status { font-size:10.5px; padding:3px 10px; }
+.lekha-a4-foot { font-size:10.5px; padding-top:12px; }
+.lekha-a4-sign { font-size:13px; }
+.lekha-doc-dock { align-self:center; display:flex; flex-direction:column; align-items:center; gap:10px; padding:10px 8px; border-radius:20px; border:1px solid var(--border); background:var(--continuity-surface,var(--card)); box-shadow:0 18px 40px -26px color-mix(in oklab,var(--primary-deep) 60%,transparent); }
+.lekha-dock-group { display:flex; flex-direction:column; align-items:center; gap:2px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.lekha-dock-group button { color:var(--primary-deep); border-radius:12px; }
+.lekha-dock-group button.is-on { background:color-mix(in oklab,var(--primary) 14%,transparent); }
+.lekha-dock-label { font-size:11px; font-weight:600; color:var(--muted-foreground); font-variant-numeric:tabular-nums; }
+.lekha-dock-approve { height:auto; flex-direction:column; gap:4px; padding:10px 8px; width:76px; border-radius:14px; white-space:normal; font-size:11px; line-height:1.2; background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:var(--primary-foreground); }
+.lekha-pdf-root { position:fixed; left:-10000px; top:0; pointer-events:none; }
+.lekha-pdf-root .lekha-a4 textarea { display:none; }
+@media(max-width:700px) { .lekha-doc-viewer { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr) auto; }.lekha-doc-dock { flex-direction:row; align-self:center; }.lekha-dock-group { flex-direction:row; border-bottom:0; padding:0 6px 0 0; border-right:1px solid var(--border); }.lekha-dock-approve { width:auto; flex-direction:row; } }
+
+/* Lekha live recording studio with 60/40 split */
+.dashboard-content:has(.lekha-live) > .dashboard-footer { display:none; }
+.lekha-live { position:relative; height:calc(100svh - 48px); min-height:540px; display:grid; grid-template-columns:minmax(0,1fr) 0fr 56px; gap:0; transition:grid-template-columns .45s cubic-bezier(.2,.8,.2,1); width:100%; max-width:1280px; margin:0 auto; }
+.lekha-live.is-split { grid-template-columns:minmax(0,3fr) minmax(0,2fr) 56px; gap:0 14px; }
+.lekha-live-stage { min-width:0; display:flex; flex-direction:column; }
+.lekha-live-center { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:10px; padding:0 16px 24px; }
+.lekha-live-center h1 { font-size:clamp(22px,2.4vw,30px); font-weight:700; color:var(--primary-deep); margin-top:4px; }
+.lekha-live-center > p { max-width:460px; font-size:14px; color:var(--muted-foreground); line-height:1.55; }
+.lekha-live-who { font-size:12.5px; font-weight:600; letter-spacing:.02em; color:var(--primary-deep); padding:5px 12px; border-radius:999px; background:color-mix(in oklab,var(--primary) 9%,transparent); }
+.lekha-live-pill { display:inline-flex; align-items:center; gap:7px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:999px; background:var(--glass-surface,var(--card)); border:1px solid var(--border); color:var(--muted-foreground); }
+.lekha-live-pill i { width:8px; height:8px; border-radius:50%; background:var(--muted-foreground); }
+.lekha-live-pill.is-on { color:var(--primary-deep); }
+.lekha-live-pill.is-on i { background:var(--destructive); animation:lekha-blink 1.2s ease-in-out infinite; }
+@keyframes lekha-blink { 50% { opacity:.25; } }
+.lekha-wave { display:flex; align-items:center; gap:4px; height:34px; }
+.lekha-wave span { width:4px; height:8px; border-radius:4px; background:color-mix(in oklab,var(--primary) 45%,transparent); transition:height .3s; }
+.lekha-wave.is-on span { background:var(--primary); animation:lekha-wave 1s ease-in-out infinite; }
+@keyframes lekha-wave { 0%,100% { height:8px; } 50% { height:30px; } }
+.lekha-live-controls { display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:10px; margin-top:12px; }
+.lekha-live-controls button { border-radius:999px; }
+.lekha-live-end { background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:var(--primary-foreground); padding-inline:20px; }
+.lekha-live-discard { color:var(--destructive); }
+.lekha-live-panel { min-width:0; overflow:hidden; display:flex; flex-direction:column; margin:8px 0 14px; border-radius:22px; border:1px solid var(--border); background:var(--continuity-surface,var(--card)); box-shadow:0 22px 50px -30px color-mix(in oklab,var(--primary-deep) 55%,transparent); animation:lekha-panel-in .4s cubic-bezier(.2,.8,.2,1); }
+@keyframes lekha-panel-in { from { opacity:0; transform:translateX(24px); } }
+.lekha-live-panel > header { flex:none; display:flex; justify-content:space-between; align-items:flex-start; gap:10px; padding:16px 18px 12px; border-bottom:1px solid var(--border); }
+.lekha-live-panel h2 { font-size:16px; font-weight:700; color:var(--primary-deep); }
+.lekha-live-panel small { font-size:12px; color:var(--muted-foreground); }
+.lekha-live-panel-body { flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:14px 16px; scrollbar-width:thin; }
+.lekha-live-panel-body .cp-card { padding:16px; border-radius:12px; }
+.lekha-live-panel-body .scheduler-compact { margin:0; grid-template-columns:1fr; }
+.lekha-live-rail { align-self:center; justify-self:end; display:flex; flex-direction:column; gap:6px; padding:6px; border-radius:999px; border:1px solid var(--border); background:var(--continuity-surface,var(--card)); box-shadow:0 14px 32px -22px color-mix(in oklab,var(--primary-deep) 60%,transparent); }
+.lekha-live-rail button { border-radius:50%; color:var(--primary-deep); }
+.lekha-live-rail button.is-on { background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:var(--primary-foreground); }
+.lekha-short-actions { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-top:10px; }
+@media(prefers-reduced-motion:reduce) { .lekha-wave.is-on span,.lekha-live-pill.is-on i,.lekha-live-panel { animation:none; } .lekha-live { transition:none; } }
+@media(max-width:800px) { .lekha-live,.lekha-live.is-split { height:auto; grid-template-columns:1fr; gap:12px; }.lekha-live-rail { flex-direction:row; justify-self:center; order:2; }.lekha-live-panel { order:3; max-height:70svh; } }
