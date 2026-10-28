@@ -12,6 +12,7 @@ import { CarePlanForm } from './care-plan-form';
 import { Scheduler } from './appointment-scheduler';
 import { LekhaAfterStudio, type LekhaBubble } from './lekha-after-studio';
 import { LekhaDocument } from './lekha-document';
+import { ConsultToolsPanel } from './consult-tools';
 import { MessageResponse } from '@/components/ai-elements/message';
 import { useLekhaRecording } from './use-lekha-recording';
 import { getCareData, getLekhaCapture, startLekhaCapture, saveLekhaProgress, generateLekhaDraft, approveLekhaDraft, savePlan, askSutra } from '@/lib/care.functions';
@@ -63,7 +64,7 @@ function LekhaSession({data,appt,busy,run,onClose}:{data:Data;appt:Appointment;b
  const covered=detectChecklist(notes,0);
  const alert=(error||recorder.error)&&<div role="alert" className="lekha-alert"><p>{error||recorder.error}</p>{recorder.error&&<Button variant="outline" size="sm" disabled={recorder.processing} onClick={()=>void recorder.retry()}>Retry saved audio</Button>}</div>;
  if(stage==='generating')return <CardGeneration assistant="lekha" title="Preparing your encounter document" phases={['Understanding who said what in the consultation','Extracting complaints, findings and decisions','Formatting tests, medicines and caregiver guidance','Compiling your A4 encounter sheets']}/>;
- if(stage==='capture'&&mode==='after'&&baby)return <LekhaAfterStudio babyName={baby.baby_name} caregiverName={baby.caregiver_name} reason={appt.reason} when={fmt(appt.starts_at)} notes={notes} covered={covered} recorder={recorder} lekhaNotes={lekhaNotes} busy={localBusy} error={error} onAppend={append} onDraft={()=>void draftSave()} onRestart={()=>void restart()} onSummarize={()=>void summarize()} onBack={()=>void leave()}/>;
+ if(stage==='capture'&&mode==='after'&&baby)return <div className={`lekha-after-split ${panel?'is-split':''}`}><LekhaAfterStudio panel={panel} onPanel={setPanel} babyName={baby.baby_name} caregiverName={baby.caregiver_name} reason={appt.reason} when={fmt(appt.starts_at)} notes={notes} covered={covered} recorder={recorder} lekhaNotes={lekhaNotes} busy={localBusy} error={error} onAppend={append} onDraft={()=>void draftSave()} onRestart={()=>void restart()} onSummarize={()=>void summarize()} onBack={()=>void leave()}/>{panel&&<ConsultToolsPanel panel={panel} data={data} babyId={appt.baby_id} busy={busy} run={run} note="Your notes stay open" onClose={()=>setPanel(null)}/>}</div>;
  if(stage==='review'&&card&&baby){const plan=baby.plan as unknown as Partial<CarePlan>;return <section className="lekha-review-studio"><div className="lekha-after-top"><Button variant="ghost" size="sm" onClick={onClose}><ArrowLeft/>Appointments</Button><span className="bento-pill">Clinician review · Edit, then approve & sign</span></div><LekhaDocument meta={{babyName:baby.baby_name,caregiverName:baby.caregiver_name,dob:plan.dob,gestation:plan.gestationalAge,reason:appt.reason,when:fmt(appt.starts_at),clinician:'Dr. Ananya Rao'}} card={card} approved={false} busy={busy} onEdit={(i,v)=>setCard(c=>c?{...c,topics:c.topics.map((t,j)=>j===i?{...t,finding:v}:t)}:c)} onApprove={()=>void run(async()=>{await approve({data:{appointmentId:appt.id,card,approved:true}});setStage('done');},'Encounter documented and signed.')}/>{error&&<div role="alert" className="lekha-alert"><p>{error}</p></div>}</section>;}
  if(stage==='done')return <div className="lekha-complete"><Mascot name="lekha" state="working" size={180}/><Check/><h1>Your documentation is complete</h1><p>Encounter signed and saved to Sutra. A caregiver-friendly copy has been sent to {baby?.caregiver_name}’s dashboard.</p><Button onClick={onClose}>Back to Lekha<ArrowRight/></Button></div>;
  if(stage==='short')return <section className="lekha-studio"><div className="lekha-top"><Button variant="ghost" onClick={onClose}><ArrowLeft/>Appointments</Button><span className="bento-pill">Recording too short</span></div><div className="lekha-choice"><Mascot name="lekha" state="idle" size={170}/><h1>I couldn’t hear enough to document</h1><p>The recording ended too early or the microphone picked up very little. No document was created.</p><div className="lekha-short-actions"><Button disabled={localBusy} onClick={()=>void retryLive()}>{localBusy?<Loader2 className="animate-spin"/>:<RotateCcw/>}Retry live recording</Button><Button variant="outline" disabled={localBusy} onClick={()=>void switchToAfter()}><FileText/>Switch to after-visit notes</Button></div></div>{alert}</section>;
@@ -87,14 +88,7 @@ function LekhaSession({data,appt,busy,run,onClose}:{data:Data;appt:Appointment;b
      {alert}
     </div>
    </div>
-   {panel&&<aside className="lekha-live-panel" aria-label={panels.find(x=>x.key===panel)?.label}>
-    <header><div><h2>{panels.find(x=>x.key===panel)?.label}</h2><small>{baby?.baby_name} · Recording continues while you work</small></div><Button variant="ghost" size="icon" aria-label="Close panel" onClick={()=>setPanel(null)}><X/></Button></header>
-    <div className="lekha-live-panel-body">
-     {panel==='plan'&&baby&&<CarePlanForm initial={baby.plan as unknown as CarePlan} busy={busy} onCancel={()=>setPanel(null)} onSave={async plan=>{await run(async()=>{await savePlan({data:{id:baby.id,plan}});setPanel(null);},'Care Plan updated.');}}/>}
-     {panel==='milan'&&<Scheduler data={data} busy={busy} run={run} onDone={()=>setPanel(null)} initialBabyId={appt.baby_id}/>}
-     {panel==='sutra'&&<LekhaSutra babyId={appt.baby_id}/>}
-    </div>
-   </aside>}
+   {panel&&baby&&<ConsultToolsPanel panel={panel} data={data} babyId={appt.baby_id} busy={busy} run={run} note="Recording continues while you work" onClose={()=>setPanel(null)}/>}
    <nav className="lekha-live-rail" aria-label="Appointment quick actions">{panels.map(x=><Button key={x.key} variant="ghost" size="icon" title={x.label} aria-label={x.label} aria-pressed={panel===x.key} className={panel===x.key?'is-on':''} onClick={()=>setPanel(panel===x.key?null:x.key)}><x.icon/></Button>)}</nav>
   </section>;
  }
@@ -103,4 +97,3 @@ function LekhaSession({data,appt,busy,run,onClose}:{data:Data;appt:Appointment;b
   {alert}
  </section>;
 }
-function LekhaSutra({babyId}:{babyId:string}){const ask=useServerFn(askSutra);const [question,setQuestion]=useState(''),[answer,setAnswer]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState(''),[conversationId,setConversationId]=useState<string>();return <form className="lekha-inline-sutra" onSubmit={e=>{e.preventDefault();setBusy(true);setError('');void ask({data:{babyId,question,conversationId,focus:[]}}).then(r=>{setAnswer(r.answer);setConversationId(r.conversationId);setQuestion('');}).catch(e=>setError(e.message)).finally(()=>setBusy(false));}}>{answer&&<MessageResponse>{answer}</MessageResponse>}<textarea className="ws-input" aria-label="Ask Sutra during appointment" value={question} maxLength={1500} onChange={e=>setQuestion(e.target.value)} placeholder="Ask about this baby’s reviewed records…"/><Button disabled={busy||!question.trim()}><Send/>{busy?'Thinking…':'Ask Sutra'}</Button>{error&&<p role="alert">{error}</p>}<small>Reviewed records only. No medical advice.</small></form>;}

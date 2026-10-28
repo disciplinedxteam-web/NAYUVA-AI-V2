@@ -5,6 +5,7 @@ import { Mascot } from './mascot';
 import { lekhaChecklist } from '@/lib/lekha-checklist';
 import { lekhaReadyToSummarize } from '@/lib/lekha-domain';
 import { sutraGreeting } from '@/lib/sutra-domain';
+import { consultPanels, type ConsultPanel } from './consult-tools';
 import { extractSutraAttachment } from '@/components/sutra/attachments';
 
 export type LekhaBubble = { id: string; from: 'clinician' | 'lekha' | 'file'; text: string };
@@ -22,7 +23,8 @@ export function clinicianWords(notes: string) {
   return notes.split('\n').filter(l => !l.startsWith('Attachment (')).join(' ').replace(/(Clinician|Conversation):/g, ' ').split(/\s+/).filter(Boolean).length;
 }
 
-export function LekhaAfterStudio({ babyName, caregiverName, reason, when, notes, covered, recorder, lekhaNotes, busy, error, onAppend, onDraft, onRestart, onSummarize, onBack }: {
+export function LekhaAfterStudio({ babyName, caregiverName, reason, when, notes, covered, recorder, lekhaNotes, busy, error, onAppend, onDraft, onRestart, onSummarize, onBack, panel = null, onPanel }: {
+  panel?: ConsultPanel | null; onPanel?: (p: ConsultPanel | null) => void;
   babyName: string; caregiverName: string; reason: string; when: string; notes: string; covered: Set<string>; recorder: Recorder; lekhaNotes: LekhaBubble[]; busy: boolean; error: string;
   onAppend: (line: string) => void; onDraft: () => void; onRestart: () => void; onSummarize: () => void; onBack: () => void;
 }) {
@@ -71,6 +73,7 @@ export function LekhaAfterStudio({ babyName, caregiverName, reason, when, notes,
           <div className="sutra-left-tools">
             <Button type="button" variant="ghost" size="icon-sm" title="Attach a report or photo" aria-label="Attach a report or photo" disabled={busy || reading} onClick={() => file.current?.click()}>{reading ? <Loader2 className="animate-spin" /> : <Plus />}</Button>
             <Button type="button" variant="ghost" size="sm" className={hasNotes ? 'lekha-resume' : ''} disabled={busy} aria-label={hasNotes ? 'Resume speaking' : 'Speak your notes'} onClick={() => void recorder.start()}><Mic />{hasNotes ? 'Resume' : 'Speak'}</Button>
+            {onPanel && consultPanels.map(x => <Button key={x.key} type="button" variant="ghost" size="icon-sm" title={x.label} aria-label={x.label} aria-pressed={panel === x.key} className={panel === x.key ? 'is-on' : ''} onClick={() => onPanel(panel === x.key ? null : x.key)}><x.icon /></Button>)}
             {hasNotes && <Button type="button" variant="ghost" size="icon-sm" title="Restart documentation" aria-label="Restart documentation" disabled={busy} onClick={() => setConfirmRestart(true)}><RotateCcw /></Button>}
           </div>
           <div className="sutra-right-tools">
