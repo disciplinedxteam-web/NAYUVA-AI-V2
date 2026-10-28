@@ -28,7 +28,7 @@ function Sheet({ meta, card, topics, index, total, approved, onEdit, offset }: {
 }
 
 export function LekhaDocument({ meta, card, approved, onEdit }: { meta: Meta; card: CareCard; approved: boolean; onEdit: (i: number, v: string) => void }) {
-  const pages = paginateTopics(card.topics), [page, setPage] = useState(0), p = Math.min(page, pages.length - 1);
+  const pages = paginateTopics(card.topics);const [page, setPage] = useState(0);const p = Math.min(page, pages.length - 1);
   const offset = p === 0 ? 0 : FIRST + (p - 1) * NEXT;
   return <div className="lekha-doc-viewer">
     <Button variant="outline" size="icon" className="lekha-doc-arrow" aria-label="Previous page" disabled={p === 0} onClick={() => setPage(p - 1)}><ChevronLeft /></Button>
