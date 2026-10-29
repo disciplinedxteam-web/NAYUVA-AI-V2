@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { SearchToggle } from '@/components/ui/search-toggle';
 import { GlassToggle } from '@/components/ui/glass-toggle';
 import { CareTicket } from './care-ticket';
+import { DocumentActions } from './document-actions';
 import { Mascot } from './mascot';
 import { CardGeneration } from './card-generation';
 import { WorkspaceHeading } from './workspace-heading';
@@ -21,6 +22,8 @@ import type { CarePlan } from '@/lib/care-domain';
 type Data=Awaited<ReturnType<typeof getCareData>>;type Appointment=Data['appointments'][number];type Run=(action:()=>Promise<unknown>,message:string)=>Promise<void>;
 type Capture=Awaited<ReturnType<typeof startLekhaCapture>>;
 type Panel='plan'|'sutra'|'milan';
+/** Caregiver availability shown on Care Team cards. */
+export const caregiverStatus=(s:string)=>s==='Confirmed'||s==='Reschedule approved'?'Caregiver confirmed':s==='Reschedule requested'?'Reschedule requested':s==='Completed'?'Visit completed':s==='Cancelled'?'Cancelled':'Awaiting confirmation';
 const fmt=(v:string)=>new Date(v).toLocaleString('en-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
 /** Counts spoken words, ignoring the speaker label prefix stored on each line. */
 const spokenWords=(notes:string)=>notes.replace(/^[^:\n]{1,24}:\s*/gm,'').split(/\s+/).filter(Boolean).length;
@@ -33,7 +36,7 @@ export function LekhaWorkspace({data,busy,run,onFocus}:{data:Data;busy:boolean;r
  useEffect(()=>{onFocus(!!appointment&&!documented(id));return()=>onFocus(false);},[id,!!appointment,!!documented(id)]);
  if(appointment&&!documented(id))return <LekhaSession key={id} data={data} appt={appointment} busy={busy} run={run} onClose={()=>setId('')}/>;
  const rows=(tab==='pending'?pending:done).filter(a=>{const b=data.babies.find(b=>b.id===a.baby_id);return `${b?.baby_name} ${b?.caregiver_name}`.toLowerCase().includes(search.toLowerCase());}).sort((a,b)=>b.starts_at.localeCompare(a.starts_at));
- return <><WorkspaceHeading title="Lekha" description="In-person visits and clinician-reviewed documentation."/><div className="ws-bar"><SearchToggle label="Filter Lekha by baby" value={search} onChange={setSearch}><GlassToggle value={tab} onChange={setTab} options={[{key:'pending',label:'Awaiting documentation',count:pending.length},{key:'done',label:'Documented',count:done.length}]}/></SearchToggle></div><div className="ws-grid">{rows.map(a=>{const b=data.babies.find(b=>b.id===a.baby_id),n=documented(a.id);return <CareTicket key={a.id} source="Lekha" title={b?.baby_name??'Appointment'} subtitle={a.reason} date={fmt(a.starts_at)} card={n?parseCard(n.observations):null} stamp={n?'Reviewed':null} stub={!n} fields={[{label:'Caregiver',value:b?.caregiver_name??'—'},{label:'Appointment',value:a.status},{label:'Mode',value:'In-person'}]} {...(!n?{action:{label:'Document',onClick:()=>setId(a.id)}}:{})}/>;})}</div>{!rows.length&&<p className="care-empty">{tab==='pending'?'No in-person visits awaiting documentation.':'No documented appointments yet.'}</p>}</>;
+ return <><WorkspaceHeading title="Lekha" description="In-person visits and clinician-reviewed documentation."/><div className="ws-bar"><SearchToggle label="Filter Lekha by baby" value={search} onChange={setSearch}><GlassToggle value={tab} onChange={setTab} options={[{key:'pending',label:'Awaiting documentation',count:pending.length},{key:'done',label:'Documented',count:done.length}]}/></SearchToggle></div><div className="ws-grid">{rows.map(a=>{const b=data.babies.find(b=>b.id===a.baby_id),n=documented(a.id);const plan=(b?.plan??{}) as Partial<CarePlan>;return <CareTicket key={a.id} source="Lekha" title={b?.baby_name??'Appointment'} subtitle={a.reason} stamp={null} fields={[{label:'Caregiver',value:b?.caregiver_name??'—'},{label:'Date & time',value:fmt(a.starts_at)},{label:'Status',value:n?'Documented':caregiverStatus(a.status)}]} footer={n?<DocumentActions meta={{babyName:b?.baby_name??'Baby',caregiverName:b?.caregiver_name??'—',dob:plan.dob,gestation:plan.gestationalAge,reason:a.reason,when:fmt(a.starts_at),clinician:'Dr. Ananya Rao'}} card={parseCard(n.observations)}/>:undefined} {...(!n?{action:{label:'Document',onClick:()=>setId(a.id)}}:{})}/>;})}</div>{!rows.length&&<p className="care-empty">{tab==='pending'?'No in-person visits awaiting documentation.':'No documented appointments yet.'}</p>}</>;
 }
 function LekhaSession({data,appt,busy,run,onClose}:{data:Data;appt:Appointment;busy:boolean;run:Run;onClose:()=>void}){
  const get=useServerFn(getLekhaCapture),start=useServerFn(startLekhaCapture),save=useServerFn(saveLekhaProgress),generate=useServerFn(generateLekhaDraft),approve=useServerFn(approveLekhaDraft);
