@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import baby from "@/assets/baby-hands.png.asset.json";
 import logo from "@/assets/nayuva-logo.png.asset.json";
+import { BrandWordmark } from "@/components/brand-wordmark";
 import flowerA from "@/assets/flower-pink-right.png";
 import flowerB from "@/assets/flower-pink-left.png";
 import flowerLavender from "@/assets/flower-lavender.png";
@@ -63,9 +64,9 @@ function Flower({ src, className }: { src: string; className: string }) {
 
 function Logo() {
   return (
-    <a href="#" className="flex items-center gap-2.5">
+    <a href="#" className="brand-spin flex items-center gap-2.5">
       <img src={logo.url} alt="Nayuva AI logo" className="site-logo-image" width={40} height={40} />
-      <span className="text-xl font-semibold tracking-[0.18em] text-primary">NAYUVA AI</span>
+      <BrandWordmark className="text-xl" />
     </a>
   );
 }

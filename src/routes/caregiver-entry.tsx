@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DropdownMenu,DropdownMenuTrigger,DropdownMenuContent,DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import logo from '@/assets/nayuva-logo.png.asset.json';
+import { BrandWordmark } from '@/components/brand-wordmark';
 import { listCaregiverDemos,openDemo } from '@/lib/care.functions';
 export const Route=createFileRoute('/caregiver-entry')({head:()=>({meta:[{title:'Choose a Caregiver Demo — Nayuva AI'},{name:'description',content:'Select a connected synthetic caregiver and baby profile for the Nayuva care demo.'},{property:'og:title',content:'Caregiver Demo — Nayuva AI'},{property:'og:description',content:'Choose your connected caregiver demo profile.'},{property:'og:type',content:'website'},{name:'twitter:card',content:'summary'},{name:'robots',content:'noindex'}]}),component:CaregiverEntry});
 function CaregiverEntry(){
@@ -20,7 +21,7 @@ function CaregiverEntry(){
   <Button asChild variant="ghost" className="entry-back"><Link to="/"><ArrowLeft/>Back to Nayuva AI</Link></Button>
   <section className="entry-access-card" aria-label="Caregiver demo access">
    <div className="entry-selection">
-    <Link to="/" className="entry-logo-square" aria-label="Nayuva AI home"><img src={logo.url} alt="Nayuva AI logo"/></Link>
+    <Link to="/" className="entry-logo-square brand-spin" aria-label="Nayuva AI home"><img src={logo.url} alt="Nayuva AI logo"/></Link>
     <div className="entry-intro"><p className="eyebrow">Caregiver access</p><h1>Choose your care profile</h1><p>Simply select a profile to explore the platform and experience its end-to-end care workflows.</p></div>
     <div className="entry-profile-field"><label id="care-profile-label">Care profile</label>
      <DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" className="entry-profile-trigger" aria-labelledby="care-profile-label" disabled={busy||query.isPending}><Heart/><span>{profile?<><strong>{profile.caregiver_name}</strong><small>{profile.baby_name}</small></>:query.isPending?'Loading care profiles…':'Select a care profile'}</span><ChevronDown/></Button></DropdownMenuTrigger>
@@ -33,7 +34,7 @@ function CaregiverEntry(){
     <Button className="entry-continue" disabled={!profile||busy} onClick={()=>void proceed()}>{busy?'Opening your care journey…':'Continue to care journey'}<ArrowRight/></Button>
     <p className="entry-access-note">Pre-configured demo access · No account creation</p>
    </div>
-   <aside className="entry-story"><span className="entry-story-label">Connected care. Beyond discharge.</span><p><strong>Demo Access:</strong> To help judges evaluate Nayuva AI without account creation or repeated onboarding, we have built pre-configured caregiver profiles.</p><div className="entry-signature"><span className="entry-logo-square"><img src={logo.url} alt=""/></span><span><strong>Nayuva AI</strong><small>Developer</small></span></div></aside>
+   <aside className="entry-story"><span className="entry-story-label">Connected care. Beyond discharge.</span><p><strong>Demo Access:</strong> To help judges evaluate Nayuva AI without account creation or repeated onboarding, we have built pre-configured caregiver profiles.</p><div className="entry-signature"><span className="entry-logo-square brand-spin"><img src={logo.url} alt=""/></span><span><strong><BrandWordmark/></strong><small>Developer</small></span></div></aside>
   </section>
  </main>;
 }
