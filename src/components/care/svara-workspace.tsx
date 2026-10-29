@@ -4,7 +4,7 @@ import { useNavigate } from '@tanstack/react-router';
 import { Mic, Phone, ArrowRight, Check, ChevronDown, Loader2, PhoneCall, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SvaraVoice, type Line } from './svara-voice';
-import { CareTicket } from './care-ticket';
+import { LekhaDocument } from './lekha-document';
 import { CardGeneration } from './card-generation';
 import { SvaraAnimation } from './svara-animation';
 import { DemoGuide, SecureNote } from './demo-guide';
@@ -143,7 +143,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       <h1 className="svara-title">Review your Health Card</h1>
       <p className="svara-lede">Check each topic. Approve when it matches what you shared, then send it to your care team.</p>
       {error && <p role="alert" className="svara-error">{error}</p>}
-      {card ? <CareTicket source="Svara" title={session?.babyName ?? 'Health Card'} subtitle="Check-in summary" date={new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} card={card} stamp={approved ? 'Approved' : null} stubLabel="Caregiver" action={{ label: 'Approve card', onClick: () => setApproved(true) }} />
+      {card ? <div className="svara-report-review"><LekhaDocument meta={{ kind: 'svara', babyName: session?.babyName ?? 'Baby', caregiverName: 'You', reason: 'Daily voice check-in', when: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), clinician: 'Awaiting care team' }} card={card} approved={approved} onEdit={(i, v) => setSummary(JSON.stringify({ ...card, topics: card.topics.map((t, j) => j === i ? { ...t, finding: v } : t) }))} onApprove={() => setApproved(true)} approveLabel={approved ? 'Approved' : 'Approve report'} /></div>
         : <p className="svara-error">This earlier draft could not be opened. Start a fresh check-in with Svara below.</p>}
       <div className="svara-review-actions">
         {approved && <Button variant="ghost" onClick={() => setApproved(false)}>Undo approval</Button>}
