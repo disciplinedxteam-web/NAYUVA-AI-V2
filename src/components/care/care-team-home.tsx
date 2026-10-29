@@ -7,12 +7,14 @@ import { getCareData, getOnlineAppointments, getTaalRoster } from '@/lib/care.fu
 import { babyDay } from '@/lib/day-protocol';
 import type { CarePlan } from '@/lib/care-domain';
 import { OnlineMeeting } from './online-meeting';
+import { ActivityMatrix } from './activity-matrix';
 
 type Data = Awaited<ReturnType<typeof getCareData>>;
 type Go = (s: 'updates' | 'milan' | 'lekha' | 'sutra' | 'care-plan' | 'taal') => unknown;
 
 const LAYOUT_KEY = 'nayuva-careteam-home-layout-v1';
 const DEFAULT_LAYOUT: WidgetItem[] = [
+  { id: 'activity', size: 'wide', label: 'Activity calendar' },
   { id: 'newborns', size: 'sm', label: 'Newborns' },
   { id: 'cadence', size: 'sm', label: 'Taal cadence' },
   { id: 'triage', size: 'sm', label: 'Care Updates' },
@@ -77,6 +79,10 @@ export function CareTeamHome({ data, go, onPriority, onSelectBaby }: { data: Dat
 
   const render = (item: WidgetItem) => {
     switch (item.id) {
+      case 'activity': return <Shell title="Activity calendar" meta={<span>Past 4 months · next 2 weeks</span>}>
+        <Big unit="upcoming appointments">{m.upcoming.length}</Big>
+        <ActivityMatrix label={`${data.cards.length} check-ins and ${data.appointments.length} appointments across all newborns.`} checkins={data.cards.map(c => c.created_at)} appointments={data.appointments.filter(a => a.status !== 'Cancelled').map(a => a.starts_at)} />
+      </Shell>;
       case 'newborns': return <Shell title="Newborns" meta={<Users className="size-4" />}>
         <Big unit="in care">{data.babies.length}</Big><p className="bento-sub">{m.newThisWeek} added this week</p>
         <button type="button" className="bento-cta mt-auto" onClick={() => go('care-plan')}><Users />View profiles<ArrowRight /></button></Shell>;
