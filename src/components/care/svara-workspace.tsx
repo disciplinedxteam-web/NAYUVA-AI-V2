@@ -7,6 +7,7 @@ import { SvaraVoice, type Line } from './svara-voice';
 import { CareTicket } from './care-ticket';
 import { CardGeneration } from './card-generation';
 import { SvaraAnimation } from './svara-animation';
+import { DemoGuide, SecureNote } from './demo-guide';
 import { parseCard } from '@/lib/care-card';
 import { prepareSvaraSession, saveSvaraTranscript, saveSvaraPhone, summarizeSvaraSession, confirmSvaraSession, getSvaraCallStatus } from '@/lib/care.functions';
 
@@ -106,17 +107,20 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
           <Button type="button" variant="ghost" className="svara-cta primary" disabled={busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></Button>
           {open === 'web' && <div className="svara-tray">
             <p>Start a voice conversation with Svara now? Your microphone will be used.</p>
+            <SecureNote>Your voice and answers are encrypted and only shared with your baby’s care team.</SecureNote>
             <Button className="w-full" disabled={busy} onClick={() => void startWeb()}>{busy ? <Loader2 className="animate-spin" /> : <Mic />}Start conversation</Button>
           </div>}
         </div>
         <div className={`svara-cta-group ${open === 'phone' ? 'open' : ''}`}>
           <Button type="button" variant="ghost" className="svara-cta" disabled={busy} aria-expanded={open === 'phone'} onClick={() => setOpen(open === 'phone' ? null : 'phone')}><Phone /><span><strong>Get a phone call</strong><small>Svara calls your mobile number</small></span><ChevronDown className="chev" /></Button>
           {open === 'phone' && <form className="svara-tray" onSubmit={(e) => { e.preventDefault(); if (phoneValid && consent) void startPhone(); }}>
+            <DemoGuide title="Test Svara Through a Phone Call">Automated daily calls are disabled for this demo. Enter your phone number to receive a Svara call and experience the personalized voice check-in firsthand.</DemoGuide>
             <label className="svara-phone">
               <span className="svara-cc"><Phone aria-hidden="true" />+91</span>
               <input inputMode="numeric" autoComplete="tel-national" aria-label="10-digit mobile number" placeholder="98765-43210" value={formatMobile(digits)} onChange={(e) => setDigits(e.target.value.replace(/\D/g, '').slice(0, 10))} />
             </label>
             <label className="svara-consent"><input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} /><span>I agree to receive this check-in call from Svara on this number.</span></label>
+            <SecureNote>Your number and call are kept private and encrypted, and used only for this check-in.</SecureNote>
             <Button type="submit" className="w-full" disabled={busy || !phoneValid || !consent}>{busy ? <Loader2 className="animate-spin" /> : <PhoneCall />}Call me now</Button>
           </form>}
         </div>

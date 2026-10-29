@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { DemoGuide, SecureNote } from './demo-guide';
 import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
 import { ArrowLeft, Mic, MicOff, PhoneOff, Video, VideoOff, FileText, Loader2, ShieldCheck, PanelRight, X, GitBranch, CalendarDays } from 'lucide-react';
@@ -149,8 +150,10 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
     <div className="vroom-lobby">
       <span className="vroom-badge"><ShieldCheck />Private 1-on-1 consultation</span>
       <h3>Join your online appointment</h3>
+      <DemoGuide title="Test a Live Online Consultation">For the best experience, join the same appointment link from two devices—one as the caregiver and the other as the care team. Have a sample consultation, then allow the AI to generate the appointment record for review and editing.</DemoGuide>
       <p>Video goes directly between the two of you and is never recorded. With both participants’ consent, each person’s spoken words are transcribed and labelled so the care team can review a documentation draft.</p>
       <label><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />I consent to transcription for clinician-reviewed care documentation.</label>
+      <SecureNote>The call is encrypted end to end between both devices, and transcripts are only shared with the authorised care team.</SecureNote>
       <Button disabled={!consent || busy} onClick={() => void start()}>{busy ? <Loader2 className="spin" /> : <Video />}Join appointment</Button>
       {error && <p role="alert" className="svara-error">{error}</p>}
     </div>
