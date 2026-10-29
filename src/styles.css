@@ -2283,3 +2283,4 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .lekha-a4-summary { margin-top:4px; padding:14px 16px; border-radius:6px; background:oklch(0.975 0.01 20); }
 .lekha-a4-summary h3 { margin:0 0 6px; font-size:15px; font-weight:700; color:var(--primary-deep); }
 .lekha-a4-summary p { margin:0; font-size:13.5px; line-height:1.65; }
+.lekha-a4-topic > .lekha-a4-topic-main { display:block; margin:0; }
