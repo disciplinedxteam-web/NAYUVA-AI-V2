@@ -18,12 +18,11 @@ export function CareTicket({ source, title, subtitle, date, card, fields, stamp,
   action?: Action; stub?: boolean; stubLabel?: string; children?: ReactNode; footer?: ReactNode; variant?: 'appointment';
 }) {
   const done = !!stamp;
-  const items = card
-    ? card.topics.map((t) => ({ label: t.title, value: t.finding || t.status, status: t.status }))
-    : (fields ?? []).map((f) => ({ ...f, status: '' }));
+  // Cards show at most three metadata tags; consultation content lives only in the document.
+  const items = (fields ?? []).slice(0, 3).map((f) => ({ ...f, status: '' }));
   const priority = card?.priority;
   const tone = priority ? priority.split(' ')[0]!.toLowerCase() : '';
-  const scrollable = variant !== 'appointment' && items.length > 4;
+  const scrollable = false;
 
   const listRef = useRef<HTMLDivElement>(null);
   const [atEnd, setAtEnd] = useState(false);
@@ -40,7 +39,7 @@ export function CareTicket({ source, title, subtitle, date, card, fields, stamp,
     <div className={`shine-border ${tone ? `tone-${tone}` : ''} ${variant === 'appointment' ? 'is-appointment' : ''}`}>
       <article className="care-ticket shine-inner" data-no-translate>
         <header className="ticket-head">
-          <span className="ticket-source"><HeartPulse aria-hidden="true" />{source} · {source === 'Milan' ? 'Appointment' : 'Care record'}</span>
+          <span className="ticket-source"><HeartPulse aria-hidden="true" />{source} · {source === 'Milan' ? 'Appointment' : source === 'Svara' ? 'Check-in' : 'Consultation'}</span>
           {priority && <span className={`ticket-priority p-${priority.split(' ')[0]?.toLowerCase()}`}>{priority}</span>}
         </header>
         <div className="ticket-heading">

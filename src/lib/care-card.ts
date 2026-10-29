@@ -6,15 +6,17 @@ export type CardPriority = (typeof PRIORITIES)[number];
 export const TOPIC_STATUSES = ['Normal', 'Concern', 'Not discussed'] as const;
 
 export const topicSchema = z.object({
-  title: z.string().trim().min(1).max(60),
-  finding: z.string().trim().max(80),
+  title: z.string().trim().min(1).max(120),
+  finding: z.string().trim().max(1000),
   status: z.enum(TOPIC_STATUSES),
-  quote: z.string().max(400).default(''),
+  quote: z.string().max(2000).default(''),
 });
 export const careCardSchema = z.object({
   topics: z.array(topicSchema).min(1).max(20),
   priority: z.enum(PRIORITIES),
-  priorityReason: z.string().max(200).default(''),
+  priorityReason: z.string().max(300).default(''),
+  /** Concluding narrative paragraph built only from stated facts. */
+  summary: z.string().max(2000).default(''),
 });
 export type CareTopic = z.infer<typeof topicSchema>;
 export type CareCard = z.infer<typeof careCardSchema>;
@@ -40,14 +42,14 @@ export function normalizeCard(raw: unknown): CareCard {
   const topics = (Array.isArray(o['topics']) ? o['topics'] : [])
     .map((t) => {
       const x = (t ?? {}) as Record<string, unknown>;
-      return { title: str(x['title'], 60), finding: str(x['finding'] ?? x['highlight'], 80), status: status(x['status']), quote: str(x['quote'], 400) };
+      return { title: str(x['title'], 120), finding: str(x['finding'] ?? x['highlight'], 1000), status: status(x['status']), quote: str(x['quote'], 2000) };
     })
     .filter((t) => t.title)
     .slice(0, 20);
   let p = priority(o['priority']);
   // A Routine card cannot contain a flagged concern.
   if (p === 'Routine' && topics.some((t) => t.status !== 'Normal')) p = 'Review Needed';
-  return careCardSchema.parse({ topics, priority: p, priorityReason: str(o['priorityReason'] ?? o['priority_reason'], 200) });
+  return careCardSchema.parse({ topics, priority: p, priorityReason: str(o['priorityReason'] ?? o['priority_reason'], 300), summary: str(o['summary'] ?? o['conclusion'], 2000) });
 }
 
 /** Read a stored card (JSON string). Returns null for older plain-text summaries. */
@@ -57,3 +59,6 @@ export function parseCard(text: string | null | undefined): CareCard | null {
 }
 
 export const cardText = (c: CareCard) => c.topics.map((t) => `${t.title}: ${t.finding || t.status}`).join('\n');
+
+/** Topics worth printing: undiscussed placeholders are omitted rather than shown as misleading pills. */
+export const documentTopics = (c: CareCard) => c.topics.filter((t) => t.status !== 'Not discussed' || t.finding.trim().length > 0);
