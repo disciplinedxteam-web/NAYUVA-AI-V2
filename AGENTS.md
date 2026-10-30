@@ -41,3 +41,4 @@
 - Profile photo and display preferences live in per-browser storage only, so they never alter care records.
 
 - Subdirectories have their own `AGENTS.md`; read them before changing files there.
+- Sutra answers end with a model SOURCES line that the server validates against the baby's record ids and stores as a [[sources:...]] marker; the chat renders it as clickable source pills, never inline brackets. Sutra dictation uses Sarvam STT only.
