@@ -2284,3 +2284,34 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .lekha-a4-summary h3 { margin:0 0 6px; font-size:15px; font-weight:700; color:var(--primary-deep); }
 .lekha-a4-summary p { margin:0; font-size:13.5px; line-height:1.65; }
 .lekha-a4-topic > .lekha-a4-topic-main { display:block; margin:0; }
+
+/* Wordmark: uniform letters (Michroma has no Greek, so Lambda falls back; force one size/metric) */
+.brand-wordmark, .brand-wordmark > span { font-size:inherit; line-height:1; vertical-align:baseline; }
+.brand-wordmark { font-variant-ligatures:none; font-synthesis:none; }
+
+/* Milan scheduler: centred on screen */
+.scheduler-stage { display:flex; align-items:center; justify-content:center; min-height:calc(100svh - 190px); width:100%; }
+.scheduler-stage > .scheduler-compact { width:min(100%,880px); margin:0 auto; }
+
+/* Sutra chat: Svara-style bubbles */
+.sutra-studio .sutra-messages { gap:22px; }
+.sutra-turn { display:flex; width:100%; animation:tray-in .35s ease both; }
+.sutra-turn.user { justify-content:flex-end; }
+.sutra-turn.user p { margin:0; max-width:72%; padding:12px 18px; border-radius:22px 22px 6px 22px; background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:var(--primary-foreground); font-size:14.5px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; box-shadow:0 10px 24px -14px var(--primary); }
+.sutra-bot-card { max-width:86%; padding:14px 18px 8px; border-radius:6px 22px 22px 22px; background:color-mix(in oklab,var(--card) 82%,transparent); border:1px solid var(--border); backdrop-filter:blur(14px); box-shadow:0 14px 32px -24px color-mix(in oklab,var(--primary-deep) 50%,transparent); }
+.sutra-bot-name { display:block; font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; font-weight:800; color:var(--primary); margin-bottom:6px; }
+.sutra-bot-card .is-assistant { max-width:100%; font-size:14.5px; line-height:1.65; }
+.sutra-bot-card .is-assistant p + p { margin-top:10px; }
+.sutra-bot-card .is-assistant ul, .sutra-bot-card .is-assistant ol { margin:8px 0; padding-left:20px; }
+.sutra-bot-card .is-assistant li { margin:3px 0; }
+.sutra-sources { margin-top:12px; padding-top:10px; border-top:1px dashed color-mix(in oklab,var(--primary) 25%,transparent); display:grid; gap:6px; }
+.sutra-sources > span { font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted-foreground); }
+.sutra-sources > div { display:flex; flex-wrap:wrap; gap:6px; }
+.sutra-sources button { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:99px; font-size:11.5px; font-weight:600; color:var(--primary-deep); background:var(--blush); border:1px solid color-mix(in oklab,var(--primary) 22%,transparent); cursor:pointer; transition:background .2s; }
+.sutra-sources button:hover { background:color-mix(in oklab,var(--primary) 18%,var(--blush)); }
+.sutra-sources button svg { width:12px; height:12px; }
+.sutra-bot-actions { display:flex; align-items:center; gap:6px; margin-top:4px; }
+.sutra-bot-actions small { font-size:11px; color:var(--muted-foreground); }
+.sutra-bot-actions [aria-pressed="true"] { color:var(--primary); }
+@media (max-width:700px){ .sutra-turn.user p,.sutra-bot-card { max-width:94%; } }
+@media (prefers-reduced-motion:reduce){ .sutra-turn { animation:none; } }
