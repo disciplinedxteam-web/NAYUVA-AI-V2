@@ -87,7 +87,7 @@ export function MilanWorkspace({ data, role, busy, run, onDocument }: { data: Da
   const reqBaby = request ? babyOf(request.baby_id) : undefined;
   return <>
     <WorkspaceHeading title="Milan" description="Appointments and coordinated follow-up care." />
-    {scheduling ? <Scheduler data={data} busy={busy} run={run} onDone={() => setScheduling(false)} /> : <>
+    {scheduling ? <div className="scheduler-stage"><Scheduler data={data} busy={busy} run={run} onDone={() => setScheduling(false)} /></div> : <>
       <div className="ws-bar">
         <div className="ws-bar-cluster">
           <SearchToggle label="Filter Milan by baby" value={search} onChange={setSearch}><Toggle value={tab} onChange={setTab} options={tabs} /></SearchToggle>

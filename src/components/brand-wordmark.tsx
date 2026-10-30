@@ -1,4 +1,4 @@
-/** NΛYUVΛ ΛI wordmark: every A is drawn as a crossbar-less Λ (an inverted V). */
+/** NΛYUVΛ ΛI wordmark: each A is Michroma's own V flipped, shifted back onto the cap line so every letter shares one size and baseline. */
 export function BrandWordmark({ className = '' }: { className?: string }) {
   const L = () => <span className="brand-lambda" aria-hidden="true">V</span>;
   return <span className={`brand-wordmark ${className}`} aria-label="Nayuva AI">
