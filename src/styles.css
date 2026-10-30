@@ -2146,8 +2146,7 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 
 /* Brand wordmark + logo spin */
 .brand-wordmark { display:inline-flex;align-items:center;font-family:"Michroma","Manrope",sans-serif;font-weight:400;letter-spacing:.2em;text-transform:uppercase;color:var(--primary-deep);line-height:1;white-space:nowrap; }
-.brand-lambda { display:inline-block;width:.9em;height:.75em;margin-right:.1em;overflow:visible;flex-shrink:0;vertical-align:baseline;align-self:baseline; }
-.brand-lambda path { stroke-width:.1em; }
+.brand-lambda { display:inline-block;line-height:1;transform:translateY(.14em) scaleY(-1); }
 .brand-gap { display:inline-block;width:.45em; }
 .dashboard-brand .brand-wordmark { font-size:13px; }
 .brand-spin img, .dashboard-brand img { transition:transform .75s cubic-bezier(.45,.05,.25,1); }
@@ -2287,7 +2286,8 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .lekha-a4-topic > .lekha-a4-topic-main { display:block; margin:0; }
 
 /* Wordmark: uniform letters (Michroma has no Greek, so Lambda falls back; force one size/metric) */
-.brand-wordmark, .brand-wordmark > span { font-size:inherit; line-height:1; vertical-align:baseline; }
+.brand-wordmark, .brand-wordmark > span { font-size:inherit !important; line-height:1; vertical-align:baseline; }
+.brand-wordmark { align-items:baseline; }
 .brand-wordmark { font-variant-ligatures:none; font-synthesis:none; }
 
 /* Milan scheduler: centred on screen */
