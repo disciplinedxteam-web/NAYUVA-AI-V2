@@ -2146,7 +2146,7 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 
 /* Brand wordmark + logo spin */
 .brand-wordmark { display:inline-flex;align-items:center;font-family:"Michroma","Manrope",sans-serif;font-weight:400;letter-spacing:.2em;text-transform:uppercase;color:var(--primary-deep);line-height:1;white-space:nowrap; }
-.brand-lambda { display:inline-block;line-height:1;transform:translateY(.35em) scaleY(-1); }
+.brand-lambda { display:inline-block;line-height:1;transform:scaleY(-1); }
 .brand-gap { display:inline-block;width:.45em; }
 .dashboard-brand .brand-wordmark { font-size:13px; }
 .brand-spin img, .dashboard-brand img { transition:transform .75s cubic-bezier(.45,.05,.25,1); }
