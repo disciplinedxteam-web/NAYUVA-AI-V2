@@ -1,6 +1,7 @@
-/** NΛYUVΛ ΛI wordmark: each A is the real capital Lambda glyph so every letter shares one cap height and baseline. */
+/** NΛYUVΛ ΛI wordmark: each A is drawn as an SVG Λ sized to the font's cap height, so every letter matches in size and baseline at any font size. */
+const L = () => <svg className="brand-lambda" viewBox="0 0 100 100" aria-hidden="true" preserveAspectRatio="none"><path d="M6 100 L50 3 L94 100" fill="none" stroke="currentColor" strokeWidth="11" strokeLinejoin="miter" vectorEffect="non-scaling-stroke" /></svg>;
 export function BrandWordmark({ className = '' }: { className?: string }) {
   return <span className={`brand-wordmark ${className}`} aria-label="Nayuva AI">
-    <span aria-hidden="true">NΛYUVΛ</span><span className="brand-gap" aria-hidden="true" /><span aria-hidden="true">ΛI</span>
+    <span aria-hidden="true">N</span><L /><span aria-hidden="true">YUV</span><L /><span className="brand-gap" aria-hidden="true" /><L /><span aria-hidden="true">I</span>
   </span>;
 }
