@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, Loader2, PenLine, ShieldCheck, ZoomIn, ZoomOut, Check, Share2 } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, Download, Loader2, PenLine, Search, ShieldCheck, ZoomIn, ZoomOut, Check, Share2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { documentTopics, type CareCard } from '@/lib/care-card';
 
@@ -71,45 +71,96 @@ export function saveBlob(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
+const ZOOMS = [0.5, 0.75, 1, 1.25, 1.5, 2] as const;
+type ZoomMode = 'fit' | (typeof ZOOMS)[number];
+
+/** Highlights search matches inside the viewer with the CSS Custom Highlight API (no DOM mutation). */
+function paintMatches(root: HTMLElement | null, query: string, active: number): Range[] {
+  const reg = (globalThis as { CSS?: { highlights?: Map<string, unknown> } }).CSS?.highlights;
+  const H = (globalThis as { Highlight?: new (...r: Range[]) => unknown }).Highlight;
+  reg?.delete('doc-match'); reg?.delete('doc-match-active');
+  const q = query.trim().toLowerCase(); if (!root || !q) return [];
+  const ranges: Range[] = []; const walk = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  for (let n = walk.nextNode(); n; n = walk.nextNode()) {
+    const text = n.textContent?.toLowerCase() ?? ''; let i = text.indexOf(q);
+    while (i >= 0) { const r = document.createRange(); r.setStart(n, i); r.setEnd(n, i + q.length); ranges.push(r); i = text.indexOf(q, i + q.length); }
+  }
+  if (reg && H) { reg.set('doc-match', new H(...ranges)); const a = ranges[active]; if (a) reg.set('doc-match-active', new H(a)); }
+  return ranges;
+}
+
 export function LekhaDocument({ meta, card, approved, busy = false, onEdit, onApprove, approveLabel = 'Approve & Sign', onShare }: { meta: Meta; card: CareCard; approved: boolean; busy?: boolean; onEdit?: (i: number, v: string) => void; onApprove?: () => void; approveLabel?: string; onShare?: () => void }) {
-  const all = orderedTopics(card); const pages = paginateTopics(all); const [page, setPage] = useState(0); const p = Math.min(page, pages.length - 1);
-  const stage = useRef<HTMLDivElement>(null), pdfRoot = useRef<HTMLDivElement>(null);
-  const [fit, setFit] = useState(0.6), [zoom, setZoom] = useState(1), [editing, setEditing] = useState(false), [saving, setSaving] = useState(false), [err, setErr] = useState('');
+  const pages = paginateTopics(orderedTopics(card));
+  const stage = useRef<HTMLDivElement>(null), pdfRoot = useRef<HTMLDivElement>(null), searchInput = useRef<HTMLInputElement>(null);
+  const [fit, setFit] = useState(0.8), [mode, setMode] = useState<ZoomMode>('fit'), [page, setPage] = useState(0);
+  const [editing, setEditing] = useState(false), [saving, setSaving] = useState(false), [err, setErr] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false), [query, setQuery] = useState(''), [hit, setHit] = useState(0), [hits, setHits] = useState(0);
+  const scale = mode === 'fit' ? fit : mode;
   useLayoutEffect(() => {
     const el = stage.current; if (!el) return;
-    const measure = () => setFit(Math.max(0.3, Math.min((el.clientHeight - 8) / A4_H, (el.clientWidth - 8) / A4_W)));
+    const measure = () => setFit(Math.max(0.35, Math.min(1.25, (el.clientWidth - 48) / A4_W)));
     measure(); const ro = new ResizeObserver(measure); ro.observe(el); return () => ro.disconnect();
   }, []);
-  useEffect(() => { const key = (e: KeyboardEvent) => { if ((e.target as HTMLElement).tagName === 'TEXTAREA') return; if (e.key === 'ArrowRight') setPage(x => Math.min(x + 1, pages.length - 1)); if (e.key === 'ArrowLeft') setPage(x => Math.max(x - 1, 0)); }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key); }, [pages.length]);
-  const scale = fit * zoom;
+  const sheets = () => Array.from(stage.current?.querySelectorAll<HTMLElement>('.lekha-doc-frame') ?? []);
+  const goTo = (i: number) => { const s = sheets()[i]; if (s && stage.current) stage.current.scrollTo({ top: s.offsetTop - 16, behavior: 'smooth' }); setPage(i); };
+  function onScroll() {
+    const el = stage.current; if (!el) return; const mid = el.scrollTop + el.clientHeight / 3;
+    let cur = 0; sheets().forEach((s, i) => { if (s.offsetTop <= mid) cur = i; }); setPage(cur);
+  }
+  useEffect(() => {
+    const ranges = paintMatches(stage.current, searchOpen ? query : '', hit); setHits(ranges.length);
+    const a = ranges[hit]; if (a) { const box = a.getBoundingClientRect(), host = stage.current!.getBoundingClientRect(); if (box.top < host.top || box.bottom > host.bottom) stage.current!.scrollBy({ top: box.top - host.top - host.height / 3, behavior: 'smooth' }); }
+  }, [query, hit, searchOpen, scale, card, editing]);
+  useEffect(() => () => { paintMatches(null, '', 0); }, []);
+  useEffect(() => { if (searchOpen) searchInput.current?.focus(); }, [searchOpen]);
+  const step = (d: 1 | -1) => { const i = ZOOMS.findIndex(z => z >= scale - 0.001); const next = d > 0 ? ZOOMS.find(z => z > scale + 0.001) : [...ZOOMS].reverse().find(z => z < scale - 0.001); setMode(next ?? (d > 0 ? ZOOMS[ZOOMS.length - 1]! : ZOOMS[0]!)); void i; };
   async function download() { setSaving(true); setErr(''); try { saveBlob(await buildPdf(pdfRoot.current), docFileName(meta)); } catch (e) { setErr(e instanceof Error ? e.message : 'PDF could not be created.'); } finally { setSaving(false); } }
+  async function share() {
+    if (onShare) return onShare();
+    setSaving(true); setErr('');
+    try { const f = new File([await buildPdf(pdfRoot.current)], docFileName(meta), { type: 'application/pdf' }); if (navigator.canShare?.({ files: [f] })) await navigator.share({ files: [f], title: f.name }); else { saveBlob(f, f.name); setErr('Sharing isn’t supported here, so the PDF was downloaded.'); } }
+    catch (e) { if ((e as Error).name !== 'AbortError') setErr('Sharing was not completed.'); } finally { setSaving(false); }
+  }
+  const review = !!onApprove;
   return <div className="lekha-doc-viewer">
-    <div ref={stage} className="lekha-doc-stage">
-      <div className="lekha-doc-frame" style={{ width: A4_W * scale, height: A4_H * scale }}>
-        <div style={{ width: A4_W, height: A4_H, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
-          <Sheet meta={meta} card={card} topics={pages[p] ?? []} index={p} total={pages.length} approved={approved} editing={editing} onEdit={onEdit} />
-        </div>
+    <div className="doc-toolbar" role="toolbar" aria-label="Document controls">
+      <div className="doc-tool-group">
+        <Button variant="ghost" size="icon" aria-label="Previous page" title="Previous page" disabled={page === 0} onClick={() => goTo(page - 1)}><ChevronLeft /></Button>
+        <span className="doc-tool-label">Page <b>{page + 1}</b> of {pages.length}</span>
+        <Button variant="ghost" size="icon" aria-label="Next page" title="Next page" disabled={page >= pages.length - 1} onClick={() => goTo(page + 1)}><ChevronRight /></Button>
+      </div>
+      <div className="doc-tool-group">
+        <Button variant="ghost" size="icon" aria-label="Zoom out" title="Zoom out" disabled={scale <= ZOOMS[0] + 0.001} onClick={() => step(-1)}><ZoomOut /></Button>
+        <select className="doc-zoom-select" aria-label="Zoom level" value={String(mode)} onChange={e => setMode(e.target.value === 'fit' ? 'fit' : Number(e.target.value) as ZoomMode)}>
+          <option value="fit">Fit width{mode === 'fit' ? ` · ${Math.round(fit * 100)}%` : ''}</option>
+          {ZOOMS.map(z => <option key={z} value={String(z)}>{Math.round(z * 100)}%</option>)}
+        </select>
+        <Button variant="ghost" size="icon" aria-label="Zoom in" title="Zoom in" disabled={scale >= ZOOMS[ZOOMS.length - 1]! - 0.001} onClick={() => step(1)}><ZoomIn /></Button>
+        <span className="doc-tool-sep" aria-hidden="true" />
+        {searchOpen ? <div className="doc-search">
+          <Search size={15} aria-hidden="true" />
+          <input ref={searchInput} aria-label="Search document" placeholder="Search" value={query} onChange={e => { setQuery(e.target.value); setHit(0); }} onKeyDown={e => { if (e.key === 'Enter' && hits) setHit(h => (h + (e.shiftKey ? hits - 1 : 1)) % hits); if (e.key === 'Escape') { setSearchOpen(false); setQuery(''); } }} />
+          <span className="doc-tool-label">{query.trim() ? `${hits ? hit + 1 : 0}/${hits}` : ''}</span>
+          <Button variant="ghost" size="icon" aria-label="Previous match" disabled={!hits} onClick={() => setHit(h => (h + hits - 1) % hits)}><ChevronUp /></Button>
+          <Button variant="ghost" size="icon" aria-label="Next match" disabled={!hits} onClick={() => setHit(h => (h + 1) % hits)}><ChevronDown /></Button>
+          <Button variant="ghost" size="icon" aria-label="Close search" onClick={() => { setSearchOpen(false); setQuery(''); }}><X /></Button>
+        </div> : <Button variant="ghost" size="icon" aria-label="Search document" title="Search" onClick={() => setSearchOpen(true)}><Search /></Button>}
+      </div>
+      <div className="doc-tool-group is-actions">
+        <Button variant="ghost" size="icon" aria-label="Download PDF" title="Download PDF" disabled={saving} onClick={() => void download()}>{saving ? <Loader2 className="animate-spin" /> : <Download />}</Button>
+        <Button variant="ghost" size="icon" aria-label="Share PDF" title="Share PDF" disabled={saving} onClick={() => void share()}><Share2 /></Button>
+        {review && onEdit && <Button variant="outline" size="sm" className={`doc-edit-btn ${editing ? 'is-on' : ''}`} aria-pressed={editing} disabled={approved} onClick={() => setEditing(v => !v)}>{editing ? <Check /> : <PenLine />}{editing ? 'Done' : 'Edit'}</Button>}
+        {review && <Button size="sm" className="doc-approve-btn" disabled={busy || approved} onClick={() => { setEditing(false); onApprove?.(); }}>{busy ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{approveLabel}</Button>}
       </div>
     </div>
-    <aside className="lekha-doc-dock" aria-label="Document controls">
-      <div className="lekha-dock-group">
-        <Button variant="ghost" size="icon" aria-label="Zoom in" disabled={zoom >= 1.6} onClick={() => setZoom(z => Math.min(1.6, +(z + 0.2).toFixed(1)))}><ZoomIn /></Button>
-        <span className="lekha-dock-label">{Math.round(zoom * 100)}%</span>
-        <Button variant="ghost" size="icon" aria-label="Zoom out" disabled={zoom <= 0.6} onClick={() => setZoom(z => Math.max(0.6, +(z - 0.2).toFixed(1)))}><ZoomOut /></Button>
-      </div>
-      <div className="lekha-dock-group">
-        <Button variant="ghost" size="icon" aria-label="Previous page" disabled={p === 0} onClick={() => setPage(p - 1)}><ChevronLeft /></Button>
-        <span className="lekha-dock-label">{p + 1} / {pages.length}</span>
-        <Button variant="ghost" size="icon" aria-label="Next page" disabled={p >= pages.length - 1} onClick={() => setPage(p + 1)}><ChevronRight /></Button>
-      </div>
-      <div className="lekha-dock-group">
-        {onEdit && <Button variant="ghost" size="icon" aria-label={editing ? 'Finish editing' : 'Edit document'} title={editing ? 'Finish editing' : 'Edit document'} aria-pressed={editing} className={editing ? 'is-on' : ''} disabled={approved} onClick={() => setEditing(v => !v)}>{editing ? <Check /> : <PenLine />}</Button>}
-        <Button variant="ghost" size="icon" aria-label="Download PDF" title="Download PDF" disabled={saving} onClick={() => void download()}>{saving ? <Loader2 className="animate-spin" /> : <Download />}</Button>
-        {onShare && <Button variant="ghost" size="icon" aria-label="Share PDF" title="Share PDF" onClick={onShare}><Share2 /></Button>}
-      </div>
-      {onApprove && <Button className="lekha-dock-approve" disabled={busy || approved} onClick={() => { setEditing(false); onApprove(); }}><ShieldCheck /><span>{approveLabel}</span></Button>}
-      {err && <p role="alert" className="lekha-dock-error">{err}</p>}
-    </aside>
+    {err && <p role="alert" className="doc-tool-error">{err}</p>}
+    <div ref={stage} className="lekha-doc-stage" onScroll={onScroll}>
+      {pages.map((t, i) => <div key={i} className="lekha-doc-frame" style={{ width: A4_W * scale, height: A4_H * scale }}>
+        <div style={{ width: A4_W, height: A4_H, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+          <Sheet meta={meta} card={card} topics={t} index={i} total={pages.length} approved={approved} editing={editing && review} onEdit={review ? onEdit : undefined} />
+        </div>
+      </div>)}
+    </div>
     <DocumentPdfRoot meta={meta} card={card} approved={approved} rootRef={pdfRoot} />
   </div>;
 }
