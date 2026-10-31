@@ -2331,3 +2331,6 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .done-checks li { display:flex;align-items:center;gap:8px;font-size:14px;color:var(--foreground); }
 .done-checks li svg { width:16px;height:16px;color:var(--primary); }
 .scheduler-done { align-items:center;text-align:center; }
+.taal-range { display:flex;justify-content:flex-start;margin:4px 0 10px; }
+.taal-detail-dialog { max-height: calc(100svh - 32px); overflow-y: auto; }
+@media (min-width: 1024px) { .taal-detail-dialog { overflow: hidden; } }
