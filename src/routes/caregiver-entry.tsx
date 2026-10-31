@@ -34,7 +34,7 @@ function CaregiverEntry(){
     <Button className="entry-continue" disabled={!profile||busy} onClick={()=>void proceed()}>{busy?'Opening your care journey…':'Continue to care journey'}<ArrowRight/></Button>
     <p className="entry-access-note">Pre-configured demo access · No account creation</p>
    </div>
-   <aside className="entry-story"><span className="entry-story-label">Connected care. Beyond discharge.</span><div className="entry-guide"><strong>Explore Care Profiles Freely</strong><p>Authentication has been disabled for this demo to make testing easier. Simply select any caregiver profile to explore its features and switch between profiles seamlessly.</p></div><div className="entry-signature"><span className="entry-logo-square brand-spin"><img src={logo.url} alt=""/></span><span><strong><BrandWordmark/></strong><small>Developer</small></span></div></aside>
+   <aside className="entry-story"><span className="entry-story-label">Connected care. Beyond discharge.</span><p><strong>Demo Access:</strong> To help judges evaluate Nayuva AI without account creation or repeated onboarding, we have built pre-configured caregiver profiles.</p><div className="entry-signature"><span className="entry-logo-square brand-spin"><img src={logo.url} alt=""/></span><span><strong><BrandWordmark/></strong><small>Developer</small></span></div></aside>
   </section>
  </main>;
 }

@@ -9,8 +9,11 @@ import {
   FileText,
   Route as RouteIcon,
   ShieldCheck,
+  Activity,
 } from "lucide-react";
 import baby from "@/assets/baby-hands.png.asset.json";
+import babyVideo from "@/assets/videos/hero-baby.mp4.asset.json";
+import { CharacterVideo } from "@/components/care/character-video";
 import logo from "@/assets/nayuva-logo.png.asset.json";
 import { BrandWordmark } from "@/components/brand-wordmark";
 import flowerA from "@/assets/flower-pink-right.png";
@@ -20,7 +23,6 @@ import flowerYellow from "@/assets/flower-yellow.png";
 import { CareGraphic } from "@/components/care-graphic";
 import { SiteHeader } from "@/components/site-header";
 import { ProductOrb, type ProductState } from "@/components/product-orb";
-import { Mascot } from "@/components/care/mascot";
 import { AwardBadge } from "@/components/ui/award-badge";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
 import rajeev from "@/assets/rajeev-portrait.png.asset.json";
@@ -123,10 +125,17 @@ function Hero() {
         </div>
         <div className="relative flex justify-center">
           
-          <img
-            src={baby.url}
-            alt="A newborn swaddled in pink, cradled in caring hands"
-            className="hero-baby relative w-full mix-blend-multiply"
+          <video
+            src={babyVideo.url}
+            poster={baby.url}
+            autoPlay
+            loop
+            muted
+            playsInline
+            disablePictureInPicture
+            tabIndex={-1}
+            aria-label="A newborn swaddled in pink, breathing gently in caring hands"
+            className="hero-baby hero-baby-video relative w-full"
           />
         </div>
       </div>
@@ -221,6 +230,14 @@ const products = [
     bullets: ["Care plans and Health Cards", "Appointments and clinical notes", "One continuous record over time"],
     state: "reasoning",
   },
+  {
+    name: "TAAL",
+    tag: "Caregiver adherence",
+    Icon: Activity,
+    body: "Tracks how consistently families complete scheduled check-ins, so the care team can see who may need a follow-up nudge.",
+    bullets: ["Scheduled check-in completion", "7 to 42 day adherence views", "Operational counts, never clinical risk"],
+    state: "working",
+  },
 ];
 
 function Products() {
@@ -231,7 +248,7 @@ function Products() {
         <SectionHead
           eyebrow="Products"
           title="Purpose-built for continuous newborn care."
-          body="Four connected products support the caregiver, care team and every stage of the post-discharge journey."
+          body="Five connected products support the caregiver, care team and every stage of the post-discharge journey."
         />
         <div>
           {products.map((p, i) => (
@@ -258,7 +275,7 @@ function Products() {
                   </ul>
                 </div>
                 <div className="min-w-0 flex-1">
-                  {p.name === "SVARA" ? <ProductOrb name={p.name} state={p.state as ProductState} /> : <div className="flex justify-center"><Mascot name={p.name.toLowerCase() as "milan" | "lekha" | "sutra"} state={p.name === "LEKHA" ? "done" : "working"} size={260} /></div>}
+                  {p.name === "SVARA" ? <ProductOrb name={p.name} state={p.state as ProductState} /> : <div className="flex justify-center"><CharacterVideo clip={p.name === "TAAL" ? "taal" : p.name === "LEKHA" ? "lekha-writing" : p.name === "MILAN" ? "milan-writing" : "sutra-search"} size={360} /></div>}
                 </div>
               </div>
               {i < products.length - 1 && <div className="h-px bg-primary/15" />}
