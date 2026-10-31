@@ -2308,9 +2308,9 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .sutra-sources { margin-top:12px; padding-top:10px; border-top:1px dashed color-mix(in oklab,var(--primary) 25%,transparent); display:grid; gap:6px; }
 .sutra-sources > span { font-size:10.5px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--muted-foreground); }
 .sutra-sources > div { display:flex; flex-wrap:wrap; gap:6px; }
-.sutra-sources button { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:99px; font-size:11.5px; font-weight:600; color:var(--primary-deep); background:var(--blush); border:1px solid color-mix(in oklab,var(--primary) 22%,transparent); cursor:pointer; transition:background .2s; }
+.sutra-sources button, .sutra-source-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:99px; font-size:11.5px; font-weight:600; color:var(--primary-deep); background:var(--blush); border:1px solid color-mix(in oklab,var(--primary) 22%,transparent); cursor:pointer; transition:background .2s; }
 .sutra-sources button:hover { background:color-mix(in oklab,var(--primary) 18%,var(--blush)); }
-.sutra-sources button svg { width:12px; height:12px; }
+.sutra-sources button svg, .sutra-source-pill svg { width:12px; height:12px; }
 .sutra-bot-actions { display:flex; align-items:center; gap:6px; margin-top:4px; }
 .sutra-bot-actions small { font-size:11px; color:var(--muted-foreground); }
 .sutra-bot-actions [aria-pressed="true"] { color:var(--primary); }
