@@ -2333,3 +2333,29 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .scheduler-done { align-items:center;text-align:center; }
 .taal-range { display:flex;justify-content:flex-start;margin:4px 0 10px; }
 .taal-detail-dialog { max-height: calc(100svh - 32px); overflow-y: auto; }
+
+/* PDF-editor style document viewer: top toolbar + scrolling desk of exact A4 sheets */
+.lekha-doc-viewer { flex:1; min-height:0; min-width:0; display:flex !important; flex-direction:column; gap:0; border:1px solid var(--border); border-radius:16px; overflow:hidden; background:var(--card); }
+.doc-toolbar { flex:none; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; padding:8px 12px; border-bottom:1px solid var(--border); background:var(--card); }
+.doc-tool-group { display:flex; align-items:center; gap:4px; min-width:0; }
+.doc-tool-group button[data-size="icon"], .doc-tool-group > button.size-9, .doc-toolbar .doc-tool-group > button:not(.doc-edit-btn):not(.doc-approve-btn), .doc-search button { width:32px; height:32px; padding:0; border-radius:8px; color:var(--foreground); }
+.doc-toolbar svg { width:16px; height:16px; }
+.doc-tool-label { font-size:12px; color:var(--muted-foreground); font-variant-numeric:tabular-nums; white-space:nowrap; padding:0 4px; }
+.doc-tool-label b { color:var(--foreground); font-weight:600; }
+.doc-tool-sep { width:1px; height:18px; background:var(--border); margin:0 6px; }
+.doc-zoom-select { height:32px; min-width:96px; border:1px solid var(--border); border-radius:8px; background:var(--background); color:var(--foreground); font-size:12px; padding:0 8px; font-variant-numeric:tabular-nums; }
+.doc-search { display:flex; align-items:center; gap:2px; height:32px; padding-left:8px; border:1px solid var(--border); border-radius:8px; background:var(--background); color:var(--muted-foreground); }
+.doc-search input { width:140px; border:0; outline:0; background:transparent; font-size:12px; color:var(--foreground); padding:0 4px; }
+.doc-search button { width:26px !important; height:26px !important; }
+.doc-tool-group.is-actions { gap:6px; }
+.doc-edit-btn { height:32px; border-radius:8px; gap:6px; }
+.doc-edit-btn.is-on { background:color-mix(in oklab,var(--primary) 12%,transparent); border-color:var(--primary); }
+.doc-approve-btn { height:32px; border-radius:8px; gap:6px; background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:var(--primary-foreground); }
+.doc-tool-error { font-size:12px; color:var(--destructive); padding:6px 12px; border-bottom:1px solid var(--border); }
+.lekha-doc-viewer > .lekha-doc-stage { flex:1; min-height:0; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:20px; padding:24px; overflow:auto; scrollbar-width:thin; background:color-mix(in oklab,var(--muted) 70%,var(--background)); }
+.lekha-doc-viewer > .lekha-doc-stage::-webkit-scrollbar { display:block; width:8px; }
+.lekha-doc-viewer .lekha-doc-frame { flex:none; margin:0; border-radius:2px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.08),0 12px 32px -16px rgba(0,0,0,.25); }
+.lekha-doc-viewer .lekha-doc-dock { display:none; }
+::highlight(doc-match) { background-color:rgba(253,224,71,.55); }
+::highlight(doc-match-active) { background-color:rgba(249,115,22,.6); }
+@media(max-width:700px) { .doc-toolbar { justify-content:center; } .doc-search input { width:90px; } }
