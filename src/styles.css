@@ -2385,3 +2385,4 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .dashboard-main:has(.lekha-review-studio,.lekha-live-stage,.lekha-after,.lekha-complete) > .tutorial-cta-slot { display:none; }
 .lekha-studio:has(> .lekha-choice) { min-height:calc(100svh - 64px); display:flex; flex-direction:column; }
 .lekha-studio > .lekha-choice { flex:1; justify-content:center; padding:56px 0 24px; }
+.doc-view-dialog .doc-toolbar { padding-right:44px; }

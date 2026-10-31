@@ -98,7 +98,7 @@ export function LekhaDocument({ meta, card, approved, busy = false, onEdit, onAp
   const scale = mode === 'fit' ? fit : mode;
   useLayoutEffect(() => {
     const el = stage.current; if (!el) return;
-    const measure = () => setFit(Math.max(0.35, Math.min(1.25, (el.clientWidth - 48) / A4_W)));
+    const measure = () => setFit(Math.max(0.35, Math.min(1, (el.clientWidth - 48) / A4_W)));
     measure(); const ro = new ResizeObserver(measure); ro.observe(el); return () => ro.disconnect();
   }, []);
   const sheets = () => Array.from(stage.current?.querySelectorAll<HTMLElement>('.lekha-doc-frame') ?? []);
