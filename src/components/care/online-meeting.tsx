@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { CharacterVideo } from './character-video';
 import { DemoGuide, SecureNote } from './demo-guide';
 import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
@@ -136,8 +137,8 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
 
   if (ended) return <section className="vroom vroom-done">
     <header className="vroom-top"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button><h2><FileText />Consultation document</h2></header>
-    {ending ? <div className="vroom-wait"><Loader2 className="spin" /><p>Lekha is working out who said what and organising it into your A4 consultation document…</p></div>
-      : approved ? <div className="vroom-wait"><Check /><p>Signed and saved. The document is now part of {info?.babyName}’s journey in Sutra.</p><Button onClick={onClose}>Back to appointments</Button></div>
+    {ending ? <div className="vroom-wait"><CharacterVideo clip="milan-writing" /><p>Lekha is working out who said what and organising it into your A4 consultation document…</p></div>
+      : approved ? <div className="vroom-wait"><CharacterVideo clip="milan-done" /><h3>Document approved</h3><ul className="done-checks"><li><Check />Saved securely</li><li><Check />Added to {info?.babyName}’s journey in Sutra</li><li><Check />Sent to caregiver {info?.caregiverName}</li></ul><Button onClick={onClose}>Back to appointments</Button></div>
       : card && info ? <LekhaDocument meta={{ babyName: info.babyName, caregiverName: info.caregiverName, dob: info.dob, gestation: info.gestation, reason: `${info.reason} · Online`, when: new Date(info.startsAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }), clinician: 'Dr. Ananya Rao' }} card={card} approved={false} busy={toolBusy}
           onEdit={(i, v) => setCard(c => c ? { ...c, topics: c.topics.map((t, j) => j === i ? { ...t, finding: v } : t) } : c)}
           onApprove={() => { setToolBusy(true); setError(''); void approve({ data: { appointmentId: id, card, approved: true } }).then(() => setApproved(true)).catch(e => setError(e instanceof Error ? e.message : 'Approval failed.')).finally(() => setToolBusy(false)); }} />
@@ -150,8 +151,8 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
     <div className="vroom-lobby">
       <span className="vroom-badge"><ShieldCheck />Private 1-on-1 consultation</span>
       <h3>Join your online appointment</h3>
-      <DemoGuide title="Test a Live Online Consultation">For the best experience, join the same appointment link from two devices—one as the caregiver and the other as the care team. Have a sample consultation, then allow the AI to generate the appointment record for review and editing.</DemoGuide>
-      <p>Video goes directly between the two of you and is never recorded. With both participants’ consent, each person’s spoken words are transcribed and labelled so the care team can review a documentation draft.</p>
+      <DemoGuide title="Try an online consultation">Open this appointment on two devices, one as caregiver and one as care team, and hold a short sample visit.</DemoGuide>
+      <p>Video is never recorded. With consent, each person’s words are transcribed so the care team can review a draft document afterwards.</p>
       <label><input type="checkbox" checked={consent} onChange={e => setConsent(e.target.checked)} />I consent to transcription for clinician-reviewed care documentation.</label>
       <SecureNote>The call is encrypted end to end between both devices, and transcripts are only shared with the authorised care team.</SecureNote>
       <Button disabled={!consent || busy} onClick={() => void start()}>{busy ? <Loader2 className="spin" /> : <Video />}Join appointment</Button>

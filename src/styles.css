@@ -2327,3 +2327,7 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .svara-animation, .svara-animation video { background: transparent !important; pointer-events: none; }
 .hero-baby-video { aspect-ratio: 1 / 1; object-fit: cover; pointer-events: none; mix-blend-mode: multiply; background: transparent; }
 @media (prefers-reduced-motion: reduce) { .character-video video { animation: none; } }
+.done-checks { list-style:none;padding:0;margin:4px 0 8px;display:flex;flex-direction:column;gap:8px;align-items:center; }
+.done-checks li { display:flex;align-items:center;gap:8px;font-size:14px;color:var(--foreground); }
+.done-checks li svg { width:16px;height:16px;color:var(--primary); }
+.scheduler-done { align-items:center;text-align:center; }
