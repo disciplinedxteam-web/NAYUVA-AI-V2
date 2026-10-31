@@ -2325,5 +2325,5 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .svara-hero-orb { width: var(--character-size) !important; }
 .svara-live-orb { width: calc(var(--character-size) * 1.1) !important; }
 .svara-animation, .svara-animation video { background: transparent !important; pointer-events: none; }
-.hero-baby-video { pointer-events: none; mix-blend-mode: multiply; background: transparent; }
+.hero-baby-video { aspect-ratio: 1 / 1; object-fit: cover; pointer-events: none; mix-blend-mode: multiply; background: transparent; }
 @media (prefers-reduced-motion: reduce) { .character-video video { animation: none; } }
