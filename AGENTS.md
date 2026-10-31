@@ -42,3 +42,4 @@
 
 - Subdirectories have their own `AGENTS.md`; read them before changing files there.
 - Sutra answers end with a model SOURCES line that the server validates against the baby's record ids and stores as a [[sources:...]] marker; the chat renders it as clickable source pills, never inline brackets. Sutra dictation uses Sarvam STT only.
+- Character clips are pre-keyed alpha WebM files rendered only through the shared CharacterVideo component (looping, muted, non-interactive), so every product character shares one size reference and never shows a background box.
