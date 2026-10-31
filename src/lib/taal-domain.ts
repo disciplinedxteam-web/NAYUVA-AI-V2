@@ -5,13 +5,13 @@ export function taalStatus(completed:number,total:number):TaalStatus {
   if(total===0)return 'Not yet due';
   return completed/total>=.8?'Active':completed/total>=.5?'Overdue':'Unresponsive';
 }
-export function scheduledWindow(plan:Pick<CarePlan,'frequency'|'customInterval'|'checkinTime'>,effectiveAt:string,now:number) {
+export function scheduledWindow(plan:Pick<CarePlan,'frequency'|'customInterval'|'checkinTime'>,effectiveAt:string,now:number,days=14) {
   const anchor=new Date(effectiveAt).getTime();
   const day=new Date(anchor).toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
   const interval=scheduleHours(plan.frequency,plan.customInterval)*3600000;
   let first=new Date(indiaTimestamp(day,plan.checkinTime)).getTime();
   if(first<anchor)first+=interval;
-  const start=Math.max(anchor,now-14*86400000);
+  const start=Math.max(anchor,now-days*86400000);
   const slots:number[]=[];
   for(let t=first+Math.max(0,Math.ceil((start-first)/interval))*interval;t<=now;t+=interval)slots.push(t);
   return slots;
