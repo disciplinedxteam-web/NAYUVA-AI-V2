@@ -20,7 +20,7 @@ const clips = {
 export type CharacterClip = keyof typeof clips;
 
 /** Backgroundless, looping, non-interactive character clip. Size follows the shared --character-size reference. */
-export function CharacterVideo({ clip, size, className = '' }: { clip: CharacterClip; size?: number | string; className?: string }) {
+export function CharacterVideo({ clip, size, className = '' }: { clip: CharacterClip; size?: number | string | undefined; className?: string }) {
   const [src, label] = clips[clip];
   return <div className={`character-video ${className}`} role="img" aria-label={label} style={size ? { width: typeof size === 'number' ? `${size}px` : size } : undefined}>
     <video src={src} autoPlay loop muted playsInline preload="auto" disablePictureInPicture controls={false} tabIndex={-1} aria-hidden="true" />
