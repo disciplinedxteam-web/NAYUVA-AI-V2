@@ -2359,3 +2359,27 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 ::highlight(doc-match) { background-color:rgba(253,224,71,.55); }
 ::highlight(doc-match-active) { background-color:rgba(249,115,22,.6); }
 @media(max-width:700px) { .doc-toolbar { justify-content:center; } .doc-search input { width:90px; } }
+
+/* Glassmorphism tutorial CTA (black glass pill, rotating shimmer border) */
+@keyframes rotate-gradient { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes borderBeamRotation { 0% { transform: translate(-50%,-50%) rotate(0deg); } 100% { transform: translate(-50%,-50%) rotate(360deg); } }
+.glass-cta { --cta-ink: oklch(0.99 0 0); --cta-fill: oklch(0.16 0.01 280 / 0.92); --cta-bg: oklch(1 0 0 / 0.05); position:relative; isolation:isolate; display:inline-flex; overflow:hidden; border-radius:9999px; cursor:pointer; text-decoration:none; box-shadow:0 8px 30px -10px oklch(0.2 0.02 280 / 0.55); transition:transform .3s, box-shadow .3s; }
+.glass-cta:hover { transform:scale(1.04); box-shadow:0 0 32px 4px oklch(0.2 0.02 280 / 0.35); }
+.glass-cta:focus-visible { outline:2px solid var(--ring); outline-offset:3px; }
+.glass-cta-spin { position:absolute; inset:0; }
+.glass-cta-spin > span { position:absolute; inset:-200%; width:400%; height:400%; animation:rotate-gradient var(--speed) linear infinite; background:conic-gradient(from calc(270deg - (var(--spread) * 0.5)), transparent 0, var(--shimmer-color) var(--spread), transparent var(--spread)); }
+.glass-cta-cut { position:absolute; inset:1px; border-radius:9999px; background:var(--cta-bg); backdrop-filter:blur(8px); }
+.glass-cta-body { position:relative; z-index:1; display:flex; align-items:center; gap:10px; padding:6px 8px 6px 6px; border-radius:9999px; overflow:hidden; color:var(--cta-ink); font-size:13px; font-weight:500; }
+.glass-cta-beam { position:absolute; width:200%; height:200%; top:50%; left:50%; transform:translate(-50%,-50%); background:linear-gradient(90deg,transparent,oklch(1 0 0 / .2),oklch(1 0 0 / .2),transparent); animation:borderBeamRotation 4s infinite linear; }
+.glass-cta-fill { position:absolute; inset:1px; border-radius:9999px; background:var(--cta-fill); backdrop-filter:blur(8px); }
+.glass-cta-avatar { position:relative; z-index:1; width:26px; height:26px; border-radius:9999px; object-fit:contain; background:oklch(1 0 0); padding:2px; box-shadow:0 0 0 2px oklch(1 0 0 / .12); }
+.glass-cta-label { position:relative; z-index:1; white-space:nowrap; letter-spacing:.01em; }
+.glass-cta-icon { position:relative; z-index:1; display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:9999px; background:oklch(1 0 0 / .1); transition:transform .25s; }
+.glass-cta-icon svg { width:14px; height:14px; }
+.glass-cta:hover .glass-cta-icon { transform:translate(1px,-1px); }
+@media (prefers-reduced-motion: reduce) { .glass-cta-spin > span, .glass-cta-beam { animation:none; } }
+/* Floats top-centre of the section so nothing below moves */
+.tutorial-cta-slot { position:absolute; top:14px; left:50%; transform:translateX(-50%); z-index:30; pointer-events:none; }
+.tutorial-cta-slot > * { pointer-events:auto; }
+/* Lekha mode choice sits a little lower and centred once the tutorial pill shows */
+.dashboard-shell.lekha-focused.has-tutorial .lekha-choice, .dashboard-shell.lekha-focused.has-tutorial .lekha-mode-select { padding-top:48px; }
