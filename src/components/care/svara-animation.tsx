@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import listening from '@/assets/svara/listening.webm.asset.json';
-import speaking from '@/assets/svara/speaking-trim.webm.asset.json';
+import speaking from '@/assets/svara/speaking-keyed.webm.asset.json';
 import greeting from '@/assets/svara/greeting.webm.asset.json';
 import idle from '@/assets/svara/idle.webm.asset.json';
 import done from '@/assets/svara/done.webm.asset.json';
