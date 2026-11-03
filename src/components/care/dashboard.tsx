@@ -19,7 +19,6 @@ import { ProfileSettings,useProfilePhoto } from './profile-settings';
 import { DashboardUtilities } from './dashboard-utilities';
 import { SvaraHistory } from './notifications';
 import { HistoryButton,HistoryScreen } from './history-screen';
-import { CaregiverLekha } from './caregiver-lekha';
 import { CarePlanForm } from './care-plan-form';
 import { SelectField,TextField,SaveButton } from './fields';
 import { Transcription } from './transcription';
@@ -38,10 +37,10 @@ type Appointment=Data['appointments'][number];
 type HealthCard=Data['cards'][number];
 export type Section='home'|'updates'|'milan'|'lekha'|'sutra'|'care-plan'|'settings'|'svara'|'emergency'|'taal';
 const teamSections=[{key:'home',name:'Home',Icon:Home},{key:'updates',name:'Care Updates',Icon:Activity},{key:'milan',name:'Milan',Icon:CalendarDays},{key:'lekha',name:'Lekha',Icon:FileText},{key:'sutra',name:'Sutra',Icon:GitBranch},{key:'care-plan',name:'Care Plan',Icon:ClipboardList},{key:'taal',name:'Taal',Icon:Clock}] as const;
-const caregiverSections=[{key:'home',name:'Home',Icon:Home},{key:'svara',name:'Svara',Icon:MessageCircleHeart},{key:'milan',name:'Milan',Icon:CalendarDays},{key:'lekha',name:'Lekha',Icon:FileText},{key:'sutra',name:'Sutra',Icon:GitBranch},{key:'emergency',name:'Emergency',Icon:Phone}] as const;
+const caregiverSections=[{key:'home',name:'Home',Icon:Home},{key:'svara',name:'Svara',Icon:MessageCircleHeart},{key:'milan',name:'Milan',Icon:CalendarDays},{key:'sutra',name:'Sutra',Icon:GitBranch},{key:'emergency',name:'Emergency',Icon:Phone}] as const;
 const TUTORIAL:Record<string,string>={updates:'Watch Care Updates Tutorial',milan:'Watch Milan Tutorial',lekha:'Watch Lekha Tutorial',sutra:'Watch Sutra Tutorial','care-plan':'Watch Care Plan Tutorial',taal:'Watch Taal Tutorial',svara:'Watch Svara Tutorial',home:'Watch Platform Tutorial'};
 /** Tutorial pill per section; Care Team Home has none and Care Team Lekha shows it only once a visit is opened. */
-export function tutorialLabel(role:DemoRole,section:string,lekhaOpen:boolean):string|null{const allowed=role==='care-team'?['updates','milan','sutra','care-plan','taal',...(lekhaOpen?['lekha']:[])]:['home','svara','milan','lekha','sutra'];return allowed.includes(section)?TUTORIAL[section]??null:null;}
+export function tutorialLabel(role:DemoRole,section:string,lekhaOpen:boolean):string|null{const allowed=role==='care-team'?['updates','milan','sutra','care-plan','taal',...(lekhaOpen?['lekha']:[])]:['home','svara','milan','sutra'];return allowed.includes(section)?TUTORIAL[section]??null:null;}
 export function Dashboard({role,section}:{role:DemoRole;section:Section}){
  const fetchData=useServerFn(getCareData),enter=useServerFn(openDemo);const queryClient=useQueryClient();const [ready,setReady]=useState(false);const [entryError,setEntryError]=useState('');const collapsed=true;const [selected,setSelected]=useState('');const [priorityFilter,setPriorityFilter]=useState('Priority Review');const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);const [lekhaFocus,setLekhaFocus]=useState(false);useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(''),5000);return()=>clearTimeout(t);},[notice]);
  const query=useQuery({queryKey:['care-data',role],queryFn:fetchData,enabled:ready,refetchInterval:10000});
@@ -63,7 +62,7 @@ export function Dashboard({role,section}:{role:DemoRole;section:Section}){
  {section==='updates'&&<Updates data={data} initialFilter={priorityFilter} busy={busy} run={run} onMilan={id=>{setSelected(id);void go('milan');}} onEditPlan={id=>{setSelected(id);void go('care-plan');}}/>}
  {section==='svara'&&baby&&<Svara key={baby.id} baby={baby} cards={data.cards.filter(c=>c.baby_id===baby.id)} busy={busy} run={run}/>}
  {section==='milan'&&<MilanWorkspace data={data} role={role} busy={busy} run={run} onDocument={id=>{if(id)sessionStorage.setItem('lekha-appointment',id);void go('lekha');}}/>}
- {section==='lekha'&&role==='care-team'&&<LekhaWorkspace data={data} busy={busy} run={run} onFocus={setLekhaFocus}/>}{section==='lekha'&&role==='caregiver'&&<CaregiverLekha data={data}/>}
+ {section==='lekha'&&role==='care-team'&&<LekhaWorkspace data={data} busy={busy} run={run} onFocus={setLekhaFocus}/>}
  {section==='taal'&&role==='care-team'&&<TaalWorkspace/>}
  {section==='sutra'&&<SutraWorkspace data={data} role={role}/>}
  {section==='settings'&&<ProfileSettings role={role} defaultName={role==='care-team'?'Dr. Ananya Rao':(baby?.caregiver_name??'Caregiver')} relationship={(baby?.plan as unknown as CarePlan|undefined)?.relationship}/>}

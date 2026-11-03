@@ -79,7 +79,7 @@ function LekhaSession({data,appt,busy,run,onClose}:{data:Data;appt:Appointment;b
     <div className="lekha-top"><Button variant="ghost" onClick={()=>void leave()} disabled={localBusy}><ArrowLeft/>Appointments</Button><span className={`lekha-live-pill ${listening?'is-on':''}`}><i/>{recorder.processing&&!listening?'Saving audio…':listening?'Recording':'Paused'}</span></div>
     <div className="lekha-live-center">
      <p className="lekha-live-who">{baby?.baby_name} · {baby?.caregiver_name} · {appt.reason}</p>
-     <Mascot name="lekha" state={listening?'working':'idle'} size={panel?150:190}/>
+     <CharacterVideo clip={listening?'lekha-writing':'lekha-idle'} size={panel?150:190}/>
      <div className={`lekha-wave ${listening?'is-on':''}`} aria-hidden="true">{Array.from({length:13},(_,i)=><span key={i} style={{animationDelay:`${(i%7)*0.11}s`}}/>)}</div>
      <h1>{listening?'Listening to your consultation':'Recording paused'}</h1>
      <p>Speak naturally with the caregiver. Lekha understands who said what and organises it into an A4 encounter document when you finish.</p>
