@@ -152,10 +152,11 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       </div>
     </div>}
 
-    {stage === 'success' && <div className="svara-stage-center">
+    {stage === 'success' && <div className="svara-stage-center completion-screen">
       <div className="svara-hero-orb"><SvaraAnimation state="completion" onComplete={() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } })} /></div>
-      <h1 className="svara-title">Card submitted to your care team</h1>
-      <p className="svara-lede">Taking you back to Home…</p>
+      <span className="completion-eyebrow">Svara</span>
+      <h1 className="completion-title">Health Card sent to your care team</h1>
+      <p className="completion-note">Taking you back to Home…</p>
     </div>}
   </div>;
 }
