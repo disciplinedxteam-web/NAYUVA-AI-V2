@@ -22,7 +22,7 @@ import flowerLavender from "@/assets/flower-lavender.png";
 import flowerYellow from "@/assets/flower-yellow.png";
 import { CareGraphic } from "@/components/care-graphic";
 import { SiteHeader } from "@/components/site-header";
-import { ProductOrb, type ProductState } from "@/components/product-orb";
+import { SvaraAnimation } from "@/components/care/svara-animation";
 import { AwardBadge } from "@/components/ui/award-badge";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
 import rajeev from "@/assets/rajeev-portrait.png.asset.json";
@@ -275,7 +275,7 @@ function Products() {
                   </ul>
                 </div>
                 <div className="min-w-0 flex-1">
-                  {p.name === "SVARA" ? <ProductOrb name={p.name} state={p.state as ProductState} /> : <div className="flex justify-center"><CharacterVideo clip={p.name === "TAAL" ? "taal" : p.name === "LEKHA" ? "lekha-writing" : p.name === "MILAN" ? "milan-writing" : "sutra-search"} size={360} /></div>}
+                  {p.name === "SVARA" ? <div className="product-svara flex justify-center"><SvaraAnimation state="idle" /></div> : <div className="flex justify-center"><CharacterVideo clip={p.name === "TAAL" ? "taal" : p.name === "LEKHA" ? "lekha-writing" : p.name === "MILAN" ? "milan-writing" : "sutra-search"} size={360} /></div>}
                 </div>
               </div>
               {i < products.length - 1 && <div className="h-px bg-primary/15" />}

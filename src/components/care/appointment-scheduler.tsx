@@ -1,13 +1,13 @@
 import { useMemo, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowLeft, ArrowRight, CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Search, User, X } from 'lucide-react';
+import { ArrowLeft, CalendarDays, ChevronLeft, ChevronRight, FileText, Search, User, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassToggle } from '@/components/ui/glass-toggle';
 import { useLanguage } from '@/components/language-provider';
 import { createAppointment, getCareData } from '@/lib/care.functions';
 import { reasons } from '@/lib/care-domain';
-import { CareTicket } from './care-ticket';
 import { CharacterVideo } from './character-video';
+import { CompletionScreen } from './completion-screen';
 type Data = Awaited<ReturnType<typeof getCareData>>;
 type Run = (action: () => Promise<unknown>, message: string) => Promise<void>;
 export function ProfileSearch({ babies, value, onSelect }: { babies: Data['babies']; value: string; onSelect: (id: string) => void }) {
@@ -35,14 +35,9 @@ export function Scheduler({ data, busy, run, onDone, initialBabyId = '' }: { dat
   const baby = data.babies.find(b => b.id === babyId);
   const days = useMemo(() => { const first = month.getDay(); const n = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate(); return [...Array<null>(first).fill(null), ...Array.from({ length: n }, (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1))]; }, [month]);
   const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  const [confirming, setConfirming] = useState(false); const [stamped, setStamped] = useState(false); const [scheduled, setScheduled] = useState(false);
-  if (scheduled && baby) return <div className="scheduler-confirm scheduler-done"><CharacterVideo clip="milan-done" /><h2 className="svara-title">Appointment confirmed</h2><p className="nv-sub">Details sent to caregiver {baby.caregiver_name}.</p><Button type="button" onClick={onDone}>Back to appointments<ArrowRight /></Button></div>;
-  if (confirming && baby && date) return <div className="scheduler-confirm">
-    <h2 className="svara-title">Confirm this appointment</h2>
-    <CareTicket source="Milan" title={baby.baby_name} subtitle={reason} date={date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} stamp={stamped ? 'Approved' : null} stubLabel="Care team" fields={[{ label: 'Caregiver', value: baby.caregiver_name }, { label: 'Date', value: date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' }) }, { label: 'Time', value: `${time} – ${endTime} IST` }, { label: 'Reason', value: reason }, { label: 'Mode', value: mode==='online'?'Online video':'In-person' }, { label: 'Location', value: mode==='online'?'Private Nayuva consultation':settings['facilityName'] || 'Not configured' }, { label: 'Status', value: 'Scheduled' }]} action={{ label: 'Approve', disabled: busy, onClick: () => { setStamped(true); window.setTimeout(() => { void run(async () => { await create({ data: { babyId: baby.id, date: iso(date), time, endTime, mode:mode as 'offline'|'online', reason, location: { facilityName: settings['facilityName'] ?? '', address: settings['address'] ?? '', mapsLink } } }); setScheduled(true); }, 'Appointment scheduled and shared with the caregiver.');  }, 900); } }} />
-    <Button type="button" variant="ghost" disabled={stamped} onClick={() => setConfirming(false)}><ArrowLeft />Edit details</Button>
-  </div>;
-  return <form className="ws-split scheduler-compact" onSubmit={e => { e.preventDefault(); if (!baby || !date || !time || !endTime || endTime <= time) return; setStamped(false); setConfirming(true); }}>
+  const [scheduled, setScheduled] = useState(false);
+  if (scheduled && baby && date) return <CompletionScreen character={<CharacterVideo clip="milan-done" />} eyebrow="Milan" title="Appointment confirmed" detail={`${baby.baby_name} · ${date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })} · ${time} IST`} note={`Details shared with ${baby.caregiver_name}`} onDone={onDone} />;
+  return <form className="ws-split scheduler-compact" onSubmit={e => { e.preventDefault(); if (!baby || !date || !time || !endTime || endTime <= time) return; void run(async () => { await create({ data: { babyId: baby.id, date: iso(date), time, endTime, mode:mode as 'offline'|'online', reason, location: { facilityName: settings['facilityName'] ?? '', address: settings['address'] ?? '', mapsLink } } }); setScheduled(true); }, 'Appointment scheduled and shared with the caregiver.'); }}>
     <section className="ws-panel">
       <div className="ws-panel-title"><CalendarDays /><div>Date & time<small>India Standard Time</small></div></div>
       <div className="cal-head"><Button type="button" variant="ghost" size="icon" aria-label="Previous month" disabled={month <= new Date(today.getFullYear(), today.getMonth(), 1)} onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}><ChevronLeft /></Button><strong>{month.toLocaleDateString(`${language}-IN`, { month: 'long', year: 'numeric' })}</strong><Button type="button" variant="ghost" size="icon" aria-label="Next month" onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}><ChevronRight /></Button></div>
