@@ -1,3 +1,4 @@
+import { CompletionScreen } from './completion-screen';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
@@ -74,7 +75,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
 
   async function send() {
     if (!session) return; setBusy(true); setError('');
-    try { await confirm({ data: { sessionId: session.sessionId, summary } }); onSaved(); setStage('success'); window.setTimeout(() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } }), 4000); }
+    try { await confirm({ data: { sessionId: session.sessionId, summary } }); onSaved(); setStage('success'); }
     catch (e) { setError(e instanceof Error ? e.message : 'Submission failed.'); } finally { setBusy(false); }
   }
 
@@ -152,11 +153,6 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       </div>
     </div>}
 
-    {stage === 'success' && <div className="svara-stage-center completion-screen">
-      <div className="svara-hero-orb"><SvaraAnimation state="completion" onComplete={() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } })} /></div>
-      <span className="completion-eyebrow">Svara</span>
-      <h1 className="completion-title">Health Card sent to your care team</h1>
-      <p className="completion-note">Taking you back to Home…</p>
-    </div>}
+    {stage === 'success' && <CompletionScreen character={<div className="svara-hero-orb"><SvaraAnimation state="completion" /></div>} eyebrow="Check-in recorded" title="Health Card Sent" rows={[{ label: 'Baby', value: session?.babyName ?? 'Baby' }, { label: 'Day of life', value: String(session?.context['day_of_life'] ?? '—') }, { label: 'Triage', value: card?.priority ?? 'Awaiting review' }, { label: 'Status', value: 'Sent to care team' }]} note="Your care team will review it shortly" onDone={() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } })} />}
   </div>;
 }

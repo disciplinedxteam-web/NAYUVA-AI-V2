@@ -13,6 +13,7 @@ import { useQuery,useQueryClient } from '@tanstack/react-query';
 import { Home,Activity,CalendarDays,FileText,GitBranch,ClipboardList,Settings,MessageCircleHeart,Phone,ArrowLeft,ArrowRight,Plus,PanelLeftClose,PanelLeftOpen,Check,Clock,MapPin,Search,ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { HaloNotification } from './halo-notification';
 import GlassmorphismCta from '@/components/ui/glassmorphism-cta';
 import { WorkspaceHeading } from './workspace-heading';
 import { ProfileSettings,useProfilePhoto } from './profile-settings';
@@ -42,7 +43,7 @@ const TUTORIAL:Record<string,string>={updates:'Watch Care Updates Tutorial',mila
 /** Tutorial pill per section; Care Team Home has none and Care Team Lekha shows it only once a visit is opened. */
 export function tutorialLabel(role:DemoRole,section:string,lekhaOpen:boolean):string|null{const allowed=role==='care-team'?['updates','milan','sutra','care-plan','taal',...(lekhaOpen?['lekha']:[])]:['home','svara','milan','sutra'];return allowed.includes(section)?TUTORIAL[section]??null:null;}
 export function Dashboard({role,section}:{role:DemoRole;section:Section}){
- const fetchData=useServerFn(getCareData),enter=useServerFn(openDemo);const queryClient=useQueryClient();const [ready,setReady]=useState(false);const [entryError,setEntryError]=useState('');const collapsed=true;const [selected,setSelected]=useState('');const [priorityFilter,setPriorityFilter]=useState('Priority Review');const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);const [lekhaFocus,setLekhaFocus]=useState(false);useEffect(()=>{if(!notice)return;const t=setTimeout(()=>setNotice(''),5000);return()=>clearTimeout(t);},[notice]);
+ const fetchData=useServerFn(getCareData),enter=useServerFn(openDemo);const queryClient=useQueryClient();const [ready,setReady]=useState(false);const [entryError,setEntryError]=useState('');const collapsed=true;const [selected,setSelected]=useState('');const [priorityFilter,setPriorityFilter]=useState('Priority Review');const [notice,setNotice]=useState('');const [busy,setBusy]=useState(false);const [lekhaFocus,setLekhaFocus]=useState(false);
  const query=useQuery({queryKey:['care-data',role],queryFn:fetchData,enabled:ready,refetchInterval:10000});
  // The server owns demo identity; a role label in the URL never grants access.
  useEffect(()=>{let active=true;setReady(false);void enter({data:role}).then(()=>{if(active){setReady(true);void queryClient.invalidateQueries({queryKey:['care-data']});}}).catch(()=>{if(active)setEntryError('Unable to open your demo account. Please try again.');});return ()=>{active=false;};},[role]);
@@ -55,7 +56,7 @@ export function Dashboard({role,section}:{role:DemoRole;section:Section}){
  <SectionIntro role={role} section={section}/><div className="dashboard-main">{tutorial&&<div className="tutorial-cta-slot"><GlassmorphismCta label={tutorial} avatarSrc={logo.url} avatarAlt="Nayuva" aria-label={`${tutorial} (video coming soon)`}/></div>}<DashboardUtilities role={role} settings={(data?.settings??{}) as Record<string,string>} events={data?.events??[]} onOpen={s=>void go(s as Section)}/>
  <div className="dashboard-content">{entryError?<div role="alert"><p>{entryError}</p><Button onClick={()=>window.location.reload()}>Try again</Button></div>:query.isError?<div role="alert"><h1>Unable to load your care journey</h1><p className="text-muted-foreground my-4">{query.error instanceof Error?query.error.message:'Please try again.'}</p><Button onClick={()=>void query.refetch()}>Try again</Button></div>:!ready||!data?<p className="py-20 text-center text-muted-foreground">Opening your care dashboard…</p>:<>
  { !['milan','lekha','sutra','taal'].includes(section) && <WorkspaceHeading title={section==='settings'?'Settings':title} description={section==='home'?'Your care, updates and next steps.':section==='updates'?'Caregiver updates for clinician review.':section==='care-plan'?'Personalized plans for connected care.':section==='svara'?'Scheduled updates for your care team.':section==='settings'?(role==='care-team'?'Your profile, facility and care contacts.':'Your profile, language and care contacts.'):'Direct access to care contacts.'}/> }
- {notice&&<div className="dashboard-notice" role="status"><Check size={18}/><span>{notice}</span><Button variant="ghost" size="icon" aria-label="Dismiss message" onClick={()=>setNotice('')}>×</Button></div>}
+ {notice&&<HaloNotification message={notice} onClose={()=>setNotice('')}/>}
  
  {section==='home'&&<DashboardHome data={data} baby={baby} role={role} go={go} onPriority={p=>{setPriorityFilter(p);void go('updates');}} onSelectBaby={setSelected}/>}
  {section==='care-plan'&&<Plans babies={babies} busy={busy} run={run} onSelect={setSelected}/>}
