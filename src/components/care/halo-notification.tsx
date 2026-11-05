@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BellRing } from 'lucide-react';
 
 /** Bottom-right halo message: transparent glass card, travelling red rim, 5s countdown ring around the close button that pauses while hovered or pressed. */
-export function HaloNotification({ message, onClose, duration = 5000, title = 'Nayuva update', action }: { message: string; onClose: () => void; duration?: number; title?: string; action?: { label: string; onClick: () => void; disabled?: boolean } }) {
+export function HaloNotification({ message, onClose, duration = 5000, title = 'Nayuva update', action }: { message: string; onClose: () => void; duration?: number; title?: string; action?: { label: string; onClick: () => void; disabled?: boolean } | undefined }) {
   const [paused, setPaused] = useState(false);
   const left = useRef(duration); const started = useRef(0);
   const close = useRef(onClose); close.current = onClose;
