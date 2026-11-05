@@ -44,3 +44,5 @@
 - Sutra answers end with a model SOURCES line that the server validates against the baby's record ids and stores as a [[sources:...]] marker; the chat renders it as clickable source pills, never inline brackets. Sutra dictation uses Sarvam STT only.
 - Character clips are pre-keyed alpha WebM files rendered only through the shared CharacterVideo component (looping, muted, non-interactive), so every product character shares one size reference and never shows a background box.
 - Dashboard messages render only through the shared HaloNotification (bottom-right, 5s hover-pausable) and finished tasks through CompletionScreen (auto-closing, no buttons), so feedback never shifts page content.
+
+- The Namaskar greeting plays full-screen once per fresh site load (SiteIntro in __root); real loading states reuse the same LoadingScreen with a progress bar, so first impressions and loading feel identical.
