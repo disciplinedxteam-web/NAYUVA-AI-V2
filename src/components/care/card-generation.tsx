@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { AssistantCharacter } from './assistant-character';
 import { CharacterVideo, type CharacterClip } from './character-video';
 
 /**
@@ -17,7 +16,7 @@ export function CardGeneration({ assistant, title, phases, clip }: { assistant: 
   const progress = Math.min(96, 8 + (step / Math.max(1, phases.length - 1)) * 88);
   return (
     <div className="card-generation" role="status" aria-live="polite">
-      {clip || assistant === 'lekha' ? <CharacterVideo clip={clip ?? 'lekha-writing'} /> : <AssistantCharacter name={assistant} working />}
+      <CharacterVideo clip={clip ?? (assistant === 'lekha' ? 'lekha-writing' : 'svara-writing')} />
       <h1 className="svara-title">{title}</h1>
       <div className="flux-label-wrap">
         <p key={step} className="flux-label">{phases[step]}</p>

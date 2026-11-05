@@ -18,35 +18,37 @@ export function transcriptText(v: unknown, depth = 0): string {
   return '';
 }
 
-/** Pure reducer for every Sarvam SDK message shape: text chunks stream into Svara's bubble, transcriptions finalise turns. */
+/** Pure reducer for every Sarvam SDK message shape. Each Svara turn gets its own bubble; the opening greeting is
+ * seeded from the known opening line (Svara's first words are often audio-only) and replaced if her real text arrives. */
 export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] {
   const type = String(m['type'] ?? '').toLowerCase();
   const last = lines[lines.length - 1];
-  // Svara's opening bubble opens as soon as she connects, pre-filled with the scripted opening line; real greeting text replaces it when it arrives.
-  // Svara's opening bubble waits (typing dots) for her real spoken greeting; no scripted text is shown.
-  if (type === 'greeting_start') return lines.some((l) => l.role === 'bot') ? lines : [{ role: 'bot', content: '', live: true, pending: true }, ...lines];
-  const isSlot = (l: Line) => l.role === 'bot' && !!l.pending;
-  // Once the caregiver speaks, every earlier Svara bubble is closed, so her next reply always opens a new bubble.
-  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...lines.filter((l) => !(isSlot(l) && !l.content)).map((l) => ({ ...l, live: false, pending: false })), { role: 'user', content: '', live: true }];
+  const close = (ls: Line[]) => ls.filter((l) => !(l.role === 'user' && l.live && !l.content)).map((l) => (l.live || l.pending ? { ...l, live: false } : l));
+  const seed = lines.findIndex((l) => l.pending);
+  const seedOnly = seed >= 0 && !lines.some((l, k) => k !== seed && l.role === 'bot' && l.content) && !lines.some((l) => l.role === 'user' && l.content);
+  if (type === 'greeting_start') {
+    if (lines.some((l) => l.role === 'bot')) return lines;
+    const t = transcriptText(m['text']).trim();
+    return [{ role: 'bot', content: t, live: !t, pending: true }, ...lines];
+  }
+  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...close(lines).map((l) => ({ ...l, pending: false })), { role: 'user', content: '', live: true }];
   if (type.includes('transcription')) {
     const content = transcriptText(m['content'] ?? m['text']).trim().slice(0, 6000); if (!content) return lines;
     const role: Line['role'] = String(m['role'] ?? '').toLowerCase() === 'user' ? 'user' : 'bot';
-    const slot = role === 'bot' ? lines.findIndex(isSlot) : -1;
-    if (slot >= 0) return lines.map((l, k) => (k === slot ? { role, content } : l));
+    if (role === 'bot' && seedOnly) return lines.map((l, k) => (k === seed ? { role: 'bot', content, pending: true } : l));
     const i = findLast(lines, (l) => l.role === role && !!l.live);
     if (i >= 0) return lines.map((l, k) => (k === i ? { role, content } : l));
     if (last && last.role === role && last.content === content) return lines;
-    return [...lines, { role, content }];
+    if (role === 'user') return [...close(lines), { role, content }];
+    return [...close(lines), { role, content }];
   }
   if (type.includes('text')) {
     const t = transcriptText(m['text'] ?? m['content']); if (!t) return lines;
     const chunk = type.includes('chunk');
     const done = String(m['status'] ?? '').toLowerCase() === 'completed';
-    // Svara's greeting text can arrive after the caregiver starts talking: fill the reserved opening bubble first.
-    const greet = lines.findIndex(isSlot);
-    if (greet >= 0) { const g = lines[greet]!; const open = chunk && !done; return lines.map((l, k) => (k === greet ? { role: 'bot' as const, content: (chunk ? g.content + t : t).slice(0, 6000), live: open, pending: open } : l)); }
+    if (seedOnly) { const g = lines[seed]!; const fresh = !g.live; return lines.map((l, k) => (k === seed ? { role: 'bot' as const, content: ((chunk && !fresh ? g.content : '') + t).slice(0, 6000), live: chunk && !done, pending: true } : l)); }
     if (last?.role === 'bot' && last.live) return [...lines.slice(0, -1), { role: 'bot', content: (chunk ? last.content + t : t).slice(0, 6000), live: !done && chunk }];
-    return [...lines.map((l) => (l.role === 'user' && l.live && !l.content ? null : l)).filter(Boolean) as Line[], { role: 'bot', content: t.slice(0, 6000), live: chunk && !done }];
+    return [...close(lines), { role: 'bot', content: t.slice(0, 6000), live: chunk && !done }];
   }
   return lines;
 }
@@ -93,9 +95,9 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
           // The SDK reports states in lowercase; normalise so readiness and the opening bubble are detected.
-          stateCallback: async (s: unknown) => { if (cancelled) return; const value = (typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED').toUpperCase(); if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start' }); setState(value); },
+          stateCallback: async (s: unknown) => { if (cancelled) return; const value = (typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED').toUpperCase(); if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start', text: context['opening_line'] ?? '' }); setState(value); },
           // Let Svara's closing words land in the transcript before the session closes.
-          endCallback: async () => { if (cancelled || ended.current) return; await new Promise((r) => setTimeout(r, 700)); if (cancelled || ended.current) return; if (ready.current || hasCaregiverAnswer(latestLines.current)) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
+          endCallback: async () => { if (cancelled || ended.current) return; await new Promise((r) => setTimeout(r, 2000)); if (cancelled || ended.current) return; if (ready.current || hasCaregiverAnswer(latestLines.current)) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
         agent.current = a;
         await a.start();

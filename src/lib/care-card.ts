@@ -61,4 +61,4 @@ export function parseCard(text: string | null | undefined): CareCard | null {
 export const cardText = (c: CareCard) => c.topics.map((t) => `${t.title}: ${t.finding || t.status}`).join('\n');
 
 /** Topics worth printing: undiscussed placeholders are omitted rather than shown as misleading pills. */
-export const documentTopics = (c: CareCard) => c.topics.filter((t) => t.status !== 'Not discussed' || t.finding.trim().length > 0);
+export const documentTopics = (c: CareCard) => c.topics.filter((t) => t.status !== 'Not discussed' || t.quote.trim().length > 0);

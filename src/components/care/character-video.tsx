@@ -1,3 +1,4 @@
+import svaraWriting from '@/assets/videos/svara-writing.webm.asset.json';
 import taal from '@/assets/videos/taal.webm.asset.json';
 import sutraWave from '@/assets/videos/sutra-wave.webm.asset.json';
 import sutraSearch from '@/assets/videos/sutra-search.webm.asset.json';
@@ -8,6 +9,7 @@ import milanDone from '@/assets/videos/milan-done.webm.asset.json';
 import milanWriting from '@/assets/videos/milan-writing.webm.asset.json';
 
 const clips = {
+  'svara-writing': [svaraWriting.url, 'Svara writing the Health Card'],
   taal: [taal.url, 'Taal character reviewing the care calendar'],
   'sutra-wave': [sutraWave.url, 'Sutra waving hello'],
   'sutra-search': [sutraSearch.url, 'Sutra searching the care journey with a magnifying glass'],

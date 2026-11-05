@@ -3,7 +3,7 @@ import { HaloNotification } from './halo-notification';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
-import { Mic, Phone, ArrowRight, Check, ChevronDown, Loader2, PhoneCall, RotateCcw } from 'lucide-react';
+import { Mic, Phone, Check, ChevronDown, Loader2, PhoneCall, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SvaraVoice, type Line } from './svara-voice';
 import { LekhaDocument } from './lekha-document';
@@ -76,7 +76,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
 
   async function send() {
     if (!session) return; setBusy(true); setError('');
-    try { await confirm({ data: { sessionId: session.sessionId, summary } }); onSaved(); setStage('success'); }
+    try { await confirm({ data: { sessionId: session.sessionId, summary } }); setApproved(true); onSaved(); setStage('success'); }
     catch (e) { setError(e instanceof Error ? e.message : 'Submission failed.'); } finally { setBusy(false); }
   }
 
@@ -143,14 +143,10 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
 
     {stage === 'review' && <div className="svara-stage-center wide">
       <h1 className="svara-title">Review your Health Card</h1>
-      <p className="svara-lede">Check each topic. Approve when it matches what you shared, then send it to your care team.</p>
-      {card ? <div className="svara-report-review"><LekhaDocument meta={{ kind: 'svara', babyName: session?.babyName ?? 'Baby', caregiverName: 'You', reason: 'Daily voice check-in', when: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), clinician: 'Awaiting care team' }} card={card} approved={approved} onEdit={(i, v) => setSummary(JSON.stringify({ ...card, topics: card.topics.map((t, j) => j === i ? { ...t, finding: v } : t) }))} onApprove={() => setApproved(true)} approveLabel={approved ? 'Approved' : 'Approve report'} /></div>
+      <p className="svara-lede">Check each topic. When it matches what you shared, approve it to send it straight to your care team.</p>
+      {card ? <div className="svara-report-review"><LekhaDocument meta={{ kind: 'svara', babyName: session?.babyName ?? 'Baby', caregiverName: 'You', reason: 'Daily voice check-in', when: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), clinician: 'Awaiting care team' }} card={card} approved={approved} onEdit={(i, v) => setSummary(JSON.stringify({ ...card, topics: card.topics.map((t, j) => j === i ? { ...t, finding: v } : t) }))} busy={busy} onApprove={() => void send()} approveLabel="Approve & Send to Care Team" onRedo={() => void redo()} redoLabel="Converse with Svara again" /></div>
         : <p className="svara-error">This earlier draft could not be opened. Start a fresh check-in with Svara below.</p>}
-      <div className="svara-review-actions">
-        {approved && <Button variant="ghost" onClick={() => setApproved(false)}>Undo approval</Button>}
-        {!approved && <Button variant="outline" size="lg" disabled={busy} onClick={() => void redo()}><RotateCcw />Converse with Svara again</Button>}
-        {card && <Button size="lg" disabled={!approved || busy} onClick={() => void send()}>{busy ? <Loader2 className="animate-spin" /> : null}Send to Care Team<ArrowRight /></Button>}
-      </div>
+      {!card && <div className="svara-review-actions"><Button variant="outline" size="lg" disabled={busy} onClick={() => void redo()}><RotateCcw />Converse with Svara again</Button></div>}
     </div>}
 
     {stage === 'success' && <CompletionScreen character={<div className="svara-hero-orb"><SvaraAnimation state="completion" /></div>} eyebrow="Check-in recorded" title="Health Card Sent" rows={[{ label: 'Baby', value: session?.babyName ?? 'Baby' }, { label: 'Day of life', value: String(session?.context['day_of_life'] ?? '—') }, { label: 'Triage', value: card?.priority ?? 'Awaiting review' }, { label: 'Status', value: 'Sent to care team' }]} note="Your care team will review it shortly" onDone={() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } })} />}

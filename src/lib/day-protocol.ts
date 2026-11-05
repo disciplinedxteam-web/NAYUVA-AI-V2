@@ -76,16 +76,17 @@ export function todaysCheckin(plan: { dob?: string; babyName?: string; neonatalC
   ];
   const topics = questions.filter((q) => q.source === 'protocol' || q.source === 'condition').map((q) => q.topic.toLowerCase());
   const list = topics.length > 1 ? `${topics.slice(0, -1).join(', ')} and ${topics.at(-1)}` : topics[0] ?? '';
-  void list;
-  const opening = `Hi, I'm Svara from Nayuva AI. I'm here for ${plan.babyName ? `${plan.babyName}'s` : "your baby's"} check-in today. How are you both doing?`;
-  return { day, theme: entry.theme, questions, opening };
+  const baby = plan.babyName || 'your baby';
+  const opening = `Hi, I'm Svara from Nayuva AI, your newborn care companion. Is this a good time for ${plan.babyName ? `${plan.babyName}'s` : "your baby's"} check-in?`;
+  const agenda = `Today is day ${day} for ${baby}. We'll talk about ${list || 'how things are going'}, and then begin with the first question.`;
+  return { day, theme: entry.theme, questions, opening, agenda };
 }
 
 /** Compact brief for the voice agent: the day, the opening line and the only questions to ask, in order. */
 export function svaraBrief(plan: Parameters<typeof todaysCheckin>[0], now = Date.now(), previous: readonly PreviousTopic[] = []) {
   const t = todaysCheckin(plan, now, previous);
   return [
-    `DAY ${t.day} CHECK-IN (${t.theme}). Always begin by introducing yourself, for example: "${t.opening}"`,
+    `DAY ${t.day} CHECK-IN (${t.theme}). Begin with exactly this greeting: "${t.opening}" Once the caregiver says it is a good time, tell them in your own warm words which day of life it is and what you will cover, like: "${t.agenda}" Then ask the first question.`,
     SVARA_STYLE,
     'Cover ONLY these topics, one at a time, in this order (rephrase naturally, keep the meaning):',
     ...t.questions.map((q, i) => `${i + 1}. [${q.topic}] ${q.text}`),

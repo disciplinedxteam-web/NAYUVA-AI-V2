@@ -10,7 +10,7 @@ describe('day-wise Svara protocol', () => {
   });
   it('opens with the day and asks that day’s questions, then the final concern', () => {
     const t = todaysCheckin({ dob: '2026-09-29', babyName: 'Aarav' }, at('2026-10-19T10:00:00+05:30'));
-    expect(t.opening.startsWith("Hi, I'm Svara from Nayuva AI.")).toBe(true);
+    expect(t.opening.startsWith("Hi, I'm Svara from Nayuva AI")).toBe(true);
     expect(t.opening).toContain('Aarav');
     expect(t.questions.map(q => q.topic)).toEqual(['Feeding', 'Growth and development', 'Caregiver concerns', 'Caregiver concerns']);
   });

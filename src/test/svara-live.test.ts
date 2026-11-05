@@ -24,9 +24,15 @@ describe('phone number entry', () => {
 });
 
 describe('Svara live transcript turns', () => {
-  it('shows no scripted text before Svara speaks', () => {
-    const l = applyMessage([], { type: 'greeting_start' });
-    expect(l).toEqual([{ role: 'bot', content: '', live: true, pending: true }]);
+  it('shows the Svara greeting as soon as she connects', () => {
+    const l = applyMessage([], { type: 'greeting_start', text: "Hi, I'm Svara" });
+    expect(l.map((x) => x.content)).toEqual(["Hi, I'm Svara"]);
+  });
+  it('keeps the greeting and opens a new bubble even without a speech-start event', () => {
+    let l = applyMessage([], { type: 'greeting_start', text: "Hi, I'm Svara. Is now a good time?" });
+    l = applyMessage(l, { type: 'server.event.transcription', role: 'user', content: 'Yes I am free' });
+    l = applyMessage(l, { type: 'server.media.text_chunk', text: 'Lovely. Today is day 5.' });
+    expect(l.map((x) => [x.role, x.content])).toEqual([['bot', "Hi, I'm Svara. Is now a good time?"], ['user', 'Yes I am free'], ['bot', 'Lovely. Today is day 5.']]);
   });
   it('gives Svara a new bubble for her reply after the caregiver speaks', () => {
     let l = applyMessage([], { type: 'greeting_start' });

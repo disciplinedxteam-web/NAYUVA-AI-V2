@@ -15,3 +15,10 @@ describe('document card rules', () => {
     expect(documentTopics(c).map((t) => t.title)).toEqual(['Cord']);
   });
 });
+
+describe('undiscussed topics with filler text', () => {
+  it('drops a "Not discussed" topic even when the finding says so', () => {
+    const c = normalizeCard({ topics: [{ title: 'Temperature', finding: 'Not discussed in this conversation', status: 'Not discussed' }, { title: 'Feeding', finding: 'Every 2 hours', status: 'Normal' }], priority: 'Routine' });
+    expect(documentTopics(c).map((t) => t.title)).toEqual(['Feeding']);
+  });
+});
