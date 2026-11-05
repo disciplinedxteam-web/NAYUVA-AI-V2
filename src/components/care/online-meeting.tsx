@@ -3,17 +3,16 @@ import { CharacterVideo } from './character-video';
 import { DemoGuide, SecureNote } from './demo-guide';
 import { createPortal } from 'react-dom';
 import { useServerFn } from '@tanstack/react-start';
-import { ArrowLeft, Mic, MicOff, PhoneOff, Video, VideoOff, FileText, Loader2, ShieldCheck, PanelRight, X, GitBranch, CalendarDays } from 'lucide-react';
+import { ArrowLeft, Mic, MicOff, PhoneOff, Video, VideoOff, FileText, Loader2, ShieldCheck, PanelRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
-import { approveLekhaDraft, getCareData, finishOnlineConsultation, generateLekhaDraft, getOnlineTranscript, joinOnlineAppointment, transcribeOnlineSegment } from '@/lib/care.functions';
+import { approveLekhaDraft, getCareData, finishOnlineConsultation, generateLekhaDraft, joinOnlineAppointment, transcribeOnlineSegment } from '@/lib/care.functions';
 import type { CareCard } from '@/lib/care-card';
 import { LekhaDocument } from './lekha-document';
-import { ConsultToolsPanel, consultPanels, type ConsultPanel } from './consult-tools';
+import { ConsultToolsPanel, SidePanel, ToolMenu, consultPanels, type ConsultPanel } from './consult-tools';
 import { Check } from 'lucide-react';
 
 type Join = Awaited<ReturnType<typeof joinOnlineAppointment>>;
-type Line = { event_key: string; speaker: string; content: string; spoken_at: string };
 type Signal = { from: string; type: 'hello' | 'ready' | 'offer' | 'answer' | 'ice' | 'bye'; sdp?: RTCSessionDescriptionInit; candidate?: RTCIceCandidateInit };
 const ICE: RTCConfiguration = { iceServers: [{ urls: ['stun:stun.l.google.com:19302', 'stun:stun1.l.google.com:19302'] }] };
 
@@ -26,10 +25,10 @@ function wav(samples: Float32Array, rate: number) {
 }
 
 export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void }) {
-  const join = useServerFn(joinOnlineAppointment), transcribe = useServerFn(transcribeOnlineSegment), transcript = useServerFn(getOnlineTranscript), finish = useServerFn(finishOnlineConsultation), draft = useServerFn(generateLekhaDraft);
+  const join = useServerFn(joinOnlineAppointment), transcribe = useServerFn(transcribeOnlineSegment), finish = useServerFn(finishOnlineConsultation), draft = useServerFn(generateLekhaDraft);
   const [consent, setConsent] = useState(false), [info, setInfo] = useState<Join | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [peer, setPeer] = useState<'waiting' | 'connecting' | 'connected'>('waiting'), [muted, setMuted] = useState(false), [camOff, setCamOff] = useState(false);
-  const [lines, setLines] = useState<Line[]>([]), [card, setCard] = useState<CareCard | null>(null), [ending, setEnding] = useState(false), [ended, setEnded] = useState(false), [drawer, setDrawer] = useState(false), [needTap, setNeedTap] = useState(false);
+  const [card, setCard] = useState<CareCard | null>(null), [ending, setEnding] = useState(false), [ended, setEnded] = useState(false), [drawer, setDrawer] = useState(false), [needTap, setNeedTap] = useState(false);
   const [tool, setTool] = useState<ConsultPanel | null>(null), [careData, setCareData] = useState<Awaited<ReturnType<typeof getCareData>> | null>(null), [toolBusy, setToolBusy] = useState(false), [approved, setApproved] = useState(false);
   const loadData = useServerFn(getCareData), approve = useServerFn(approveLekhaDraft);
   const localVideo = useRef<HTMLVideoElement>(null), remoteVideo = useRef<HTMLVideoElement>(null);
@@ -116,12 +115,6 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
     finally { setBusy(false); }
   }
 
-  useEffect(() => {
-    if (info?.role !== 'care-team' || ended) return;
-    const t = setInterval(() => { void transcript({ data: { id } }).then(setLines).catch(() => undefined); }, 4000);
-    return () => clearInterval(t);
-  }, [info, ended, id]); // eslint-disable-line react-hooks/exhaustive-deps
-
   function toggleMic() { const m = !muted; local.current?.getAudioTracks().forEach(t => (t.enabled = !m)); mutedRef.current = m; setMuted(m); }
   function toggleCam() { const c = !camOff; local.current?.getVideoTracks().forEach(t => (t.enabled = !c)); setCamOff(c); }
   function leave() { cleanup(); onClose(); }
@@ -133,7 +126,7 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
   }
 
   async function runTool(action: () => Promise<unknown>, _message: string) { setToolBusy(true); setError(''); try { await action(); if (info) setCareData(await loadData()); } catch (e) { setError(e instanceof Error ? e.message : 'That action could not be completed.'); } finally { setToolBusy(false); } }
-  function openTool(k: ConsultPanel) { setTool(tool === k ? null : k); setDrawer(false); if (!careData) void loadData().then(setCareData).catch(() => setError('Care details could not be loaded.')); }
+  function openTool(k: ConsultPanel) { setTool(k); setDrawer(false); if (!careData) void loadData().then(setCareData).catch(() => setError('Care details could not be loaded.')); }
 
   if (ended) return <section className="vroom vroom-done">
     <header className="vroom-top"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button><h2><FileText />Consultation document</h2></header>
@@ -161,8 +154,7 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
   </section>;
 
   const team = info.role === 'care-team';
-  const base = team ? '/care-team' : '/caregiver';
-  const room = <section className={`vroom-full ${drawer || tool ? 'has-drawer' : ''}`} aria-label="Online appointment">
+  const room = <section className="vroom-full" aria-label="Online appointment">
     <div className="vroom-stage">
       <video ref={remoteVideo} autoPlay playsInline className="vroom-remote" />
       {needTap && <button type="button" className="vroom-tap" onClick={() => { const v = remoteVideo.current; if (v) { v.muted = false; void v.play(); } setNeedTap(false); }}>Tap to turn on sound</button>}
@@ -173,23 +165,16 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
       <div className="vroom-dock">
         <Button variant="ghost" aria-label={muted ? 'Unmute' : 'Mute'} className={muted ? 'is-off' : ''} onClick={toggleMic}>{muted ? <MicOff /> : <Mic />}</Button>
         <Button variant="ghost" aria-label={camOff ? 'Camera on' : 'Camera off'} className={camOff ? 'is-off' : ''} onClick={toggleCam}>{camOff ? <VideoOff /> : <Video />}</Button>
-        {team && consultPanels.map(x => <Button key={x.key} variant="ghost" aria-label={x.label} title={x.label} className={tool === x.key ? 'is-on' : ''} onClick={() => openTool(x.key)}><x.icon /></Button>)}
-        <Button variant="ghost" aria-label={team ? 'Live transcript' : 'Quick actions'} title={team ? 'Live transcript' : 'Quick actions'} className={drawer ? 'is-on' : ''} onClick={() => { setDrawer(!drawer); setTool(null); }}><PanelRight /></Button>
+        <Button variant="ghost" aria-label="Care tools" title="Care tools" className={drawer || tool ? 'is-on' : ''} onClick={() => { if (tool) { setTool(null); setDrawer(false); } else setDrawer(!drawer); }}><PanelRight /></Button>
         {team && <Button variant="ghost" className="vroom-doc" disabled={ending} onClick={() => void endAndDocument()}><FileText />End & summarise</Button>}
         <Button variant="ghost" aria-label="Leave" className="vroom-leave" onClick={leave}><PhoneOff /></Button>
       </div>
       {error && <p role="alert" className="vroom-alert">{error}</p>}
     </div>
-    {tool && team && <ConsultToolsPanel panel={tool} data={careData} babyId={info.babyId} busy={toolBusy} run={runTool} note="The call continues while you work" onClose={() => setTool(null)} />}
-    {drawer && <aside className="vroom-drawer">
-      <div className="vroom-drawer-top"><h3>{team ? 'Live transcript' : 'Quick actions'}</h3><Button variant="ghost" size="icon" aria-label="Close panel" onClick={() => setDrawer(false)}><X /></Button></div>
-      <div className="vroom-actions">
-        {!team && <a href={`${base}/sutra`} target="_blank" rel="noreferrer"><GitBranch />Ask Sutra</a>}
-        {!team && <a href={`${base}/milan`} target="_blank" rel="noreferrer"><CalendarDays />My appointments</a>}
-      </div>
-      {team && <><h4>Live transcript</h4><p className="vroom-muted">Visible only to the care team. Labelled by each person’s own microphone.</p>
-        <div className="vroom-lines">{lines.length ? lines.map(l => <div key={l.event_key} className={`vroom-line ${l.speaker === 'Care Team' ? 'is-me' : ''}`}><b>{l.speaker}</b><span>{l.content}</span></div>) : <p className="vroom-muted">Lines appear here a few seconds after each person speaks.</p>}</div></>}
-    </aside>}
+    {tool && <ConsultToolsPanel panel={tool} role={team ? 'care-team' : 'caregiver'} size="narrow" data={careData} babyId={info.babyId} busy={toolBusy} run={runTool} note="The call continues while you work" onBack={() => { setTool(null); setDrawer(true); }} onClose={() => { setTool(null); setDrawer(false); }} />}
+    {drawer && !tool && <SidePanel size="narrow" title="Care tools" subtitle={`${info.babyName} · The call continues while you work`} onClose={() => setDrawer(false)}>
+      <ToolMenu options={team ? consultPanels : [{ key: 'plan', label: 'Your Care Plan', description: 'See what your care team planned', icon: consultPanels[0].icon }, consultPanels[1]]} onPick={k => openTool(k as ConsultPanel)} />
+    </SidePanel>}
   </section>;
   return typeof document === 'undefined' ? room : createPortal(room, document.body);
 }

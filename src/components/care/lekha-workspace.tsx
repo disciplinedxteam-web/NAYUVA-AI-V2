@@ -15,7 +15,7 @@ import { WorkspaceHeading } from './workspace-heading';
 import { DemoGuide, SecureNote } from './demo-guide';
 import { LekhaAfterStudio, type LekhaBubble } from './lekha-after-studio';
 import { LekhaDocument } from './lekha-document';
-import { ConsultToolsPanel } from './consult-tools';
+import { ConsultToolsPanel, consultPanels } from './consult-tools';
 import { useLekhaRecording } from './use-lekha-recording';
 import { getCareData, getLekhaCapture, startLekhaCapture, saveLekhaProgress, generateLekhaDraft, approveLekhaDraft } from '@/lib/care.functions';
 import { canStartLekhaMode, isOnlineAppointment, lekhaEligible, lekhaLiveTooShort } from '@/lib/lekha-domain';
@@ -74,7 +74,7 @@ function LekhaSession({data,appt,busy,run,onClose}:{data:Data;appt:Appointment;b
  if(stage==='short')return <section className="lekha-studio"><div className="lekha-top"><Button variant="ghost" onClick={onClose}><ArrowLeft/>Appointments</Button><span className="bento-pill">Recording too short</span></div><div className="lekha-choice"><CharacterVideo clip="lekha-idle"/><h1>I couldn’t hear enough to document</h1><p>The recording ended too early or the microphone picked up very little. No document was created.</p><div className="lekha-short-actions"><Button disabled={localBusy} onClick={()=>void retryLive()}>{localBusy?<Loader2 className="animate-spin"/>:<RotateCcw/>}Retry live recording</Button><Button variant="outline" disabled={localBusy} onClick={()=>void switchToAfter()}><FileText/>Switch to after-visit notes</Button></div></div>{alert}</section>;
  if(stage==='capture'&&mode==='live'){
   const listening=recorder.listening,paused=!listening&&!recorder.processing;
-  const panels=[{key:'plan',label:'Care Plan',icon:ClipboardList},{key:'sutra',label:'Ask Sutra',icon:MessageCircle},{key:'milan',label:'Schedule follow-up',icon:CalendarDays}] as const;
+  const panels=consultPanels;
   return <section className={`lekha-live ${panel?'is-split':''}`} aria-label="Live appointment recording">
    <div className="lekha-live-stage">
     <div className="lekha-top"><Button variant="ghost" onClick={()=>void leave()} disabled={localBusy}><ArrowLeft/>Appointments</Button><span className={`lekha-live-pill ${listening?'is-on':''}`}><i/>{recorder.processing&&!listening?'Saving audio…':listening?'Recording':'Paused'}</span></div>

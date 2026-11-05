@@ -89,7 +89,7 @@ function paintMatches(root: HTMLElement | null, query: string, active: number): 
   return ranges;
 }
 
-export function LekhaDocument({ meta, card, approved, busy = false, onEdit, onApprove, approveLabel = 'Approve & Sign', onShare, onRedo, redoLabel = 'Start again' }: { meta: Meta; card: CareCard; approved: boolean; busy?: boolean; onEdit?: (i: number, v: string) => void; onApprove?: () => void; approveLabel?: string; onShare?: () => void; onRedo?: () => void; redoLabel?: string }) {
+export function LekhaDocument({ meta, card, approved, busy = false, onEdit, onApprove, approveLabel = 'Approve & Sign', onShare, onRedo, redoLabel = 'Start again', extraActions }: { meta: Meta; card: CareCard; approved: boolean; busy?: boolean; onEdit?: (i: number, v: string) => void; onApprove?: () => void; approveLabel?: string; onShare?: () => void; onRedo?: () => void; redoLabel?: string; extraActions?: React.ReactNode }) {
   const pages = paginateTopics(orderedTopics(card));
   const stage = useRef<HTMLDivElement>(null), pdfRoot = useRef<HTMLDivElement>(null), searchInput = useRef<HTMLInputElement>(null);
   const [fit, setFit] = useState(0.8), [mode, setMode] = useState<ZoomMode>('fit'), [page, setPage] = useState(0);
@@ -149,6 +149,7 @@ export function LekhaDocument({ meta, card, approved, busy = false, onEdit, onAp
       <div className="doc-tool-group is-actions">
         <Button variant="ghost" size="icon" aria-label="Download PDF" title="Download PDF" disabled={saving} onClick={() => void download()}>{saving ? <Loader2 className="animate-spin" /> : <Download />}</Button>
         <Button variant="ghost" size="icon" aria-label="Share PDF" title="Share PDF" disabled={saving} onClick={() => void share()}><Share2 /></Button>
+        {extraActions && <><span className="doc-tool-sep" aria-hidden="true" />{extraActions}</>}
         {review && onRedo && <Button variant="outline" size="sm" className="doc-edit-btn" disabled={busy || approved} onClick={onRedo}><RotateCcw />{redoLabel}</Button>}
         {review && onEdit && <Button variant="outline" size="sm" className={`doc-edit-btn ${editing ? 'is-on' : ''}`} aria-pressed={editing} disabled={approved} onClick={() => setEditing(v => !v)}>{editing ? <Check /> : <PenLine />}{editing ? 'Done' : 'Edit'}</Button>}
         {review && <Button size="sm" className="doc-approve-btn" disabled={busy || approved} onClick={() => { setEditing(false); onApprove?.(); }}>{busy ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{approveLabel}</Button>}
