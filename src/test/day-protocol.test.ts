@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { babyDay, todaysCheckin, DAY_PROTOCOL } from '@/lib/day-protocol';
+import { babyDay, todaysCheckin, DAY_PROTOCOL, NEONATAL_CONDITIONS, conditionQuestions, svaraBrief, SVARA_STYLE } from '@/lib/day-protocol';
 const at = (iso: string) => new Date(iso).getTime();
 describe('day-wise Svara protocol', () => {
   it('has 42 days of three questions', () => { expect(DAY_PROTOCOL).toHaveLength(42); expect(DAY_PROTOCOL.every(d => d.questions.length === 3)).toBe(true); });
@@ -16,5 +16,28 @@ describe('day-wise Svara protocol', () => {
   it('adds a condition observation question for jaundice', () => {
     const t = todaysCheckin({ dob: '2026-10-19', neonatalConditions: ['Neonatal Jaundice'] }, at('2026-10-19T10:00:00+05:30'));
     expect(t.questions.some(q => q.source === 'condition' && q.topic === 'Skin and eye colour')).toBe(true);
+  });
+});
+
+describe('Svara condition attribution, follow-ups and conversation rules', () => {
+  const now = at('2026-10-19T10:00:00+05:30');
+  it('prefixes condition questions with the care team attribution and names the condition', () => {
+    const q = todaysCheckin({ dob: '2026-10-19', neonatalConditions: ['Neonatal Jaundice'] }, now).questions.find(x => x.source === 'condition')!;
+    expect(q.text.startsWith('Since your care team noted neonatal jaundice in your baby\'s discharge care plan, I wanted to check:')).toBe(true);
+  });
+  it('gives every listed Care Plan condition an observation question', () => {
+    for (const c of NEONATAL_CONDITIONS) expect(conditionQuestions([c]).length, c).toBeGreaterThan(0);
+  });
+  it('also uses the free-text conditions field', () => {
+    expect(todaysCheckin({ dob: '2026-10-19', conditions: ['Oral Candidiasis (Thrush)'] }, now).questions.some(q => q.topic === 'Mouth and feeding comfort')).toBe(true);
+  });
+  it('asks about last check-in concerns first, and skips normal topics', () => {
+    const t = todaysCheckin({ dob: '2026-10-19' }, now, [{ title: 'Umbilical cord', finding: 'Slight redness near the cord', status: 'Concern' }, { title: 'Feeding', finding: '8 feeds', status: 'Normal' }]);
+    expect(t.questions[0]).toMatchObject({ source: 'followup', text: 'In your last check-in, you mentioned: Slight redness near the cord. How is that now?' });
+    expect(t.questions.filter(q => q.source === 'followup')).toHaveLength(1);
+  });
+  it('brief requires "Just to confirm," confirmations', () => {
+    expect(SVARA_STYLE).toContain('"Just to confirm,"');
+    expect(svaraBrief({ dob: '2026-10-19' }, now)).toContain(SVARA_STYLE);
   });
 });

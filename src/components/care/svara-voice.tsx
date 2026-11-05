@@ -1,6 +1,6 @@
 import { Component, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PhoneOff, Mic, MicOff, Pause, Play, RotateCcw } from 'lucide-react';
-import { registeredSvaraVariables, isConversationComplete } from '@/lib/svara-agent-contract';
+import { registeredSvaraVariables, isConversationComplete, hasCaregiverAnswer } from '@/lib/svara-agent-contract';
 import { Button } from '@/components/ui/button';
 import { SvaraAnimation } from './svara-animation';
 
@@ -66,7 +66,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
   useEffect(() => { latestLines.current = lines; if (lines.length) onTranscript(lines.filter((l) => l.content).map(({ role, content }) => ({ role, content }))); }, [lines, onTranscript]);
 
   // Only a genuinely completed conversation becomes a card; anything else restarts fresh.
-  function finish() { if (ended.current) return; ended.current = true; onTranscript(latestLines.current.filter(l => l.content)); void agent.current?.stop(); agent.current = null; setMuted(false); setHeld(false); if (isConversationComplete(latestLines.current)) onEnded(); else onCancel(); }
+  function finish() { if (ended.current) return; ended.current = true; const settled = latestLines.current.map((l) => ({ ...l, live: false, pending: false })); latestLines.current = settled; setLines(settled); onTranscript(settled.filter(l => l.content)); void agent.current?.stop(); agent.current = null; setMuted(false); setHeld(false); if (isConversationComplete(latestLines.current)) onEnded(); else onCancel(); }
   function toggleMute() { const a = agent.current; if (!a) return; if (a.isMuted()) { a.unmute(); setMuted(false); setHeld(false); } else { a.mute(); setMuted(true); } }
   function toggleHold() { const a = agent.current; if (!a) return; if (held) { a.unmute(); setHeld(false); setMuted(false); } else { a.mute(); setHeld(true); setMuted(true); } }
   useEffect(() => {
@@ -88,8 +88,10 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
           },
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
-          stateCallback: async (s: unknown) => { if (cancelled) return; const value = typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED'; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start', text: context['opening_line'] ?? '' }); setState(value); },
-          endCallback: async () => { if (cancelled || ended.current) return; if (ready.current) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
+          // The SDK reports states in lowercase; normalise so readiness and the opening bubble are detected.
+          stateCallback: async (s: unknown) => { if (cancelled) return; const value = (typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED').toUpperCase(); if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start', text: context['opening_line'] ?? '' }); setState(value); },
+          // Let Svara's closing words land in the transcript before the session closes.
+          endCallback: async () => { if (cancelled || ended.current) return; await new Promise((r) => setTimeout(r, 700)); if (cancelled || ended.current) return; if (ready.current || hasCaregiverAnswer(latestLines.current)) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
         agent.current = a;
         await a.start();

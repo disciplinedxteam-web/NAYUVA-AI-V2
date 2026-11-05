@@ -39,9 +39,10 @@ export const Route = createFileRoute('/api/public/sarvam-questions')({
         const returning = (cards?.length ?? 0) > 0;
         const { parseCard } = await import('@/lib/care-card');
         const lastFor = (topic: string) => { const answer=responses?.find(a=>a.topic.toLowerCase()===topic.toLowerCase()&&a.original_text); if(answer)return `Previous caregiver answer: ${answer.original_text}`; for (const c of cards ?? []) { const k = parseCard(c.summary_text); const t = k?.topics.find((x) => x.title.toLowerCase() === topic.toLowerCase()); if (t) return `Last time: ${t.finding}`; } return ''; };
-        const { todaysCheckin } = await import('@/lib/day-protocol');
-        const day = todaysCheckin({ ...(b.plan as Record<string, unknown>), babyName: b.baby_name });
-        const questions = day.questions.map((q, i) => ({ question_id: `day${day.day}_q${i + 1}`, topic: q.topic, question_text: q.text, answer_type: 'free_text', context_note: q.source === 'final' ? '' : lastFor(q.topic), ...(q.source === 'final' ? { mandatory: true, ask_last: true } : {}) }));
+        const { todaysCheckin, SVARA_STYLE } = await import('@/lib/day-protocol');
+        const { previousTopics } = await import('@/lib/svara-context.server');
+        const day = todaysCheckin({ ...(b.plan as Record<string, unknown>), babyName: b.baby_name }, Date.now(), await previousTopics(db, s.baby_id));
+        const questions = day.questions.map((q, i) => ({ question_id: `day${day.day}_q${i + 1}`, topic: q.topic, question_text: q.text, answer_type: 'free_text', context_note: q.source === 'final' || q.source === 'followup' ? '' : lastFor(q.topic), ...(q.source === 'final' ? { mandatory: true, ask_last: true } : {}) }));
         const missingTopics: string[] = []; void qs; void topics;
         const today = new Date().toISOString().slice(0, 10);
         return json({
@@ -54,11 +55,11 @@ export const Route = createFileRoute('/api/public/sarvam-questions')({
           due_topics: day.questions.map((q) => q.topic),
           missing_approved_topics: missingTopics,
           previous_answers: responses ?? [],
-          instructions: "Start with opening_line. Never diagnose or give treatment advice. Ask only the returned approved questions, one at a time. Use context_note and previous_answers to ask what changed; do not repeat answered questions within this check-in. Never invent generic replacement questions. Save each exact answer with submit_observation. Ask the mandatory final concern last.",
+          instructions: SVARA_STYLE + " Start with opening_line. Ask any follow-up questions about the last check-in first. Never diagnose or give treatment advice. Ask only the returned approved questions, one at a time. Use context_note and previous_answers to ask what changed; do not repeat answered questions within this check-in. Never invent generic replacement questions. Save each exact answer with submit_observation. Ask the mandatory final concern last.",
           previous_updates: (cards ?? []).map((c) => { const k = parseCard(c.summary_text); return k ? k.topics.map((t) => `${t.title}: ${t.finding}`).join('; ') : c.category; }),
           clinician_instructions: (ins ?? []).filter((i) => !i.expires_on || i.expires_on >= today).map((i) => i.instruction),
           questions,
-          closing_note: 'After all questions are answered, thank the caregiver and confirm their answers have been saved for the care team.',
+          closing_note: 'After all questions are answered, say only: "Thank you. Your answers have been recorded for your care team. Take care."',
         });
       },
     },
