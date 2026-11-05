@@ -1,4 +1,5 @@
 import { CompletionScreen } from './completion-screen';
+import { HaloNotification } from './halo-notification';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useNavigate } from '@tanstack/react-router';
@@ -98,11 +99,12 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   if (stage === 'web' && session) return <SvaraVoice profileId={session.profileId} context={session.context} babyName={session.babyName} onTranscript={onTranscript} onEnded={onEnded} onCancel={onAbandoned} />;
 
   return <div className="svara-stage">
+    {error && <HaloNotification title="Svara" message={error} duration={7000} onClose={() => setError('')} action={stage === 'choose' && last ? { label: last === 'web' ? 'Talk to Svara again' : 'Call me again', disabled: busy || (last === 'phone' && !(phoneValid && consent)), onClick: () => void (last === 'web' ? startWeb() : startPhone()) } : undefined} />}
     {stage === 'choose' && <div className="svara-stage-center">
       <div className="svara-hero-orb"><SvaraAnimation state="greeting" /></div>
       <h1 className="svara-title">Your check-in with Svara</h1>
       <p className="svara-lede">Choose how you would like to talk. Svara asks only the questions in your baby’s Care Plan.{due ? '' : ' Your next scheduled check-in is not due yet, but you can talk to Svara anytime.'}</p>
-      {error && <div className="svara-retry"><p role="alert" className="svara-error">{error}</p>{last && <Button size="lg" disabled={busy || (last === 'phone' && !(phoneValid && consent))} onClick={() => void (last === 'web' ? startWeb() : startPhone())}>{busy ? <Loader2 className="animate-spin" /> : <RotateCcw />}{last === 'web' ? 'Talk to Svara again' : 'Call me again'}</Button>}</div>}
+
       <div className="svara-ctas">
         <div className={`svara-cta-group ${open === 'web' ? 'open' : ''}`}>
           <Button type="button" variant="ghost" className="svara-cta primary" disabled={busy} aria-expanded={open === 'web'} onClick={() => setOpen(open === 'web' ? null : 'web')}><Mic /><span><strong>Talk on this website</strong><small>Live voice with on-screen transcript</small></span><ChevronDown className="chev" /></Button>
@@ -129,7 +131,6 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     </div>}
 
     {stage === 'phone' && <div className="svara-stage-center">
-      {error && <p role="alert" className="svara-error">{error}</p>}
       <div className="svara-hero-orb"><SvaraAnimation state={call === 'in_progress' ? 'listening' : 'idle'} /></div>
       {call === 'in_progress' ? <p className="svara-lede">{CALL_TEXT['in_progress']}</p> : <>
         <h1 className="svara-title">{call === 'completed' ? 'Preparing your Health Card' : 'Svara is calling you'}</h1>
@@ -143,7 +144,6 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
     {stage === 'review' && <div className="svara-stage-center wide">
       <h1 className="svara-title">Review your Health Card</h1>
       <p className="svara-lede">Check each topic. Approve when it matches what you shared, then send it to your care team.</p>
-      {error && <p role="alert" className="svara-error">{error}</p>}
       {card ? <div className="svara-report-review"><LekhaDocument meta={{ kind: 'svara', babyName: session?.babyName ?? 'Baby', caregiverName: 'You', reason: 'Daily voice check-in', when: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }), clinician: 'Awaiting care team' }} card={card} approved={approved} onEdit={(i, v) => setSummary(JSON.stringify({ ...card, topics: card.topics.map((t, j) => j === i ? { ...t, finding: v } : t) }))} onApprove={() => setApproved(true)} approveLabel={approved ? 'Approved' : 'Approve report'} /></div>
         : <p className="svara-error">This earlier draft could not be opened. Start a fresh check-in with Svara below.</p>}
       <div className="svara-review-actions">

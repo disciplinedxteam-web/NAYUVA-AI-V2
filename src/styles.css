@@ -2449,3 +2449,5 @@ body:has(.lekha-action-drawer) .lekha-capture-layout { grid-template-columns:1fr
 .lekha-live-panel-body table { font-size:12px; display:block; max-width:100%; overflow-x:auto; }
 .lekha-live-panel-body th, .lekha-live-panel-body td { padding:6px 8px; }
 @media (max-width:860px) { .lekha-live.is-split, .lekha-after-split.is-split { grid-template-columns:1fr; } .lekha-live-panel, .vroom-drawer { max-width:none; } }
+.halo-action { align-self:flex-start; margin-top:6px; font-size:.78rem; font-weight:600; color:var(--destructive); text-decoration:underline; text-underline-offset:3px; cursor:pointer; }
+.halo-action:disabled { opacity:.5; cursor:default; }

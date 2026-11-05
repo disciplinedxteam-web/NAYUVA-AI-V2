@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowUp, Check, FileText, Loader2, Mic, Plus, RotateCcw, Save, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Mascot } from './mascot';
+import { HaloNotification } from './halo-notification';
 import { lekhaChecklist } from '@/lib/lekha-checklist';
 import { lekhaReadyToSummarize } from '@/lib/lekha-domain';
 import { sutraGreeting } from '@/lib/sutra-domain';
@@ -28,7 +29,7 @@ export function LekhaAfterStudio({ babyName, caregiverName, reason, when, notes,
   babyName: string; caregiverName: string; reason: string; when: string; notes: string; covered: Set<string>; recorder: Recorder; lekhaNotes: LekhaBubble[]; busy: boolean; error: string;
   onAppend: (line: string) => void; onDraft: () => void; onRestart: () => void; onSummarize: () => void; onBack: () => void;
 }) {
-  const [draft, setDraft] = useState(''), [greeting, setGreeting] = useState('Hello'), [reading, setReading] = useState(false), [fileError, setFileError] = useState(''), [confirmRestart, setConfirmRestart] = useState(false);
+  const [draft, setDraft] = useState(''), [greeting, setGreeting] = useState('Hello'), [reading, setReading] = useState(false), [fileError, setFileError] = useState(''), [dismissed, setDismissed] = useState(''), [confirmRestart, setConfirmRestart] = useState(false);
   const file = useRef<HTMLInputElement>(null), log = useRef<HTMLDivElement>(null);
   const bubbles = [...notesToBubbles(notes), ...lekhaNotes];
   const hasNotes = notes.trim().length > 0;
@@ -85,7 +86,7 @@ export function LekhaAfterStudio({ babyName, caregiverName, reason, when, notes,
       </form>}
 
       {confirmRestart && <div className="lekha-restart" role="alertdialog" aria-label="Restart documentation"><p>Clear everything said so far and start again?</p><Button size="sm" variant="ghost" onClick={() => setConfirmRestart(false)}><X />Keep</Button><Button size="sm" variant="destructive" onClick={() => { setConfirmRestart(false); onRestart(); }}><RotateCcw />Restart</Button></div>}
-      {(error || recorder.error || fileError) && <div className="lekha-after-alert" role="alert"><p>{error || recorder.error || fileError}</p>{recorder.error && <Button size="sm" variant="outline" disabled={recorder.processing} onClick={() => void recorder.retry()}>Retry audio</Button>}</div>}
+      {(error || recorder.error || fileError) && (error || recorder.error || fileError) !== dismissed && <HaloNotification title="Lekha" message={error || recorder.error || fileError} duration={7000} onClose={() => { setDismissed(error || recorder.error || fileError); setFileError(''); }} action={recorder.error ? { label: 'Retry audio', disabled: recorder.processing, onClick: () => void recorder.retry() } : undefined} />}
 
       <div className="lekha-ribbon" aria-label={`Recommended topics, ${covered.size} of 8 covered`}>
         <div className="lekha-ribbon-head"><strong>Best-practice checklist</strong><span>Recommended, not required · {covered.size}/8</span></div>

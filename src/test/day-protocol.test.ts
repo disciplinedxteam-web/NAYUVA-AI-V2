@@ -10,7 +10,8 @@ describe('day-wise Svara protocol', () => {
   });
   it('opens with the day and asks that day’s questions, then the final concern', () => {
     const t = todaysCheckin({ dob: '2026-09-29', babyName: 'Aarav' }, at('2026-10-19T10:00:00+05:30'));
-    expect(t.opening.startsWith('Today is day 21 for Aarav')).toBe(true);
+    expect(t.opening.startsWith("Hi, I'm Svara from Nayuva AI.")).toBe(true);
+    expect(t.opening).toContain('Aarav');
     expect(t.questions.map(q => q.topic)).toEqual(['Feeding', 'Growth and development', 'Caregiver concerns', 'Caregiver concerns']);
   });
   it('adds a condition observation question for jaundice', () => {
@@ -36,8 +37,9 @@ describe('Svara condition attribution, follow-ups and conversation rules', () =>
     expect(t.questions[0]).toMatchObject({ source: 'followup', text: 'In your last check-in, you mentioned: Slight redness near the cord. How is that now?' });
     expect(t.questions.filter(q => q.source === 'followup')).toHaveLength(1);
   });
-  it('brief requires "Just to confirm," confirmations', () => {
-    expect(SVARA_STYLE).toContain('"Just to confirm,"');
+  it('brief keeps Svara non-diagnostic and introducing herself', () => {
+    expect(SVARA_STYLE).toContain('Never diagnose');
+    expect(SVARA_STYLE).toContain('Svara from Nayuva AI');
     expect(svaraBrief({ dob: '2026-10-19' }, now)).toContain(SVARA_STYLE);
   });
 });

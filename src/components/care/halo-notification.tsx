@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BellRing } from 'lucide-react';
 
 /** Bottom-right halo message: transparent glass card, travelling red rim, 5s countdown ring around the close button that pauses while hovered or pressed. */
-export function HaloNotification({ message, onClose, duration = 5000 }: { message: string; onClose: () => void; duration?: number }) {
+export function HaloNotification({ message, onClose, duration = 5000, title = 'Nayuva update', action }: { message: string; onClose: () => void; duration?: number; title?: string; action?: { label: string; onClick: () => void; disabled?: boolean } }) {
   const [paused, setPaused] = useState(false);
   const left = useRef(duration); const started = useRef(0);
   const close = useRef(onClose); close.current = onClose;
@@ -22,7 +22,7 @@ export function HaloNotification({ message, onClose, duration = 5000 }: { messag
     <span className="halo-rim" aria-hidden="true"><i /><i /><i /></span>
     <div className="halo-body">
       <span className="halo-icon" aria-hidden="true"><BellRing size={16} /></span>
-      <div className="halo-text"><strong>Nayuva update</strong><span>{message}</span></div>
+      <div className="halo-text"><strong>{title}</strong><span>{message}</span>{action && <button type="button" className="halo-action" disabled={action.disabled} onClick={() => { action.onClick(); close.current(); }}>{action.label}</button>}</div>
       <button type="button" className="halo-close" aria-label="Dismiss message" onClick={() => close.current()}>
         <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r={r} className="halo-ring-bg" /><circle cx="16" cy="16" r={r} className="halo-ring" style={{ strokeDasharray: c, ['--halo-c' as string]: c }} /></svg>
         <span>×</span>

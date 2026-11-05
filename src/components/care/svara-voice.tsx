@@ -3,6 +3,7 @@ import { PhoneOff, Mic, MicOff, Pause, Play, RotateCcw } from 'lucide-react';
 import { registeredSvaraVariables, isConversationComplete, hasCaregiverAnswer } from '@/lib/svara-agent-contract';
 import { Button } from '@/components/ui/button';
 import { SvaraAnimation } from './svara-animation';
+import { HaloNotification } from './halo-notification';
 
 export type Line = { role: 'user' | 'bot'; content: string; live?: boolean; pending?: boolean };
 type Agent = { stop: () => Promise<void>; mute: () => void; unmute: () => void; isMuted: () => boolean };
@@ -22,9 +23,11 @@ export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] 
   const type = String(m['type'] ?? '').toLowerCase();
   const last = lines[lines.length - 1];
   // Svara's opening bubble opens as soon as she connects, pre-filled with the scripted opening line; real greeting text replaces it when it arrives.
-  if (type === 'greeting_start') return lines.some((l) => l.role === 'bot') ? lines : [{ role: 'bot', content: transcriptText(m['text']).slice(0, 6000), live: true, pending: true }, ...lines];
-  const isSlot = (l: Line) => l.role === 'bot' && (!!l.pending || (!!l.live && !l.content));
-  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...lines.map((l) => (isSlot(l) ? l : { ...l, live: false })), { role: 'user', content: '', live: true }];
+  // Svara's opening bubble waits (typing dots) for her real spoken greeting; no scripted text is shown.
+  if (type === 'greeting_start') return lines.some((l) => l.role === 'bot') ? lines : [{ role: 'bot', content: '', live: true, pending: true }, ...lines];
+  const isSlot = (l: Line) => l.role === 'bot' && !!l.pending;
+  // Once the caregiver speaks, every earlier Svara bubble is closed, so her next reply always opens a new bubble.
+  if (type.includes('user_speech_start')) return last?.role === 'user' && last.live ? lines : [...lines.filter((l) => !(isSlot(l) && !l.content)).map((l) => ({ ...l, live: false, pending: false })), { role: 'user', content: '', live: true }];
   if (type.includes('transcription')) {
     const content = transcriptText(m['content'] ?? m['text']).trim().slice(0, 6000); if (!content) return lines;
     const role: Line['role'] = String(m['role'] ?? '').toLowerCase() === 'user' ? 'user' : 'bot';
@@ -41,7 +44,7 @@ export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] 
     const done = String(m['status'] ?? '').toLowerCase() === 'completed';
     // Svara's greeting text can arrive after the caregiver starts talking: fill the reserved opening bubble first.
     const greet = lines.findIndex(isSlot);
-    if (greet >= 0) { const g = lines[greet]!; const base = g.pending ? '' : g.content; return lines.map((l, k) => (k === greet ? { role: 'bot' as const, content: (chunk ? base + t : t).slice(0, 6000), live: chunk && !done } : l)); }
+    if (greet >= 0) { const g = lines[greet]!; const open = chunk && !done; return lines.map((l, k) => (k === greet ? { role: 'bot' as const, content: (chunk ? g.content + t : t).slice(0, 6000), live: open, pending: open } : l)); }
     if (last?.role === 'bot' && last.live) return [...lines.slice(0, -1), { role: 'bot', content: (chunk ? last.content + t : t).slice(0, 6000), live: !done && chunk }];
     return [...lines.map((l) => (l.role === 'user' && l.live && !l.content ? null : l)).filter(Boolean) as Line[], { role: 'bot', content: t.slice(0, 6000), live: chunk && !done }];
   }
@@ -54,6 +57,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
   const [state, setState] = useState('CONNECTING');
   const [lines, setLines] = useState<Line[]>([]);
   const [error, setError] = useState('');
+  const [dismissed, setDismissed] = useState('');
   const [muted, setMuted] = useState(false);
   const [held, setHeld] = useState(false);
   const agent = useRef<Agent | null>(null);
@@ -89,7 +93,7 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
           audioInterface: new BrowserAudioInterface(),
           textCallback: ingest, transcriptCallback: ingest, eventCallback: ingest,
           // The SDK reports states in lowercase; normalise so readiness and the opening bubble are detected.
-          stateCallback: async (s: unknown) => { if (cancelled) return; const value = (typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED').toUpperCase(); if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start', text: context['opening_line'] ?? '' }); setState(value); },
+          stateCallback: async (s: unknown) => { if (cancelled) return; const value = (typeof s === 'string' ? s : transcriptText(s) || 'CONNECTED').toUpperCase(); if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) ready.current = true; if (['CONNECTED','LISTENING','SPEAKING'].includes(value)) void ingest({ type: 'greeting_start' }); setState(value); },
           // Let Svara's closing words land in the transcript before the session closes.
           endCallback: async () => { if (cancelled || ended.current) return; await new Promise((r) => setTimeout(r, 700)); if (cancelled || ended.current) return; if (ready.current || hasCaregiverAnswer(latestLines.current)) finish(); else { setError('The conversation ended before it was complete. Start again when you are ready.'); setState('IDLE'); } },
         } as never) as unknown as Agent & { start: () => Promise<void>; waitForConnect: (t?: number) => Promise<boolean> };
@@ -114,9 +118,10 @@ function SvaraLiveInner({ profileId, context, babyName, onTranscript, onEnded, o
         {lines.map((l, i) => l.role === 'user'
           ? <div key={i} className="live-turn user"><p className={l.live && !l.content ? 'is-typing' : ''}>{l.content || <><span /><span /><span /></>}</p></div>
           : <div key={i} className="live-turn bot"><div className="live-bot-card"><span className="live-bot-name">Svara</span>{l.content ? <p>{l.content}{l.live && <span className="live-caret" aria-hidden="true" />}</p> : <p className="is-typing" aria-label="Svara is greeting you"><span /><span /><span /></p>}</div></div>)}
-        {error && <p className="svara-live-error" role="alert">{error}</p>}
+
       </div>
     </div>
+    {error && error !== dismissed && <HaloNotification title="Svara" message={error} duration={7000} onClose={() => setDismissed(error)} />}
     <footer className="svara-live-dock">
       <div className="svara-live-orb"><SvaraAnimation state={held?'idle':s.includes('speak')?'speaking':s.includes('listen')?'listening':'idle'}/></div>
       {held && <p className="svara-live-hold" role="status">On hold — Svara is waiting for you.</p>}
