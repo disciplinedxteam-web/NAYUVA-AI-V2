@@ -70,7 +70,7 @@ export const TTS_LANGUAGES = ['en-IN', 'hi-IN', 'bn-IN', 'gu-IN', 'kn-IN', 'ml-I
 export async function sarvamSpeak(text: string, language: string) {
   const json = await call('/text-to-speech', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text: text.slice(0, 1500), target_language_code: language, model: 'bulbul:v3', speaker: 'kavya' }),
+    body: JSON.stringify({ text: text.slice(0, 1500), target_language_code: language, model: 'bulbul:v3', speaker: 'ritu' }),
   });
   const audio = (json['audios'] as string[] | undefined)?.[0];
   if (!audio) throw new SarvamError('No audio was produced.', 'empty');

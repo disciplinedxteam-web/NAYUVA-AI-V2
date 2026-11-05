@@ -2548,3 +2548,41 @@ body[data-consult-panel] .side-panel { z-index: 130; }
 .side-panel-body .cp-steps em { display: none; }
 .side-panel-body .cp-steps button.current { grid-column: span 1; }
 .side-panel-body .cp-card h2, .side-panel-body .cp-card h1 { font-size: 20px; line-height: 1.3; }
+
+/* ===== Full-screen document viewer ===== */
+.doc-fullscreen { position: fixed; inset: 0; z-index: 80; display: flex; flex-direction: column; background-color: var(--background); background-image: var(--nayuva-texture); background-size: cover; animation: nv-fade-in .25s ease both; }
+.doc-fullscreen-body { flex: 1; min-height: 0; display: flex; padding: 14px clamp(12px, 3vw, 40px) 18px; }
+.doc-fullscreen-body > .lekha-doc-viewer { flex: 1; min-height: 0; }
+.doc-fullscreen-body .doc-toolbar { padding-right: 52px; }
+.doc-fullscreen-close { position: absolute; top: 20px; right: clamp(16px, 3vw, 44px); z-index: 2; width: 36px; height: 36px; display: grid; place-items: center; border-radius: 999px; color: var(--foreground); background: color-mix(in oklab, var(--card) 85%, transparent); border: 1px solid var(--border); box-shadow: var(--shadow-sm, 0 2px 8px color-mix(in oklab, var(--foreground) 10%, transparent)); transition: background .2s; }
+.doc-fullscreen-close:hover { background: var(--card); }
+.doc-fullscreen-close svg { width: 18px; height: 18px; }
+.record-sheet { margin: auto; width: min(720px, 100%); max-height: 100%; overflow-y: auto; padding: 40px 44px; border-radius: 18px; background: var(--card); color: var(--card-foreground); border: 1px solid var(--border); }
+.record-sheet-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--primary); }
+.record-sheet h2 { margin-top: 6px; font-size: 24px; font-weight: 700; letter-spacing: -.02em; }
+.record-sheet dl { margin-top: 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; padding: 18px; border-radius: 12px; background: var(--blush); }
+.record-sheet dt { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted-foreground); }
+.record-sheet dd { margin-top: 2px; font-weight: 600; }
+.record-sheet-body { margin-top: 20px; line-height: 1.65; white-space: pre-line; }
+
+/* Reviewed / documented state is always a green pill */
+.doc-pill.is-done, .ticket-done { color: var(--success) !important; background: var(--success-soft) !important; border-color: color-mix(in oklab, var(--success) 30%, transparent) !important; }
+.doc-pill.is-waiting { color: var(--primary-deep); background: color-mix(in oklab, var(--primary) 10%, transparent); }
+
+/* Sutra source pills and listen button */
+button.sutra-source-pill { cursor: pointer; transition: background .2s, transform .2s; }
+button.sutra-source-pill:hover { background: color-mix(in oklab, var(--primary) 16%, var(--blush)); transform: translateY(-1px); }
+.sutra-listen { display: inline-flex; align-items: center; gap: 7px; height: 30px; padding: 0 12px 0 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--primary-deep); background: color-mix(in oklab, var(--primary) 8%, transparent); border: 1px solid color-mix(in oklab, var(--primary) 18%, transparent); transition: background .2s, color .2s; }
+.sutra-listen:hover { background: color-mix(in oklab, var(--primary) 14%, transparent); }
+.sutra-listen svg { width: 15px; height: 15px; }
+.sutra-listen.is-on { color: var(--primary-foreground); background: var(--primary); border-color: var(--primary); }
+.sutra-listen-bars { display: inline-flex; align-items: flex-end; gap: 2px; height: 12px; }
+.sutra-listen-bars i { width: 3px; border-radius: 2px; background: currentColor; animation: sutra-bar 0.9s ease-in-out infinite; }
+.sutra-listen-bars i:nth-child(2) { animation-delay: .15s; } .sutra-listen-bars i:nth-child(3) { animation-delay: .3s; }
+@keyframes sutra-bar { 0%,100% { height: 3px; } 50% { height: 12px; } }
+.sutra-bot-card .sutra-bot-actions { margin-top: 10px; }
+.sutra-bot-card [data-streamdown] p + p, .sutra-bot-card p + p { margin-top: .7em; }
+.sutra-bot-card ul, .sutra-bot-card ol { margin: .4em 0 .6em; padding-left: 1.2em; }
+.sutra-bot-card li + li { margin-top: .25em; }
+.nv-loading.is-intro { animation: none; }
+@media (prefers-reduced-motion: reduce) { .sutra-listen-bars i { animation: none; height: 8px; } .doc-fullscreen { animation: none; } }

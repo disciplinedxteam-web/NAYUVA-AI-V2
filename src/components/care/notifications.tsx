@@ -6,6 +6,8 @@ import { SearchToggle } from '@/components/ui/search-toggle';
 import { GlassToggle } from '@/components/ui/glass-toggle';
 import { parseCard } from '@/lib/care-card';
 import { CareTicket } from './care-ticket';
+import { DocumentActions } from './document-actions';
+import type { DocMeta } from './lekha-document';
 
 type Event = { id: string; kind: string; summary: string; created_at: string };
 type Card = { id: string; created_at: string; summary_text: string | null; reviewed: boolean; review_note?: string | null; category: string };
@@ -37,7 +39,7 @@ export function NotificationBell({ role, events, onOpen }: { role: string; event
   </DropdownMenu>;
 }
 
-export function SvaraHistory({ cards }: { cards: Card[] }) {
+export function SvaraHistory({ cards, meta }: { cards: Card[]; meta?: (c: Card) => DocMeta }) {
   const [open, setOpen] = useState(false), [tab, setTab] = useState('all'), [search, setSearch] = useState('');
   const counts = { all: cards.length, reviewed: cards.filter(c => c.reviewed).length, awaiting: cards.filter(c => !c.reviewed).length };
   const list = cards.filter(c => tab === 'all' || (tab === 'reviewed') === c.reviewed).filter(c => `${c.category} ${c.summary_text ?? ''}`.toLowerCase().includes(search.toLowerCase()));
@@ -46,7 +48,7 @@ export function SvaraHistory({ cards }: { cards: Card[] }) {
     {open && <HistoryScreen title="Svara history" description="Your past check-ins and Health Cards." onClose={() => setOpen(false)}>
       <div className="ws-bar"><SearchToggle label="Search your Health Cards" placeholder="Search topics" value={search} onChange={setSearch}><GlassToggle value={tab} onChange={setTab} options={[{ key: 'all', label: 'All', count: counts.all }, { key: 'awaiting', label: 'Awaiting review', count: counts.awaiting }, { key: 'reviewed', label: 'Reviewed', count: counts.reviewed }]} /></SearchToggle></div>
       {list.length ? <div className="ticket-list">{list.map(c => { const card = parseCard(c.summary_text ?? ''); return <div key={c.id}>
-        {card ? <CareTicket source="Svara" title={c.category} subtitle={c.reviewed ? 'Reviewed by care team' : 'Awaiting care team review'} date={when(c.created_at)} card={card} fields={[{ label: 'Check-in', value: when(c.created_at) }, { label: 'Status', value: c.reviewed ? 'Reviewed' : 'Awaiting review' }, { label: 'Category', value: card.priority }]} stamp={c.reviewed ? 'Reviewed' : null} stub={false} /> : <p className="vroom-muted">{when(c.created_at)} · {(c.summary_text ?? c.category)}</p>}
+        {card ? <CareTicket source="Svara" title={c.category} subtitle={c.reviewed ? 'Reviewed by care team' : 'Awaiting care team review'} date={when(c.created_at)} card={card} fields={[{ label: 'Check-in', value: when(c.created_at) }, { label: 'Status', value: c.reviewed ? 'Reviewed' : 'Awaiting review' }, { label: 'Category', value: card.priority }]} stamp={c.reviewed ? 'Reviewed' : null} stub={false} footer={meta ? <DocumentActions meta={meta(c)} card={card} approved={c.reviewed} label={c.reviewed ? 'Reviewed' : 'Awaiting review'} /> : undefined} /> : <p className="vroom-muted">{when(c.created_at)} · {(c.summary_text ?? c.category)}</p>}
         {c.reviewed && c.review_note ? <p className="svara-history-note"><b>Care team note:</b> {c.review_note}</p> : null}
       </div>; })}</div> : <div className="care-empty"><p>{cards.length ? 'No Health Cards match.' : 'No Health Cards yet. Your check-ins will appear here.'}</p></div>}
     </HistoryScreen>}

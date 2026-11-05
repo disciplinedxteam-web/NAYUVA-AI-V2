@@ -3,6 +3,7 @@ import { Download, Eye, Loader2, Mail, MessageCircle, Share2, Link2, Check } fro
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { CareCard } from '@/lib/care-card';
+import { DocumentViewer } from './document-viewer';
 import { DocumentPdfRoot, LekhaDocument, buildPdf, docFileName, saveBlob, type DocMeta } from './lekha-document';
 
 type Job = 'download' | 'share' | null;
@@ -13,7 +14,7 @@ type Job = 'download' | 'share' | null;
  * it downloads the PDF and opens WhatsApp or email so the file can be attached.
  * Older records without a stored document show disabled icons.
  */
-export function DocumentActions({ meta, card, label = 'Documented' }: { meta: DocMeta; card: CareCard | null; label?: string }) {
+export function DocumentActions({ meta, card, label = 'Documented', approved = true }: { meta: DocMeta; card: CareCard | null; label?: string; approved?: boolean }) {
   const [view, setView] = useState(false), [shareOpen, setShareOpen] = useState(false), [job, setJob] = useState<Job>(null), [msg, setMsg] = useState('');
   const root = useRef<HTMLDivElement>(null), blob = useRef<Blob | null>(null);
   const name = docFileName(meta);
@@ -48,7 +49,7 @@ export function DocumentActions({ meta, card, label = 'Documented' }: { meta: Do
   }
   const none = !card, tip = 'No document exists for this older record';
   return <div className="doc-actions">
-    <span className="doc-pill"><Check size={13} aria-hidden="true" />{label}</span>
+    <span className={`doc-pill ${approved ? 'is-done' : 'is-waiting'}`}><Check size={13} aria-hidden="true" />{label}</span>
     <div className="doc-icons">
       <Button type="button" variant="ghost" size="icon" aria-label="View document" title={none ? tip : 'View document'} disabled={none} onClick={() => setView(true)}><Eye /></Button>
       <Button type="button" variant="ghost" size="icon" aria-label="Download PDF" title={none ? tip : 'Download PDF'} disabled={none || !!job} onClick={() => { setMsg(''); setJob('download'); }}>{job === 'download' ? <Loader2 className="animate-spin" /> : <Download />}</Button>
@@ -56,14 +57,12 @@ export function DocumentActions({ meta, card, label = 'Documented' }: { meta: Do
     </div>
     {msg && !shareOpen && <p className="doc-msg" role="status">{msg}</p>}
     {card && <>
-      <DocumentPdfRoot meta={meta} card={card} approved rootRef={root} />
-      <Dialog open={view} onOpenChange={setView}>
-        <DialogContent className="doc-view-dialog"><DialogHeader className="sr-only"><DialogTitle>{name}</DialogTitle><DialogDescription>Document preview</DialogDescription></DialogHeader>
-          <LekhaDocument meta={meta} card={card} approved onShare={() => setShareOpen(true)} />
-        </DialogContent>
-      </Dialog>
+      <DocumentPdfRoot meta={meta} card={card} approved={approved} rootRef={root} />
+      {view && <DocumentViewer title={name} onClose={() => setView(false)}>
+        <LekhaDocument meta={meta} card={card} approved={approved} onShare={() => setShareOpen(true)} />
+      </DocumentViewer>}
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
-        <DialogContent className="doc-share-dialog">
+        <DialogContent className="doc-share-dialog z-[95]">
           <DialogHeader><DialogTitle>Share PDF</DialogTitle><DialogDescription>Send the {meta.kind === 'svara' ? 'report' : 'consultation record'} for {meta.babyName} as a PDF.</DialogDescription></DialogHeader>
           <div className="doc-share-grid">
             <Button type="button" variant="outline" disabled={!!job} onClick={() => void via('whatsapp')}><MessageCircle />WhatsApp</Button>
