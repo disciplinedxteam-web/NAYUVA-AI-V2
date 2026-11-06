@@ -2590,7 +2590,6 @@ button.sutra-source-pill:hover { background: color-mix(in oklab, var(--primary) 
 /* Fresh-visit intro: 1.3s total, crisp (never upscaled), soft fade in and out. */
 .nv-loading.is-intro { animation: nv-fade-in .25s ease both; }
 .nv-loading.is-intro.is-leaving { animation: nv-fade-out .3s ease forwards; }
-.nv-loading.is-intro .nv-loading-video { inset: auto; position: relative; width: min(100vw, 960px); height: auto; max-height: 100svh; object-fit: contain; image-rendering: auto; }
 
 /* ---------- Care Plan exit, delete and confirm ---------- */
 .cp-exit { display:flex; margin:0 0 14px; }

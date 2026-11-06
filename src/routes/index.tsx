@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   ArrowUpRight,
+  Check,
   MessageCircleHeart,
   CalendarClock,
   FileText,
@@ -112,13 +113,12 @@ function Hero() {
             <span className="font-light italic text-primary">beyond discharge.</span>
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
-            The first weeks at home are when families have the most questions and care teams
-            see the least. Nayuva AI keeps them connected: daily voice check-ins in the family's
-            own language, structured updates for clinicians, and every visit and note in one journey.
+            Nayuva AI connects newborns, caregivers and care teams after discharge, helping
+            families stay guided and helping clinicians stay informed between visits.
           </p>
           <p className="max-w-md text-sm font-medium text-foreground/60">
-            Clinician-directed from day one. AI listens, organises and documents; the care team
-            reviews and decides.
+            A clinician-directed platform for newborn post-discharge care, follow-up and
+            continuity.
           </p>
           <CTAs />
         </div>
@@ -201,35 +201,40 @@ const products = [
     name: "SVARA",
     tag: "Caregiver connection",
     Icon: MessageCircleHeart,
-    body: "Svara is a warm voice companion that calls the family every day, on the phone or on the website, in Hindi, English or their own language. She tells them which day of life it is and which topics today's Care Plan covers, asks one simple question at a time, follows up on anything reported the day before, and repeats back what she heard. The conversation becomes a Health Card the caregiver approves and sends to the care team. Svara never diagnoses or advises; she listens and records.",
+    body: 'A warm daily voice companion for families, on the phone or the website, in their own language.',
+    bullets: ["Asks only the questions in today's Care Plan", 'Follows up on concerns from earlier check-ins', 'Repeats back what it heard to confirm', 'Creates a Health Card the caregiver approves'],
     state: "working",
   },
   {
     name: "MILAN",
     tag: "Follow-up coordination",
     Icon: CalendarClock,
-    body: "Milan turns a concern into a booked visit. The care team picks a date and time, chooses in-person or a secure online video consultation, and the family sees it instantly with the location or join link. Caregivers can confirm or ask to reschedule, and after an online visit its summary appears in the family's past appointments.",
+    body: 'Turns a concern into a booked follow-up visit, in person or online, in one step.',
+    bullets: ['Care team schedules date, time and visit type', 'Families see location or video join link instantly', 'Confirm or request a reschedule', 'Online visit summaries saved to past appointments'],
     state: "searching",
   },
   {
     name: "LEKHA",
     tag: "Clinical documentation",
     Icon: FileText,
-    body: "Lekha sits quietly in the consultation room. It records the visit, understands who said what, and drafts an in-person consultation summary covering the essential topics. The clinician edits and approves it in one place, so documentation takes minutes instead of an evening, and nothing is saved without a doctor's sign-off.",
+    body: 'Listens during the consultation and drafts the visit summary for the clinician.',
+    bullets: ['Records and separates who said what', 'Drafts an in-person consultation summary', 'Checklist of essential topics covered', "Nothing saved without the clinician's approval"],
     state: "lighthouse",
   },
   {
     name: "SUTRA",
     tag: "Longitudinal care journey",
     Icon: RouteIcon,
-    body: "Sutra is the memory of the whole journey. Ask it anything, from a summary of the first three weeks to when the last visit was, and it answers in the language you asked in, using only this baby's records. Every answer ends with links to the exact Svara check-ins and appointment summaries it drew from.",
+    body: "The memory of the baby's whole care journey, answering questions in the language asked.",
+    bullets: ["Answers only from this baby's records", 'Summaries, lists and short clear replies', 'Links to the exact source documents', 'Listen to answers or ask by voice'],
     state: "reasoning",
   },
   {
     name: "TAAL",
     tag: "Caregiver adherence",
     Icon: Activity,
-    body: "Taal shows the rhythm of follow-up care: how many scheduled check-ins and visits each family completed over the last 7, 14, 28 or 42 days. When a family falls behind, the care team can call them or send a kind WhatsApp reminder in one tap. Taal measures activity, never clinical risk.",
+    body: 'Shows how consistently each family completes scheduled check-ins and visits.',
+    bullets: ['7, 14, 28 and 42 day views', 'One-tap call or WhatsApp reminder', 'Spots families who may need a nudge', 'Measures activity, never clinical risk'],
     state: "working",
   },
 ];
@@ -256,7 +261,17 @@ function Products() {
                     <span className="eyebrow">{p.tag}</span>
                   </div>
                   <h3 className="text-4xl font-extrabold tracking-[0.12em]">{p.name}</h3>
-                  <p className="text-[15px] leading-[1.8] text-muted-foreground">{p.body}</p>
+                  <p className="leading-relaxed text-muted-foreground">{p.body}</p>
+                  <ul className="flex flex-col gap-3">
+                    {p.bullets.map((b) => (
+                      <li key={b} className="flex items-center gap-3 text-sm">
+                        <span className="flex size-[18px] shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                          <Check className="size-2.5" />
+                        </span>
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
                 <div className="min-w-0 flex-1">
                   {p.name === "SVARA" ? <div className="product-svara flex justify-center"><SvaraAnimation state="idle" /></div> : <div className="flex justify-center"><CharacterVideo clip={p.name === "TAAL" ? "taal" : p.name === "LEKHA" ? "lekha-writing" : p.name === "MILAN" ? "milan-writing" : "sutra-search"} size={360} /></div>}
@@ -326,9 +341,9 @@ function Team() {
       <Flower src={flowerLavender} className="flower-edge flower-right team-flower" />
       <div className="mx-auto max-w-6xl px-6">
         <SectionHead eyebrow="Our Team" title="Building the connection between discharge and home." body="We're building technology that helps newborn care continue beyond the hospital — keeping families connected to their care teams when continuity matters most." />
-        <div className="mx-auto grid max-w-4xl grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="flex flex-wrap justify-center gap-6">
           {team.map((m) => (
-            <div key={m.name} className="glass team-member group relative flex flex-col items-center rounded-lg px-6 py-8 text-center">
+            <div key={m.name} className="glass team-member group relative flex w-full flex-col sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-4.5rem)/4)] items-center rounded-lg px-6 py-8 text-center">
               <div className="team-portrait relative flex size-36 items-center justify-center overflow-hidden rounded-full" data-framing={m.framing}>
                 <img src={m.photo.url} alt={m.name} width={256} height={256} loading="lazy" />
               </div>
