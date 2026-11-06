@@ -22,6 +22,7 @@ FACTS AND SAFETY
 
 SOURCES
 - Every record item has a short "ref" such as R0, R3. R0 is the Care Plan.
+- Only items with a "document" field (Svara check-ins, in-person and online appointment summaries) can be cited as sources. Never cite the Care Plan, events or appointment bookings. Cite only the documents your answer actually used.
 - Never put citations, brackets or refs inside the answer text.
 - Whenever your answer states ANY fact from the record, finish with one final line exactly like: SOURCES: R0, R3 listing every ref you used.
 - Only if you used no record at all (pure greeting or nothing found), leave out the SOURCES line.`;

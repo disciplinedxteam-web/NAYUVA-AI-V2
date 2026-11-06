@@ -77,8 +77,8 @@ export function todaysCheckin(plan: { dob?: string; babyName?: string; neonatalC
   const topics = questions.filter((q) => q.source === 'protocol' || q.source === 'condition').map((q) => q.topic.toLowerCase());
   const list = topics.length > 1 ? `${topics.slice(0, -1).join(', ')} and ${topics.at(-1)}` : topics[0] ?? '';
   const baby = plan.babyName || 'your baby';
-  const opening = `Hi, I'm Svara from Nayuva AI, your newborn care companion. Is this a good time for ${plan.babyName ? `${plan.babyName}'s` : "your baby's"} check-in?`;
-  const agenda = `Today is day ${day} for ${baby}. We'll talk about ${list || 'how things are going'}, and then begin with the first question.`;
+  const opening = 'Namaste, this is Svara calling from Nayuva, the newborn care companion. This is a short call to see how the little one is doing at home, with a few quick questions along the way. Is now a good time?';
+  const agenda = `Okay. Today is day ${day} for ${baby}. Today's care plan contains these topics: ${list || 'how things are going'}. Let's start with the first one.`;
   return { day, theme: entry.theme, questions, opening, agenda };
 }
 
@@ -86,7 +86,7 @@ export function todaysCheckin(plan: { dob?: string; babyName?: string; neonatalC
 export function svaraBrief(plan: Parameters<typeof todaysCheckin>[0], now = Date.now(), previous: readonly PreviousTopic[] = []) {
   const t = todaysCheckin(plan, now, previous);
   return [
-    `DAY ${t.day} CHECK-IN (${t.theme}). Begin with exactly this greeting: "${t.opening}" Once the caregiver says it is a good time, tell them in your own warm words which day of life it is and what you will cover, like: "${t.agenda}" Then ask the first question.`,
+    `DAY ${t.day} CHECK-IN (${t.theme}). Your opening greeting is "${t.opening}" It is spoken exactly once at the very start of the call. NEVER repeat the greeting and NEVER ask again whether it is a good time. As soon as the caregiver agrees (yes, okay, haan, sure, I am free, or similar), your very next reply must be the care plan agenda: "${t.agenda}" Always use the words "today's care plan" so the caregiver knows the topics come from their care plan. Then ask the first question. Only if the caregiver clearly says it is NOT a good time, thank them kindly and end the call.`,
     SVARA_STYLE,
     'Cover ONLY these topics, one at a time, in this order (rephrase naturally, keep the meaning):',
     ...t.questions.map((q, i) => `${i + 1}. [${q.topic}] ${q.text}`),

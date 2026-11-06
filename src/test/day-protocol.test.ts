@@ -10,8 +10,9 @@ describe('day-wise Svara protocol', () => {
   });
   it('opens with the day and asks that day’s questions, then the final concern', () => {
     const t = todaysCheckin({ dob: '2026-09-29', babyName: 'Aarav' }, at('2026-10-19T10:00:00+05:30'));
-    expect(t.opening.startsWith("Hi, I'm Svara from Nayuva AI")).toBe(true);
-    expect(t.opening).toContain('Aarav');
+    expect(t.opening).toBe('Namaste, this is Svara calling from Nayuva, the newborn care companion. This is a short call to see how the little one is doing at home, with a few quick questions along the way. Is now a good time?');
+    expect(t.agenda).toContain("Today's care plan contains these topics");
+    expect(t.agenda).toContain('Aarav');
     expect(t.questions.map(q => q.topic)).toEqual(['Feeding', 'Growth and development', 'Caregiver concerns', 'Caregiver concerns']);
   });
   it('adds a condition observation question for jaundice', () => {

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Camera, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassToggle } from '@/components/ui/glass-toggle';
-import { languages, useLanguage } from '@/components/language-provider';
 
 // Profile presentation preferences are saved in this browser only; they never change care records.
 type Prefs = { photo: string; name: string; relationship: string; designation: string; registration: string; reminders: string };
@@ -30,7 +29,6 @@ export function ProfileSettings({ role, defaultName, relationship }: { role: str
   const team = role === 'care-team';
   const [p, setP] = useState<Prefs>({ photo: '', name: defaultName, relationship: relationship ?? 'Mother', designation: 'Paediatrician', registration: '', reminders: 'WhatsApp' });
   const [saved, setSaved] = useState(false); const [error, setError] = useState('');
-  const { language, setLanguage } = useLanguage();
   useEffect(() => { setP(v => ({ ...v, ...read(role) })); }, [role]);
   const set = (k: keyof Prefs, v: string) => { setSaved(false); setP(x => ({ ...x, [k]: v })); };
   const save = () => { localStorage.setItem(key(role), JSON.stringify(p)); window.dispatchEvent(new Event(EVENT)); setSaved(true); };
@@ -51,7 +49,6 @@ export function ProfileSettings({ role, defaultName, relationship }: { role: str
         <label className="care-field"><span>Designation</span><select value={p.designation} onChange={e => set('designation', e.target.value)}>{['Paediatrician', 'Neonatologist', 'Nurse', 'Care coordinator'].map(o => <option key={o}>{o}</option>)}</select></label>
         <label className="care-field"><span>Registration number</span><input value={p.registration} onChange={e => set('registration', e.target.value)} maxLength={40} placeholder="Optional" /></label>
       </> : <div className="care-field"><span>Relationship to baby</span><GlassToggle value={p.relationship} onChange={v => set('relationship', v)} options={['Mother', 'Father', 'Guardian', 'Other'].map(k => ({ key: k, label: k }))} /></div>}
-      <label className="care-field"><span>Interface language</span><select value={language} onChange={e => setLanguage(e.target.value)}>{languages.map(l => <option key={l.code} value={l.code}>{l.name}</option>)}</select></label>
       {!team && <div className="care-field"><span>Check-in reminders</span><GlassToggle value={p.reminders} onChange={v => set('reminders', v)} options={['WhatsApp', 'SMS', 'Off'].map(k => ({ key: k, label: k }))} /></div>}
     </div>
     <div className="ps-footer"><small>Photo and display preferences are saved on this device and do not change care records.</small><Button onClick={save}>{saved ? <><Check />Saved</> : 'Save profile'}</Button></div>

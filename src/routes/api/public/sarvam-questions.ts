@@ -55,7 +55,7 @@ export const Route = createFileRoute('/api/public/sarvam-questions')({
           due_topics: day.questions.map((q) => q.topic),
           missing_approved_topics: missingTopics,
           previous_answers: responses ?? [],
-          instructions: SVARA_STYLE + " Always start by introducing yourself as Svara from Nayuva AI, as in opening_line. Ask any follow-up questions about the last check-in first. Never diagnose or give treatment advice. Ask only the returned approved questions, one at a time. Use context_note and previous_answers to ask what changed; do not repeat answered questions within this check-in. Never invent generic replacement questions. Save each exact answer with submit_observation. Ask the mandatory final concern last.",
+          instructions: SVARA_STYLE + " The opening_line greeting is spoken once at the start; never repeat it or ask again if it is a good time. Once the caregiver agrees, say the day and that today's care plan contains these topics, then begin. Ask any follow-up questions about the last check-in first. Never diagnose or give treatment advice. Ask only the returned approved questions, one at a time. Use context_note and previous_answers to ask what changed; do not repeat answered questions within this check-in. Never invent generic replacement questions. Save each exact answer with submit_observation. Ask the mandatory final concern last.",
           previous_updates: (cards ?? []).map((c) => { const k = parseCard(c.summary_text); return k ? k.topics.map((t) => `${t.title}: ${t.finding}`).join('; ') : c.category; }),
           clinician_instructions: (ins ?? []).filter((i) => !i.expires_on || i.expires_on >= today).map((i) => i.instruction),
           questions,

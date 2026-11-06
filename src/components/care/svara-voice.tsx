@@ -39,7 +39,7 @@ export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] 
     const i = findLast(lines, (l) => l.role === role && !!l.live);
     if (i >= 0) return lines.map((l, k) => (k === i ? { role, content } : l));
     if (last && last.role === role && last.content === content) return lines;
-    if (role === 'user') return [...close(lines), { role, content }];
+    if (role === 'bot' && isRepeat(lines, content)) return close(lines);
     return [...close(lines), { role, content }];
   }
   if (type.includes('text')) {
@@ -52,6 +52,9 @@ export function applyMessage(lines: Line[], m: Record<string, unknown>): Line[] 
   }
   return lines;
 }
+const norm = (t: string) => t.toLowerCase().replace(/[^a-z0-9\u0900-\u0dff]+/g, ' ').trim();
+/** Svara must never show her opening greeting twice; a repeated earlier bot turn is dropped. */
+export function isRepeat(lines: Line[], content: string) { const n = norm(content); return n.length > 20 && lines.some((l) => l.role === 'bot' && !l.live && norm(l.content) === n); }
 function findLast<T>(a: T[], f: (x: T) => boolean) { for (let i = a.length - 1; i >= 0; i--) { const item = a[i]; if (item !== undefined && f(item)) return i; } return -1; }
 
 /** Full-screen live Svara conversation via the Sarvam Web SDK. The key stays on the server proxy (/api/sarvam/). */

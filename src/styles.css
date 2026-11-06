@@ -2586,3 +2586,71 @@ button.sutra-source-pill:hover { background: color-mix(in oklab, var(--primary) 
 .sutra-bot-card li + li { margin-top: .25em; }
 .nv-loading.is-intro { animation: none; }
 @media (prefers-reduced-motion: reduce) { .sutra-listen-bars i { animation: none; height: 8px; } .doc-fullscreen { animation: none; } }
+
+/* Fresh-visit intro: 1.3s total, crisp (never upscaled), soft fade in and out. */
+.nv-loading.is-intro { animation: nv-fade-in .25s ease both; }
+.nv-loading.is-intro.is-leaving { animation: nv-fade-out .3s ease forwards; }
+.nv-loading.is-intro .nv-loading-video { inset: auto; position: relative; width: min(100vw, 960px); height: auto; max-height: 100svh; object-fit: contain; image-rendering: auto; }
+
+/* ---------- Care Plan exit, delete and confirm ---------- */
+.cp-exit { display:flex; margin:0 0 14px; }
+.profile-actions { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.profile-delete { color:var(--destructive); }
+.cp-confirm { position:fixed; inset:0; z-index:80; display:grid; place-items:center; padding:20px; background:color-mix(in oklab,var(--foreground) 30%,transparent); backdrop-filter:blur(6px); }
+.cp-confirm > div { width:min(440px,100%); border-radius:18px; padding:22px; background:var(--card); border:1px solid var(--border); box-shadow:var(--shadow-soft); }
+.cp-confirm h3 { font-size:17px; font-weight:750; color:var(--primary-deep); }
+.cp-confirm p { margin:8px 0 18px; font-size:13px; line-height:1.6; color:var(--muted-foreground); }
+.cp-confirm > div > div { display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+
+/* ---------- Mobile dashboard: menu button + slide-out drawer (desktop unchanged) ---------- */
+.mobile-topbar, .mobile-nav-scrim { display:none; }
+@media (max-width:767px) {
+  .dashboard-shell, .dashboard-shell.sidebar-collapsed { display:block; grid-template-columns:none; }
+  .mobile-topbar { display:flex; align-items:center; gap:10px; position:sticky; top:0; z-index:45; height:60px; padding:0 14px; padding-right:120px; background:color-mix(in oklab,var(--background) 80%,transparent); backdrop-filter:blur(16px); border-bottom:1px solid var(--border); }
+  .mobile-brand { display:flex; align-items:center; gap:8px; min-width:0; }
+  .mobile-brand img { width:28px; height:28px; flex:none; }
+  .mobile-brand .brand-wordmark { font-size:12px; letter-spacing:.14em; white-space:nowrap; }
+  .dashboard-shell .dashboard-sidebar, .dashboard-shell .dashboard-sidebar:hover { position:fixed; top:0; left:0; bottom:0; height:100svh; width:min(280px,82vw) !important; padding:24px 16px 18px !important; z-index:70; transform:translateX(-105%); transition:transform .3s cubic-bezier(.22,1,.36,1); background:var(--card); box-shadow:none; overflow-y:auto; }
+  .dashboard-shell.nav-open .dashboard-sidebar { transform:none; box-shadow:24px 0 60px -30px color-mix(in oklab,var(--primary-deep) 50%,transparent); }
+  .dashboard-shell .dashboard-sidebar .dashboard-nav span, .dashboard-shell .dashboard-sidebar .dashboard-brand span, .dashboard-shell .dashboard-sidebar .dashboard-brand .brand-wordmark, .dashboard-shell .dashboard-sidebar .profile-trigger > span:nth-child(2) { display:inline-block !important; opacity:1 !important; visibility:visible !important; }
+  .dashboard-shell .dashboard-sidebar .dashboard-nav { justify-content:flex-start !important; padding:0 14px !important; font-size:14px; }
+  .dashboard-shell .dashboard-sidebar .sidebar-context { display:none; }
+  .mobile-nav-scrim { display:block; position:fixed; inset:0; z-index:65; background:color-mix(in oklab,var(--foreground) 28%,transparent); border:0; }
+  .dashboard-main { min-width:0; width:100%; }
+  .dashboard-utilities { position:fixed !important; top:10px !important; right:12px !important; z-index:46; gap:6px; }
+  .dashboard-utilities > * { transform:scale(.88); }
+  .dashboard-content { padding:18px 14px 28px !important; }
+  /* Tutorial pill sits on its own row above the title so nothing overlaps. */
+  .tutorial-cta-slot { position:static !important; transform:none !important; display:flex; justify-content:center; margin:14px 14px 0; max-width:calc(100vw - 28px); }
+  .tutorial-cta-slot > * { max-width:100%; }
+  .workspace-heading, .dashboard-content .workspace-heading { margin-top:14px !important; padding-right:0 !important; }
+  .workspace-heading h1 { font-size:22px !important; overflow-wrap:anywhere; }
+  .workspace-heading p { font-size:13px !important; }
+  /* Smaller, still readable section guide. */
+  .section-intro { left:12px; right:12px; bottom:12px; width:auto; padding:12px 14px 12px; border-radius:16px; }
+  .section-intro h2 { font-size:14px; margin-top:4px; }
+  .section-intro p { font-size:12px; line-height:1.45; margin:4px 0 10px; }
+  .section-intro-ok { height:34px; font-size:12px; }
+  .section-intro-close { width:28px; height:28px; }
+  /* Cards: keep everything inside, centred and wrapping. */
+  .dashboard-content * { min-width:0; }
+  .dashboard-content h3, .dashboard-content p, .dashboard-content strong, .dashboard-content small, .dashboard-content span { overflow-wrap:anywhere; }
+  .dashboard-content button { white-space:normal; height:auto; min-height:36px; }
+  .profile-item { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:10px 12px; }
+  .profile-item > .profile-schedule { display:none; }
+  .profile-item > .profile-actions { grid-column:1 / -1; justify-content:flex-start; margin-left:0; }
+  .ws-bar { flex-wrap:wrap; }
+  .ws-bar-action { flex:1 1 auto; }
+  .taal-table-wrap { overflow-x:auto; }
+}
+@media (prefers-reduced-motion: reduce) { .dashboard-shell .dashboard-sidebar { transition:none; } }
+
+/* ---------- Homepage on phones ---------- */
+@media (max-width:639px) {
+  .solution-note { white-space:normal !important; }
+  .care-card { padding:20px !important; }
+  .care-card h3 { overflow-wrap:anywhere; }
+}
+.solution-note { white-space:nowrap; }
+@media (max-width:767px) { .dashboard-shell .mobile-topbar { z-index:40; } .dashboard-shell .dashboard-main { position:relative; z-index:41; } }
+@media (max-width:639px) { #team .team-member { width:100%; max-width:320px; } }

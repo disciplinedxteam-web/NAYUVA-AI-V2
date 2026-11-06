@@ -40,6 +40,7 @@ export function CarePlanForm({ initial, onSave, onCancel, busy }: { initial?: Ca
   const overlays = conditionQuestions(plan.neonatalConditions);
 
   return <div className="cp">
+    <div className="cp-exit"><Button type="button" variant="outline" size="sm" onClick={onCancel}><ArrowLeft />Back to Care Plans</Button></div>
     <nav className="cp-steps" aria-label="Care plan steps">{STEPS.map((s, i) => { const I = s.icon; return <button type="button" key={s.label} className={i === step ? 'current' : i < step ? 'done' : ''} onClick={() => go(i)} aria-current={i === step ? 'step' : undefined}><span>{i < step ? <Check /> : <I />}</span><em>{s.label}</em></button>; })}</nav>
     <form className="cp-card" onSubmit={(e) => { e.preventDefault(); if (step < 5) go(step + 1); else void submit(); }}>
       <header className="cp-head"><p className="eyebrow">Step {step + 1} of 6</p><h2>{S.title.replace('the baby', plan.babyName && step > 2 ? plan.babyName : 'the baby')}</h2><p>{S.lede}</p></header>

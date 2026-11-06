@@ -23,11 +23,11 @@ export function SiteIntro() {
     const update = () => setProgress(pageProgress());
     update(); document.addEventListener('readystatechange', update); window.addEventListener('load', update);
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    fallback.current = window.setTimeout(() => setPlayed(true), reduce ? 600 : 1900);
+    fallback.current = window.setTimeout(() => setPlayed(true), reduce ? 500 : 1000);
     return () => { document.removeEventListener('readystatechange', update); window.removeEventListener('load', update); clearTimeout(fallback.current); };
   }, []);
   const done = played && progress >= 70;
-  useEffect(() => { if (!done) return; setLeaving(true); const t = setTimeout(() => setGone(true), 600); return () => clearTimeout(t); }, [done]);
+  useEffect(() => { if (!done) return; setLeaving(true); const t = setTimeout(() => setGone(true), 300); return () => clearTimeout(t); }, [done]);
   if (gone) return null;
-  return <LoadingScreen intro fitSeconds={1.9} loop={false} leaving={leaving} onEnded={() => setPlayed(true)} {...(played && progress < 70 ? { progress, message: 'Almost there, getting everything ready for you…' } : {})} />;
+  return <LoadingScreen intro fitSeconds={1.0} loop={false} leaving={leaving} onEnded={() => setPlayed(true)} {...(played && progress < 70 ? { progress, message: 'Almost there, getting everything ready for you…' } : {})} />;
 }

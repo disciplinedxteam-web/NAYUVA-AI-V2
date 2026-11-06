@@ -668,11 +668,13 @@ export function DraggableWidgetGrid({
 		const measure = () => {
 			const width = el.getBoundingClientRect().width
 			if (width < 1) return
-			const columns = Math.max(
+			// Phones get a single readable column with shorter rows so card content never clips.
+			const narrow = width < 520
+			const columns = narrow ? 1 : Math.max(
 				minColumns,
 				Math.min(maxColumns, Math.round(width / cellSize)),
 			)
-			const unit = (width - gap * (columns - 1)) / columns
+			const unit = narrow ? Math.min(200, width * 0.55) : (width - gap * (columns - 1)) / columns
 			setMetrics((was) =>
 				was.columns === columns && Math.abs(was.unit - unit) < 0.5
 					? was
@@ -901,7 +903,7 @@ export function DraggableWidgetGrid({
 						gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
 						// Square cells: row height equals column width.
 						gridAutoRows: metrics.unit
-							? `${Math.round(metrics.unit)}px`
+							? metrics.columns === 1 ? `minmax(${Math.round(metrics.unit)}px, auto)` : `${Math.round(metrics.unit)}px`
 							: `minmax(${cellSize * 0.75}px, auto)`,
 					}}>
 					{domOrder.current.map((id) => {

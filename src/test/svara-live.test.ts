@@ -44,3 +44,13 @@ describe('Svara live transcript turns', () => {
     expect(l.map((x) => [x.role, x.content])).toEqual([['bot', "Hi, I'm Svara from Nayuva AI."], ['user', 'We are fine'], ['bot', 'Glad to hear that.']]);
   });
 });
+
+describe('Svara opening is never repeated', () => {
+  it('drops a second identical greeting after the caregiver says yes', () => {
+    const g = 'Namaste, this is Svara calling from Nayuva, the newborn care companion. Is now a good time?';
+    let l = applyMessage([], { type: 'greeting_start', text: g });
+    l = applyMessage(l, { type: 'server.event.transcription', role: 'user', content: 'Yes' });
+    l = applyMessage(l, { type: 'server.event.transcription', role: 'bot', content: g });
+    expect(l.filter((x) => x.role === 'bot')).toHaveLength(1);
+  });
+});

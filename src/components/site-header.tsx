@@ -1,8 +1,4 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Languages, Check } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { LanguageMenu } from './language-provider';
 
 export function SiteHeader({ logo }: { logo: ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
@@ -28,7 +24,6 @@ export function SiteHeader({ logo }: { logo: ReactNode }) {
       <nav aria-label="Main navigation" className="header-links">
         {["Solution", "Products", "Impact", "Team"].map(link => <a key={link} href={`#${link.toLowerCase()}`}>{link}</a>)}
       </nav>
-      <LanguageMenu />
     </header>
   </div>;
 }

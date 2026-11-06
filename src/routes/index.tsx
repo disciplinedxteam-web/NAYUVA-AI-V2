@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
   ArrowUpRight,
-  Check,
   MessageCircleHeart,
   CalendarClock,
   FileText,
@@ -27,7 +26,6 @@ import { AwardBadge } from "@/components/ui/award-badge";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
 import rajeev from "@/assets/rajeev-portrait.png.asset.json";
 import charmi from "@/assets/charmi-portrait.png.asset.json";
-import varun from "@/assets/varun-portrait.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -114,12 +112,13 @@ function Hero() {
             <span className="font-light italic text-primary">beyond discharge.</span>
           </h1>
           <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Nayuva AI connects newborns, caregivers and care teams after discharge, helping
-            families stay guided and helping clinicians stay informed between visits.
+            The first weeks at home are when families have the most questions and care teams
+            see the least. Nayuva AI keeps them connected: daily voice check-ins in the family's
+            own language, structured updates for clinicians, and every visit and note in one journey.
           </p>
           <p className="max-w-md text-sm font-medium text-foreground/60">
-            A clinician-directed platform for newborn post-discharge care, follow-up and
-            continuity.
+            Clinician-directed from day one. AI listens, organises and documents; the care team
+            reviews and decides.
           </p>
           <CTAs />
         </div>
@@ -170,16 +169,16 @@ function Solution() {
       <div className="mx-auto max-w-5xl px-6">
         <SectionHead
           eyebrow="The Solution"
-          title="Keeping newborn care connected, wherever care happens."
-          body="Nayuva provides a continuous layer between the care team and home — connecting caregiver updates, follow-ups, appointments and clinical documentation in one care journey."
+          title="From the hospital door to home, care never goes quiet."
+          body="Discharge is where newborn care usually breaks apart: families go home with instructions and worries, and clinicians lose sight until the next visit. Nayuva turns that gap into one connected story, told day by day."
         />
         <div className="solution-grid grid grid-cols-6 gap-4">
           {[
-            { kind: "home", title: "Guided Home Care", body: "Keeps caregivers connected to their clinician-defined care plan after discharge." },
-            { kind: "updates", title: "Structured Care Updates", body: "Turns caregiver conversations into clear, structured information for the care team." },
-            { kind: "visibility", title: "Care-Team Visibility", body: "Gives clinicians a connected view of what happens between visits." },
-            { kind: "followup", title: "Follow-Up Coordination", body: "Keeps appointments, reminders and next steps connected to the care journey." },
-            { kind: "record", title: "Longitudinal Record", body: "Brings care plans, updates, appointments and clinical notes together over time." },
+            { kind: "home", title: "Guided Home Care", body: "The care team writes a Care Plan before discharge. Every day, Svara calls the family and asks only the questions that plan defines, for that day of life and the baby's noted conditions." },
+            { kind: "updates", title: "Structured Care Updates", body: "What a parent says, in their own words and language, becomes a clear Health Card, with the original statements kept beside each observation and nothing filled in by guesswork." },
+            { kind: "visibility", title: "Care-Team Visibility", body: "Updates arrive sorted for review, never silently marked routine. Clinicians see what changed at home and approve every card before it joins the record." },
+            { kind: "followup", title: "Follow-Up Coordination", body: "When something needs a closer look, a follow-up is booked in one step, in person or online, and Taal shows which families may need a gentle nudge." },
+            { kind: "record", title: "Longitudinal Record", body: "Check-ins, visit summaries and clinical notes build one continuous journey that Sutra can answer questions about, with every answer linked back to its source document." },
           ].map((item, i) => (
             <div key={item.kind} className={`care-card glass col-span-full rounded-2xl p-6 text-left ${i < 3 ? "md:col-span-2" : "md:col-span-3"}`}>
               <CareGraphic kind={item.kind as "home" | "updates" | "visibility" | "followup" | "record"} />
@@ -188,7 +187,7 @@ function Solution() {
             </div>
           ))}
         </div>
-        <p className="mx-auto mt-8 flex max-w-xl items-center justify-center gap-3 text-center text-sm font-medium text-primary-deep">
+        <p className="solution-note mx-auto mt-8 flex w-fit items-center justify-center gap-3 text-center text-sm font-medium text-primary-deep">
           <ShieldCheck className="size-5 shrink-0" />
           AI supports communication and documentation. Clinical decisions remain with the care team.
         </p>
@@ -202,40 +201,35 @@ const products = [
     name: "SVARA",
     tag: "Caregiver connection",
     Icon: MessageCircleHeart,
-    body: "A multilingual voice and text assistant that keeps caregivers engaged with their care plan and captures home updates.",
-    bullets: ["Voice and text, in the family's language", "Keeps the care plan close at home", "Captures home updates for the team"],
+    body: "Svara is a warm voice companion that calls the family every day, on the phone or on the website, in Hindi, English or their own language. She tells them which day of life it is and which topics today's Care Plan covers, asks one simple question at a time, follows up on anything reported the day before, and repeats back what she heard. The conversation becomes a Health Card the caregiver approves and sends to the care team. Svara never diagnoses or advises; she listens and records.",
     state: "working",
   },
   {
     name: "MILAN",
     tag: "Follow-up coordination",
     Icon: CalendarClock,
-    body: "Keeps appointments, reminders and follow-up communication connected to the care team's plan.",
-    bullets: ["Appointment scheduling and reminders", "Follow-up communication in one place", "Aligned with the care team's plan"],
+    body: "Milan turns a concern into a booked visit. The care team picks a date and time, chooses in-person or a secure online video consultation, and the family sees it instantly with the location or join link. Caregivers can confirm or ask to reschedule, and after an online visit its summary appears in the family's past appointments.",
     state: "searching",
   },
   {
     name: "LEKHA",
     tag: "Clinical documentation",
     Icon: FileText,
-    body: "Converts clinical conversations and appointment outcomes into structured documentation with less manual effort.",
-    bullets: ["Conversations to structured notes", "Appointment outcomes captured", "Less manual documentation effort"],
+    body: "Lekha sits quietly in the consultation room. It records the visit, understands who said what, and drafts an in-person consultation summary covering the essential topics. The clinician edits and approves it in one place, so documentation takes minutes instead of an evening, and nothing is saved without a doctor's sign-off.",
     state: "lighthouse",
   },
   {
     name: "SUTRA",
     tag: "Longitudinal care journey",
     Icon: RouteIcon,
-    body: "Connects care plans, Health Cards, appointments and clinical notes into one continuous record.",
-    bullets: ["Care plans and Health Cards", "Appointments and clinical notes", "One continuous record over time"],
+    body: "Sutra is the memory of the whole journey. Ask it anything, from a summary of the first three weeks to when the last visit was, and it answers in the language you asked in, using only this baby's records. Every answer ends with links to the exact Svara check-ins and appointment summaries it drew from.",
     state: "reasoning",
   },
   {
     name: "TAAL",
     tag: "Caregiver adherence",
     Icon: Activity,
-    body: "Tracks how consistently families complete scheduled check-ins, so the care team can see who may need a follow-up nudge.",
-    bullets: ["Scheduled check-in completion", "7 to 42 day adherence views", "Operational counts, never clinical risk"],
+    body: "Taal shows the rhythm of follow-up care: how many scheduled check-ins and visits each family completed over the last 7, 14, 28 or 42 days. When a family falls behind, the care team can call them or send a kind WhatsApp reminder in one tap. Taal measures activity, never clinical risk.",
     state: "working",
   },
 ];
@@ -248,7 +242,7 @@ function Products() {
         <SectionHead
           eyebrow="Products"
           title="Purpose-built for continuous newborn care."
-          body="Five connected products support the caregiver, care team and every stage of the post-discharge journey."
+          body="Five products, one story: Svara listens at home, the care team reviews, Milan books the follow-up, Lekha documents the visit, Sutra remembers it all, and Taal keeps the rhythm."
         />
         <div>
           {products.map((p, i) => (
@@ -262,17 +256,7 @@ function Products() {
                     <span className="eyebrow">{p.tag}</span>
                   </div>
                   <h3 className="text-4xl font-extrabold tracking-[0.12em]">{p.name}</h3>
-                  <p className="leading-relaxed text-muted-foreground">{p.body}</p>
-                  <ul className="flex flex-col gap-3">
-                    {p.bullets.map((b) => (
-                      <li key={b} className="flex items-center gap-3 text-sm">
-                        <span className="flex size-[18px] items-center justify-center rounded-md bg-primary text-primary-foreground">
-                          <Check className="size-2.5" />
-                        </span>
-                        {b}
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-[15px] leading-[1.8] text-muted-foreground">{p.body}</p>
                 </div>
                 <div className="min-w-0 flex-1">
                   {p.name === "SVARA" ? <div className="product-svara flex justify-center"><SvaraAnimation state="idle" /></div> : <div className="flex justify-center"><CharacterVideo clip={p.name === "TAAL" ? "taal" : p.name === "LEKHA" ? "lekha-writing" : p.name === "MILAN" ? "milan-writing" : "sutra-search"} size={360} /></div>}
@@ -295,33 +279,33 @@ function Impact() {
     <section id="impact" className="section-band relative py-14 md:py-20">
       <Flower src={flowerYellow} className="flower-edge flower-left impact-flower" />
       <div className="mx-auto max-w-5xl px-6">
-        <SectionHead eyebrow="Impact" title="Making continuity of care measurable." body="Nayuva is designed to strengthen the connection between families and care teams after discharge." />
+        <SectionHead eyebrow="Impact" title="Making continuity of care measurable." body="Every check-in, review and visit is recorded, so continuity stops being a hope and becomes something a care team can see." />
         <div className="impact-grid grid grid-cols-1 gap-4 md:grid-cols-3">
           <div className="care-card impact-feature rounded-2xl p-7 md:col-span-2 md:row-span-2 md:p-9">
             <p className="eyebrow">Continuity</p>
             <CareGraphic kind="continuity" large />
             <h3 className="text-3xl font-bold leading-tight md:text-4xl">Care that continues<br />after discharge.</h3>
-            <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">More consistent care between discharge and follow-up.</p>
+            <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">Families are reached every scheduled day, not only at the next appointment, so small changes are heard early.</p>
           </div>
           <div className="care-card impact-visibility rounded-2xl p-6">
             <CareGraphic kind="impact-visibility" />
             <h3 className="mt-5 text-lg font-semibold">Visibility</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Better visibility into what happens between clinical visits.</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Clinicians see what happened at home, in the caregiver's own words, before the baby walks in.</p>
           </div>
           <div className="care-card impact-followup rounded-2xl p-6">
             <CareGraphic kind="impact-followup" />
             <h3 className="mt-5 text-lg font-semibold">Follow-up</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">More connected coordination of appointments and next steps.</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Concerns turn into booked visits in one step, and missed check-ins are noticed and followed up.</p>
           </div>
           <div className="care-card impact-efficiency rounded-2xl p-6">
             <CareGraphic kind="efficiency" />
             <h3 className="mt-5 text-lg font-semibold">Efficiency</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Less manual effort in communication and clinical documentation.</p>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Calls, notes and summaries are drafted automatically, giving clinicians time back for care.</p>
           </div>
           <a href="#cta" className="care-card impact-outcome relative rounded-2xl p-7 md:col-span-2">
             <p className="eyebrow">Outcome</p>
             <CareGraphic kind="support" />
-            <h3 className="max-w-lg text-xl font-semibold leading-relaxed">Better-connected care can help families stay supported and care teams stay informed.</h3>
+            <h3 className="max-w-lg text-xl font-semibold leading-relaxed">Families feel accompanied through the first six weeks, and care teams stay informed without extra work.</h3>
             <ArrowUpRight className="absolute right-6 top-6 size-5 text-primary" />
           </a>
         </div>
@@ -334,7 +318,6 @@ const team = [
   { name: "Raksha H", role: "UI/UX Designer", photo: raksha, framing: "raksha" },
   { name: "Rajeev Shukla", role: "Technical Leader", photo: rajeev, framing: "rajeev" },
   { name: "Dr Charmi Shah", role: "Clinical Head", photo: charmi, framing: "charmi" },
-  { name: "Varun Viyas", role: "Backend Developer", photo: varun, framing: "varun" },
 ];
 
 function Team() {
@@ -343,7 +326,7 @@ function Team() {
       <Flower src={flowerLavender} className="flower-edge flower-right team-flower" />
       <div className="mx-auto max-w-6xl px-6">
         <SectionHead eyebrow="Our Team" title="Building the connection between discharge and home." body="We're building technology that helps newborn care continue beyond the hospital — keeping families connected to their care teams when continuity matters most." />
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mx-auto grid max-w-4xl grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {team.map((m) => (
             <div key={m.name} className="glass team-member group relative flex flex-col items-center rounded-lg px-6 py-8 text-center">
               <div className="team-portrait relative flex size-36 items-center justify-center overflow-hidden rounded-full" data-framing={m.framing}>
