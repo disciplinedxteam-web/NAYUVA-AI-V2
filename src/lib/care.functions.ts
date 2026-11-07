@@ -242,7 +242,13 @@ export const getLekhaCapture=createServerFn({method:'POST'}).inputValidator(z.ob
 export const startLekhaCapture=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid(),mode:z.enum(['live','after']),consent:z.literal(true)})).handler(async({data})=>{
  const s=await lekhaAccess(data.appointmentId);
  const existing=await s.db.from('lekha_captures').select('*').eq('appointment_id',data.appointmentId).maybeSingle();check(existing.error);
- if(existing.data){if(existing.data.status==='approved')throw new Error('This appointment is already documented.');return existing.data;}
+ if(existing.data){if(existing.data.status==='approved')throw new Error('This appointment is already documented.');
+  // An opened capture with nothing saved may switch mode, so the clinician keeps the choice until a draft exists.
+  if(existing.data.mode!==data.mode&&!existing.data.edited_notes.trim()&&['capturing','paused'].includes(existing.data.status)){
+   if(!canStartLekhaMode(s.appointment,data.mode))throw new Error(data.mode==='after'?'Mark the appointment done in Milan before documenting after the visit.':'Live capture is available for today’s open appointments.');
+   const u=await s.db.from('lekha_captures').update({mode:data.mode,consent_at:new Date().toISOString(),revision:existing.data.revision+1,updated_at:new Date().toISOString()}).eq('id',existing.data.id).eq('revision',existing.data.revision).select().single();
+   if(u.error||!u.data)throw new Error('This appointment changed in another window. Reopen it to continue safely.');return u.data;}
+  return existing.data;}
  if(!canStartLekhaMode(s.appointment,data.mode))throw new Error(data.mode==='after'?'Mark the appointment done in Milan before documenting after the visit.':'Live capture is available for today’s open appointments.');
  const n=await s.db.from('clinical_notes').select('id').eq('appointment_id',data.appointmentId);check(n.error);if(n.data?.length)throw new Error('This appointment is already documented.');
  const r=await s.db.from('lekha_captures').upsert({appointment_id:data.appointmentId,baby_id:s.baby.id,mode:data.mode,consent_at:new Date().toISOString(),plan_snapshot:s.baby.plan},{onConflict:'appointment_id',ignoreDuplicates:true}).select().single();check(r.error);
