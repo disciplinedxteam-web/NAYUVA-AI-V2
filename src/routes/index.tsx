@@ -22,6 +22,7 @@ import flowerLavender from "@/assets/flower-lavender.png";
 import flowerYellow from "@/assets/flower-yellow.png";
 import { CareGraphic } from "@/components/care-graphic";
 import { SiteHeader } from "@/components/site-header";
+import { VideoShowcase } from "@/components/video-showcase";
 import { SvaraAnimation } from "@/components/care/svara-animation";
 import { AwardBadge } from "@/components/ui/award-badge";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
@@ -403,6 +404,7 @@ function Index() {
     <main className="page-shell">
       <Nav />
       <Hero />
+      <VideoShowcase />
       <Solution />
       <Products />
       <Impact />
