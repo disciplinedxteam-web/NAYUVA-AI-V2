@@ -1,5 +1,11 @@
 # Roadmap
 
+## Current request: Phone completion timing
+- [x] Show writing as soon as the completed-call status arrives; check immediately and every second without overlapping requests
+- [x] Open the caregiver draft as soon as it is ready, with no extra phone-only animation delay
+- [x] Show early-ended calls as a retry notification; preserve calling, qualification and explicit approval
+- [x] Run synthetic timing and phone review regressions (19 targeted tests passed)
+
 ## Current request: Svara phone review
 - [x] Preserve call initiation and protocol; stop automatic phone document delivery
 - [x] Reuse writing animation and editable caregiver review after phone completion

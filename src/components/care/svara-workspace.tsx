@@ -28,8 +28,6 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const [session, setSession] = useState<Session | null>(null);
   const [digits, setDigits] = useState(''), [consent, setConsent] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [summary, setSummary] = useState(''), [approved, setApproved] = useState(false), [call, setCall] = useState<string | null>(null);
-  const [phoneDraft, setPhoneDraft] = useState<string | null>(null);
-  const generationStarted = useRef(0);
   const lines = useRef<Line[]>([]);
   const [last, setLast] = useState<'web' | 'phone' | null>(null), [callSince, setCallSince] = useState(0), [tick, setTick] = useState(0);
   useEffect(() => { if (stage !== 'phone') return; const t = setInterval(() => setTick((n) => n + 1), 5000); return () => clearInterval(t); }, [stage]);
@@ -42,25 +40,30 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   useEffect(() => {
     if ((stage !== 'phone' && !(stage === 'generating' && last === 'phone')) || !session) return;
     let cancelled = false;
-    const t = setInterval(() => { void callStatusFn({ data: { sessionId: session.sessionId } }).then((r) => {
+    let polling = false;
+    const poll = async () => {
+      if (polling) return;
+      polling = true;
+      try {
+      const r = await callStatusFn({ data: { sessionId: session.sessionId } });
       if (cancelled) return;
       if (r.status === 'submitted') { onSaved(); setStage('success'); return; }
       setCall(r.callStatus);
+      if (r.callStatus === 'completed_no_transcript') {
+        setStage('choose'); setOpen('phone'); setError('Call ended too early. Try again.'); return;
+      }
       if (r.callStatus === 'completed') {
         if (r.failure === 'summary_unavailable') { setStage('choose'); setOpen('phone'); setError('Your call ended, but the document could not be prepared. Please try again.'); return; }
-        if (!generationStarted.current) generationStarted.current = Date.now();
-        setStage('generating');
-        if (r.draft) setPhoneDraft(r.draft);
+        if (r.draft) { setSummary(r.draft); setApproved(false); setStage('review'); }
+        else setStage('generating');
       }
-    }).catch(() => {}); }, 4000);
+      } catch { /* A transient status failure must not interrupt the call or draft. */ }
+      finally { polling = false; }
+    };
+    void poll();
+    const t = setInterval(() => { void poll(); }, 1000);
     return () => { cancelled = true; clearInterval(t); };
   }, [stage, session, last, callStatusFn, onSaved]);
-
-  useEffect(() => {
-    if (stage !== 'generating' || last !== 'phone' || !phoneDraft) return;
-    const t = setTimeout(() => { setSummary(phoneDraft); setApproved(false); setStage('review'); }, Math.max(0, 5600 - (Date.now() - generationStarted.current)));
-    return () => clearTimeout(t);
-  }, [stage, last, phoneDraft]);
 
   const onTranscript = useCallback((v: Line[]) => { lines.current = v; }, []);
   useEffect(() => { if (stage !== 'web' || !session) return; const t = setInterval(() => { if (lines.current.length) void persist({ data: { sessionId: session.sessionId, lines: lines.current } }).catch(() => {}); }, 5000); return () => clearInterval(t); }, [stage, session, persist]);
@@ -72,7 +75,6 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   }
   async function startPhone() {
     setBusy(true); setError(''); setLast('phone');
-    setPhoneDraft(null); generationStarted.current = 0;
     try { const s = await prepare({ data: { channel: 'phone' } }); setSession(s); const r = await phoneSave({ data: { sessionId: s.sessionId, phone: `+91${digits}`, consent: true } }); setCall(r.status); setCallSince(Date.now()); setStage('phone'); }
     catch (e) { setError(e instanceof Error ? e.message : 'The call could not be placed.'); } finally { setBusy(false); }
   }

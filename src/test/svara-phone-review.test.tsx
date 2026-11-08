@@ -30,14 +30,15 @@ describe('phone document review handoff', () => {
   afterEach(() => { cleanup(); vi.useRealTimers(); });
   it('keeps a qualifying phone draft unsent through animation and editing until explicit approval', async () => {
     const onSaved = vi.fn();
-    mocks.poll.mockResolvedValue({ status: 'awaiting_confirmation', callStatus: 'completed', draft, failure: null });
+    mocks.poll.mockResolvedValue({ status: 'in_progress', callStatus: 'completed', draft: null, failure: null });
     render(<SvaraWorkspace due={false} onSaved={onSaved} />);
     await placeCall();
     expect(mocks.phone).toHaveBeenCalledWith({ data: { sessionId: 'synthetic-session', phone: '+919876543210', consent: true } });
-    await act(async () => { await vi.advanceTimersByTimeAsync(4000); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
     expect(screen.getByRole('status').textContent).toBe('Writing document');
     expect(mocks.confirm).not.toHaveBeenCalled(); expect(onSaved).not.toHaveBeenCalled();
-    await act(async () => { await vi.advanceTimersByTimeAsync(5600); });
+    mocks.poll.mockResolvedValue({ status: 'awaiting_confirmation', callStatus: 'completed', draft, failure: null });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
     fireEvent.change(screen.getByRole('textbox', { name: 'Finding' }), { target: { value: 'Five feeds' } });
     expect(mocks.confirm).not.toHaveBeenCalled();
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Approve & Send to Care Team' })); });
@@ -45,12 +46,13 @@ describe('phone document review handoff', () => {
     expect(mocks.confirm).toHaveBeenCalledTimes(1); expect(onSaved).toHaveBeenCalledTimes(1);
   });
   it('keeps polling while the webhook is still generating the phone draft', async () => {
-    mocks.poll.mockResolvedValueOnce({ status: 'in_progress', callStatus: 'completed', draft: null, failure: null }).mockResolvedValue({ status: 'awaiting_confirmation', callStatus: 'completed', draft, failure: null });
+    mocks.poll.mockResolvedValue({ status: 'in_progress', callStatus: 'completed', draft: null, failure: null });
     render(<SvaraWorkspace due={false} onSaved={vi.fn()} />); await placeCall();
-    await act(async () => { await vi.advanceTimersByTimeAsync(4000); });
-    expect(mocks.poll).toHaveBeenCalledTimes(1);
-    await act(async () => { await vi.advanceTimersByTimeAsync(4000); });
-    await act(async () => { await vi.advanceTimersByTimeAsync(1600); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(mocks.poll.mock.calls.length).toBeGreaterThanOrEqual(2);
+    expect(mocks.confirm).not.toHaveBeenCalled();
+    mocks.poll.mockResolvedValue({ status: 'awaiting_confirmation', callStatus: 'completed', draft, failure: null });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
     expect(screen.getByRole('textbox', { name: 'Finding' }).getAttribute('value')).toBe('Four feeds');
     expect(mocks.confirm).not.toHaveBeenCalled();
   });
@@ -60,5 +62,26 @@ describe('phone document review handoff', () => {
     await act(async () => { await vi.advanceTimersByTimeAsync(12000); });
     expect(screen.queryByRole('button', { name: 'Approve & Send to Care Team' })).toBeNull();
     expect(mocks.confirm).not.toHaveBeenCalled(); expect(mocks.summarize).not.toHaveBeenCalled();
+  });
+  it('detects call completion within one second without waiting for AI or sending a card', async () => {
+    mocks.poll.mockResolvedValue({ status: 'in_progress', callStatus: 'in_progress', draft: null, failure: null });
+    render(<SvaraWorkspace due={false} onSaved={vi.fn()} />); await placeCall();
+    const before = mocks.poll.mock.calls.length;
+    mocks.poll.mockResolvedValue({ status: 'in_progress', callStatus: 'completed', draft: null, failure: null });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(mocks.poll.mock.calls.length).toBeGreaterThan(before);
+    expect(mocks.confirm).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Call me now' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Approve & Send to Care Team' })).toBeNull();
+  });
+  it('does not overlap slow status requests', async () => {
+    let resolvePoll: ((value: { status: string; callStatus: string; draft: null; failure: null }) => void) | undefined;
+    mocks.poll.mockImplementation(() => new Promise(resolve => { resolvePoll = resolve; }));
+    render(<SvaraWorkspace due={false} onSaved={vi.fn()} />); await placeCall();
+    await act(async () => { await vi.advanceTimersByTimeAsync(5000); });
+    expect(mocks.poll).toHaveBeenCalledTimes(1);
+    await act(async () => { resolvePoll?.({ status: 'in_progress', callStatus: 'in_progress', draft: null, failure: null }); });
+    await act(async () => { await vi.advanceTimersByTimeAsync(1000); });
+    expect(mocks.poll).toHaveBeenCalledTimes(2);
   });
 });
