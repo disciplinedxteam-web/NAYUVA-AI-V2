@@ -1,5 +1,11 @@
 # Roadmap
 
+## Current request: Svara phone review
+- [x] Preserve call initiation and protocol; stop automatic phone document delivery
+- [x] Reuse writing animation and editable caregiver review after phone completion
+- [x] Verify approval, incomplete calls and regressions with synthetic tests (105 passing); existing care records unchanged
+- [ ] Verify a real phone call through caregiver approval — requires an actual consented call; no call placed during this change
+
 ## Current: Lekha and Taal
 - [x] Connect authorized persistent live/post-visit capture, consent, draft and approval
 - [x] Redesign Lekha choices, chat capture, eight-topic checklist and quick-action drawers

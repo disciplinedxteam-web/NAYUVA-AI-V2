@@ -28,6 +28,8 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const [session, setSession] = useState<Session | null>(null);
   const [digits, setDigits] = useState(''), [consent, setConsent] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [summary, setSummary] = useState(''), [approved, setApproved] = useState(false), [call, setCall] = useState<string | null>(null);
+  const [phoneDraft, setPhoneDraft] = useState<string | null>(null);
+  const generationStarted = useRef(0);
   const lines = useRef<Line[]>([]);
   const [last, setLast] = useState<'web' | 'phone' | null>(null), [callSince, setCallSince] = useState(0), [tick, setTick] = useState(0);
   useEffect(() => { if (stage !== 'phone') return; const t = setInterval(() => setTick((n) => n + 1), 5000); return () => clearInterval(t); }, [stage]);
@@ -36,17 +38,29 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   useEffect(() => { if (!due) return; void prepare({ data: { channel: 'website_voice' } }).then((s) => { const sm = (s.summary ?? {}) as Record<string, unknown>; if (s.context['check_in_status'] === 'awaiting_confirmation' && typeof sm['summary'] === 'string') { setSession(s); setSummary(sm['summary']); setStage('review'); } else if (s.phone) setDigits(s.phone.replace(/\D/g, '').slice(-10)); }).catch(() => {}); // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [due]);
 
-  // Phone: poll the real call record until a draft card exists.
+  // Keep polling during the writing animation: the webhook prepares a draft, never sends it.
   useEffect(() => {
-    if (stage !== 'phone' || !session) return;
+    if ((stage !== 'phone' && !(stage === 'generating' && last === 'phone')) || !session) return;
+    let cancelled = false;
     const t = setInterval(() => { void callStatusFn({ data: { sessionId: session.sessionId } }).then((r) => {
+      if (cancelled) return;
       if (r.status === 'submitted') { onSaved(); setStage('success'); return; }
-      // Automatic delivery failed but a draft exists: let the caregiver send it.
-      if (r.draft && r.callStatus === 'completed') { setSummary(r.draft); setApproved(false); setStage('review'); return; }
       setCall(r.callStatus);
+      if (r.callStatus === 'completed') {
+        if (r.failure === 'summary_unavailable') { setStage('choose'); setOpen('phone'); setError('Your call ended, but the document could not be prepared. Please try again.'); return; }
+        if (!generationStarted.current) generationStarted.current = Date.now();
+        setStage('generating');
+        if (r.draft) setPhoneDraft(r.draft);
+      }
     }).catch(() => {}); }, 4000);
-    return () => clearInterval(t);
-  }, [stage, session, callStatusFn, onSaved]);
+    return () => { cancelled = true; clearInterval(t); };
+  }, [stage, session, last, callStatusFn, onSaved]);
+
+  useEffect(() => {
+    if (stage !== 'generating' || last !== 'phone' || !phoneDraft) return;
+    const t = setTimeout(() => { setSummary(phoneDraft); setApproved(false); setStage('review'); }, Math.max(0, 5600 - (Date.now() - generationStarted.current)));
+    return () => clearTimeout(t);
+  }, [stage, last, phoneDraft]);
 
   const onTranscript = useCallback((v: Line[]) => { lines.current = v; }, []);
   useEffect(() => { if (stage !== 'web' || !session) return; const t = setInterval(() => { if (lines.current.length) void persist({ data: { sessionId: session.sessionId, lines: lines.current } }).catch(() => {}); }, 5000); return () => clearInterval(t); }, [stage, session, persist]);
@@ -58,6 +72,7 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   }
   async function startPhone() {
     setBusy(true); setError(''); setLast('phone');
+    setPhoneDraft(null); generationStarted.current = 0;
     try { const s = await prepare({ data: { channel: 'phone' } }); setSession(s); const r = await phoneSave({ data: { sessionId: s.sessionId, phone: `+91${digits}`, consent: true } }); setCall(r.status); setCallSince(Date.now()); setStage('phone'); }
     catch (e) { setError(e instanceof Error ? e.message : 'The call could not be placed.'); } finally { setBusy(false); }
   }

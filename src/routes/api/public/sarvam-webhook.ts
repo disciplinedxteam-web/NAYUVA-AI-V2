@@ -39,7 +39,7 @@ export const Route = createFileRoute('/api/public/sarvam-webhook')({
         const { data: s } = await db.from('checkin_sessions').select('*').eq('attempt_id', p.attempt_id).maybeSingle();
         if (!s) return new Response('Unknown attempt', { status: 404 });
         if (!safeEqual(token, await webhookToken(s.id, key))) return new Response('Unauthorized', { status: 401 });
-        if (s.status === 'submitted') return Response.json({ ok: true, duplicate: true });
+        if (s.status === 'submitted' || s.status === 'awaiting_confirmation') return Response.json({ ok: true, duplicate: true });
 
         const status = mapStatus(p.status);
         const lines = (p.interaction_transcript ?? []).map((t) => { const who = String(t.role ?? (t as Record<string, unknown>)['speaker'] ?? '').toLowerCase(); return { role: ['user', 'caregiver', 'customer', 'human'].includes(who) ? 'user' : 'bot', content: String(t.en_text ?? t.text ?? t.content ?? '').trim().slice(0, 6000) }; }).filter((l) => l.content);
@@ -79,18 +79,8 @@ export const Route = createFileRoute('/api/public/sarvam-webhook')({
           draft = { summary: JSON.stringify(card), card, source: 'confirmed_answers_fallback' };
         }
         await db.from('checkin_sessions').update({ status: 'awaiting_confirmation', summary: { ...summaryJson, ...draft } as Json }).eq('id', s.id).neq('status', 'submitted');
-        // Phone callers should not need the website: deliver the card to the care team automatically (idempotent).
-        const text = String(draft['summary'] ?? '');
-        const { data: cardId, error: saveError } = await db.rpc('confirm_svara_card', { p_session: s.id, p_baby: s.baby_id, p_summary: text });
-        if (saveError) { console.error('svara auto-submit failed', saveError.message); return Response.json({ ok: true, draft: true, submitted: false }); }
-        const { parseCard, cardText } = await import('@/lib/care-card');
-        const card = parseCard(text);
-        if (card && cardId) {
-          const category = card.topics.filter((t) => t.status !== 'Not discussed').map((t) => t.title).join(', ').slice(0, 100) || 'Check-in';
-          await db.from('health_cards').update({ priority: card.priority, category, observation: card.topics.some((t) => t.status === 'Concern') ? 'Clinician attention requested' : 'Caregiver reported', scoring_result: { source: 'sarvam_llm', priority: card.priority, reason: card.priorityReason, note: 'AI-suggested category; care team confirms.' } as Json }).eq('id', cardId as unknown as string);
-          await db.from('care_events').update({ summary: cardText(card).slice(0, 2000) }).eq('baby_id', s.baby_id).eq('summary', text);
-        }
-        return Response.json({ ok: true, draft: true, submitted: true });
+        // Delivery is exclusively the caregiver's existing Approve & Send action.
+        return Response.json({ ok: true, draft: true, submitted: false });
       },
     },
   },

@@ -131,7 +131,9 @@ export const summarizeSvaraSession=createServerFn({method:'POST'}).inputValidato
 });
 export const confirmSvaraSession=createServerFn({method:'POST'}).inputValidator(z.object({sessionId:z.string().uuid(),summary:z.string().trim().min(1).max(5000)})).handler(async({data})=>{
  const auth=await authorized('caregiver');const {data:s,error}=await auth.db.from('checkin_sessions').select('*').eq('id',data.sessionId).eq('baby_id',auth.caregiverProfileId??'').single();check(error);if(!s)throw new Error('Check-in unavailable.');
- const stored=((s.summary??{}) as Record<string,unknown>)['summary'];const text=typeof stored==='string'&&stored.trim()?stored:data.summary;
+ if(s.status==='submitted'){const {data:existing,error:existingError}=await auth.db.from('health_cards').select('id').eq('session_id',s.id).single();check(existingError);return {ok:true,cardId:existing?.id};}
+ if(s.status!=='awaiting_confirmation')throw new Error('Prepare and review your Health Card before sending.');
+ const stored=((s.summary??{}) as Record<string,unknown>)['summary'];const {reviewedSvaraSummary}=await import('./svara-session-domain');const text=reviewedSvaraSummary(stored,data.summary);
  const {parseCard,cardText}=await import('./care-card');const card=parseCard(text);
  const {data:cardId,error:saveError}=await auth.db.rpc('confirm_svara_card',{p_session:s.id,p_baby:s.baby_id,p_summary:text});check(saveError);
  if(card&&cardId){const category=card.topics.filter(t=>t.status!=='Not discussed').map(t=>t.title).join(', ').slice(0,100)||'Check-in';check((await auth.db.from('health_cards').update({priority:card.priority,category,observation:card.topics.some(t=>t.status==='Concern')?'Clinician attention requested':'Caregiver reported',scoring_result:{source:'sarvam_llm',priority:card.priority,reason:card.priorityReason,note:'AI-suggested category; care team confirms.'} as Json}).eq('id',cardId as unknown as string)).error);await auth.db.from('care_events').update({summary:cardText(card).slice(0,2000)}).eq('baby_id',s.baby_id).eq('summary',text);}
