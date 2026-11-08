@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
+import { lockScroll } from '@/lib/scroll-lock';
 
 /**
  * Full-screen document view used everywhere a record is opened (history lists,
@@ -11,8 +12,8 @@ export function DocumentViewer({ title, onClose, children }: { title: string; on
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); onClose(); } };
     window.addEventListener('keydown', k, true);
-    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
-    return () => { window.removeEventListener('keydown', k, true); document.body.style.overflow = prev; };
+    const unlock = lockScroll();
+    return () => { window.removeEventListener('keydown', k, true); unlock(); };
   }, [onClose]);
   if (typeof document === 'undefined') return null;
   return createPortal(<div className="doc-fullscreen" role="dialog" aria-modal="true" aria-label={title}>

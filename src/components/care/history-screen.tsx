@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { History, X } from 'lucide-react';
+import { lockScroll } from '@/lib/scroll-lock';
 
 /** Round history button matching the search button. */
 export function HistoryButton({ label, onClick }: { label: string; onClick: () => void }) {
@@ -11,8 +12,8 @@ export function HistoryButton({ label, onClick }: { label: string; onClick: () =
 export function HistoryScreen({ title, description, onClose, children }: { title: string; description?: string; onClose: () => void; children: ReactNode }) {
   useEffect(() => {
     const k = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', k); const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
-    return () => { window.removeEventListener('keydown', k); document.body.style.overflow = prev; };
+    window.addEventListener('keydown', k); const unlock = lockScroll();
+    return () => { window.removeEventListener('keydown', k); unlock(); };
   }, [onClose]);
   if (typeof document === 'undefined') return null;
   return createPortal(<div className="history-screen" role="dialog" aria-modal="true" aria-label={title}>
