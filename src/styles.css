@@ -2769,3 +2769,49 @@ button.sutra-source-pill:hover { background: color-mix(in oklab, var(--primary) 
   .svara-banner { flex-wrap:wrap; }
 }
 .sutra-schedule-side .ws-label{display:flex;align-items:center;gap:4px;}
+
+/* ---- Chat redesign v2: open layout, compact Sutra-style composer, hover sidebar ---- */
+.chat-pane { max-width:1180px; }
+.chat-pane-sutra { max-width:1180px; }
+.converse { border:0; border-radius:0; background:transparent; backdrop-filter:none; }
+.converse-head { position:relative; margin:4px auto 0; width:min(100%,880px); padding:10px 14px; border:1px solid color-mix(in oklab,var(--primary) 14%,transparent); border-radius:18px; background:color-mix(in oklab,var(--card) 70%,transparent); backdrop-filter:blur(14px); }
+.converse-head-meta { flex:1; }
+.converse-call { color:var(--primary-deep); }
+.converse-call-menu { width:260px; padding:6px; display:grid; gap:2px; }
+.converse-call-menu a { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:10px; color:var(--foreground); text-decoration:none; }
+.converse-call-menu a:hover { background:var(--accent); }
+.converse-call-menu span { display:flex; flex-direction:column; font-size:13px; }
+.converse-call-menu small { color:var(--muted-foreground); }
+.converse-pin { width:min(100%,880px); margin:8px auto 0; border:1px solid color-mix(in oklab,var(--primary) 14%,transparent); border-radius:16px; background:color-mix(in oklab,var(--card) 80%,transparent); backdrop-filter:blur(12px); }
+.converse-list { width:100%; padding:18px max(16px,calc((100% - 880px)/2)); }
+.converse-list, .chat-pane-sutra, .sutra-conversation, .sutra-conversation *, .chat-picker-list { scrollbar-width:none; -ms-overflow-style:none; }
+.converse-list::-webkit-scrollbar, .chat-pane-sutra::-webkit-scrollbar, .sutra-conversation::-webkit-scrollbar, .sutra-conversation *::-webkit-scrollbar, .chat-picker-list::-webkit-scrollbar { display:none; }
+.converse-bubble { position:relative; cursor:pointer; }
+.converse-actions { position:absolute; bottom:calc(100% + 6px); right:0; z-index:5; display:flex; gap:2px; padding:4px; border-radius:12px; background:var(--popover); color:var(--popover-foreground); border:1px solid var(--border); box-shadow:0 10px 30px -12px color-mix(in oklab,var(--primary-deep) 40%,transparent); }
+.converse-bubble.is-theirs .converse-actions { right:auto; left:0; }
+.converse-actions button { display:flex; align-items:center; gap:5px; padding:6px 9px; border-radius:8px; font-size:12px; background:transparent; border:0; color:inherit; cursor:pointer; white-space:nowrap; }
+.converse-actions button:hover { background:var(--accent); }
+.converse-actions .is-danger { color:var(--destructive); }
+.converse-composer { width:min(100%,880px); margin:0 auto 4px; display:flex; flex-direction:column; gap:6px; padding:10px 12px 8px; border:1px solid color-mix(in oklab,var(--primary) 16%,transparent); border-top:1px solid color-mix(in oklab,var(--primary) 16%,transparent); border-radius:22px; background:var(--card); box-shadow:0 18px 40px -26px color-mix(in oklab,var(--primary-deep) 45%,transparent); }
+.converse-composer textarea { width:100%; border:0 !important; outline:none; resize:none; background:transparent; padding:4px 6px; font-size:15px; min-height:28px; max-height:140px; box-shadow:none !important; }
+.converse-tools { display:flex; align-items:center; gap:4px; }
+.converse-send { margin-left:auto; border-radius:999px; }
+.converse-chip { align-self:flex-start; display:flex; align-items:center; gap:6px; padding:4px 6px 4px 10px; border-radius:10px; background:var(--accent); color:var(--primary-deep); font-size:12px; max-width:100%; }
+.converse-chip span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:320px; }
+.chat-edge { position:fixed; left:0; top:0; bottom:0; width:10px; z-index:39; }
+.chat-picker-head { justify-content:flex-start; gap:8px; }
+.chat-picker-head img { width:24px; height:24px; object-fit:contain; }
+.chat-picker-label { font-size:12px; color:var(--muted-foreground); padding:4px 6px; }
+.chat-picker-foot { margin-top:auto; display:flex; flex-direction:column; gap:2px; border-top:1px solid var(--border); padding-top:10px; }
+.chat-picker-foot > * { justify-content:flex-start; }
+a.chat-picker-item { text-decoration:none; color:inherit; }
+.tutorial-chip { display:inline-flex; align-items:center; gap:8px; padding:7px 14px 7px 7px; border-radius:12px; font-size:13px; font-weight:600; color:var(--primary-deep); text-decoration:none; background:color-mix(in oklab,var(--card) 75%,transparent); border:1px solid color-mix(in oklab,var(--primary) 22%,transparent); backdrop-filter:blur(10px); transition:background .2s, transform .2s; }
+.tutorial-chip:hover { background:var(--card); transform:translateY(-1px); }
+.tutorial-chip-play { display:grid; place-items:center; width:24px; height:24px; border-radius:8px; background:var(--primary); color:var(--primary-foreground); }
+.tutorial-chip-play svg { width:13px; height:13px; }
+.sutra-slot-note { font-size:12px; color:var(--muted-foreground); margin:4px 0; }
+.sutra-time-input { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted-foreground); margin:6px 0; }
+.sutra-time-input input { padding:5px 8px; border:1px solid var(--border); border-radius:10px; background:var(--card); color:var(--foreground); }
+.sutra-slots { display:flex; flex-wrap:wrap; gap:6px; max-height:132px; overflow-y:auto; scrollbar-width:none; }
+@media (max-width:860px) { .tutorial-chip { font-size:0; padding:7px; gap:0; } }
+.converse-tools { justify-content:flex-start !important; }

@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useServerFn } from '@tanstack/react-start';
 import { useQuery } from '@tanstack/react-query';
-import { ClipboardList, Menu, MessageCircleHeart, Phone, Search, Settings, Globe, X } from 'lucide-react';
+import { ClipboardList, Menu, MessageCircleHeart, Phone, Search, Settings, Globe, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassToggle } from '@/components/ui/glass-toggle';
-import GlassmorphismCta from '@/components/ui/glassmorphism-cta';
 import { SutraWorkspace } from '@/components/sutra/workspace';
 import { getCareData, getChatThreads } from '@/lib/care.functions';
 import { nextCheckin, type CarePlan, type DemoRole } from '@/lib/care-domain';
@@ -42,27 +41,34 @@ export function ChatDashboard({ data, role, view }: { data: Data; role: DemoRole
   useEffect(() => { if (role === 'caregiver') { setBabyId(data.babies[0]?.id ?? ''); return; } const saved = sessionStorage.getItem('nv-chat-baby'); setBabyId(data.babies.some(b => b.id === saved) ? saved! : data.babies[0]?.id ?? ''); }, [role, data.babies.length]);
   const pick = (id: string) => { setBabyId(id); sessionStorage.setItem('nv-chat-baby', id); setOpen(false); };
   const go = (v: string) => void navigate({ to: role === 'care-team' ? '/care-team/$section' : '/caregiver/$section', params: { section: v } });
-  const baby = data.babies.find(b => b.id === babyId); const t = DASHBOARD_TUTORIAL[role];
+  const activeId = role === 'caregiver' ? (data.babies[0]?.id ?? '') : (data.babies.some(b => b.id === babyId) ? babyId : data.babies[0]?.id ?? '');
+  const baby = data.babies.find(b => b.id === activeId);
+  const contacts = ([['careTeamContact', 'Care Team'], ['emergencyContact', 'Hospital Emergency'], ['ambulanceNumber', 'Ambulance'], ['afterHoursContact', 'After-hours']] as const).filter(([k]) => (data.settings as Record<string, string>)[k]); const t = DASHBOARD_TUTORIAL[role];
   const unreadTotal = Object.values(threads.data ?? {}).reduce((n, x) => n + x.unread, 0);
   const sorted = [...data.babies].filter(b => `${b.baby_name} ${b.caregiver_name}`.toLowerCase().includes(q.toLowerCase())).sort((a, b) => (threads.data?.[b.id]?.at ?? '').localeCompare(threads.data?.[a.id]?.at ?? ''));
   return <div className={`chat-dash role-${role} ${open ? 'picker-open' : ''}`}>
     <header className="chat-dash-top">
-      <div className="chat-dash-left">{role === 'care-team' && <Button variant="ghost" size="icon" aria-label="Choose caregiver" aria-expanded={open} onClick={() => setOpen(true)} className="chat-dash-menu"><Menu />{unreadTotal > 0 && <i className="chat-badge">{unreadTotal}</i>}</Button>}<Link to="/" className="chat-dash-brand"><img src={logo.url} alt="Nayuva AI logo" /><BrandWordmark /></Link></div>
+      <div className="chat-dash-left"><Button variant="ghost" size="icon" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)} onMouseEnter={() => setOpen(true)} className="chat-dash-menu"><Menu />{role === 'care-team' && unreadTotal > 0 && <i className="chat-badge">{unreadTotal}</i>}</Button><Link to="/" className="chat-dash-brand"><img src={logo.url} alt="Nayuva AI logo" /><BrandWordmark /></Link></div>
       <GlassToggle label="Dashboard view" value={view} onChange={v => go(v)} options={[{ key: 'converse', label: role === 'care-team' ? 'Converse with Caregiver' : 'Converse with Care Team', ...(role === 'caregiver' && unreadTotal ? { count: unreadTotal } : {}) }, { key: 'sutra', label: 'Sutra AI' }]} />
-      <div className="chat-dash-right"><GlassmorphismCta label={t.label} avatarSrc={logo.url} avatarAlt="Nayuva" href={t.url} target="_blank" rel="noopener noreferrer" aria-label={`${t.label} (opens YouTube)`} /><Button variant="ghost" size="icon" aria-label="Settings" title="Settings" onClick={() => go('settings')}><Settings /></Button></div>
+      <div className="chat-dash-right"><a className="tutorial-chip" href={t.url} target="_blank" rel="noopener noreferrer" aria-label={`${t.label} (opens YouTube)`}><span className="tutorial-chip-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor"/></svg></span>{t.label}</a></div>
     </header>
-    {role === 'care-team' && <>
-      {open && <button type="button" className="chat-picker-scrim" aria-label="Close caregiver list" onClick={() => setOpen(false)} />}
-      <aside className="chat-picker" aria-label="Caregiver profiles" aria-hidden={!open}>
-        <div className="chat-picker-head"><strong>Caregivers</strong><Button variant="ghost" size="icon-sm" aria-label="Close" onClick={() => setOpen(false)}><X /></Button></div>
+    <div className="chat-edge" aria-hidden="true" onMouseEnter={() => setOpen(true)} />
+    {open && <button type="button" className="chat-picker-scrim" aria-label="Close menu" onClick={() => setOpen(false)} />}
+    <aside className="chat-picker" aria-label={role === 'care-team' ? 'Caregiver profiles' : 'Menu'} aria-hidden={!open} onMouseLeave={() => setOpen(false)}>
+      <div className="chat-picker-head"><img src={logo.url} alt="" /><strong>{role === 'care-team' ? 'Caregivers' : 'Menu'}</strong></div>
+      {role === 'care-team' ? <>
         <label className="chat-picker-search"><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search baby or caregiver" aria-label="Search caregiver profiles" /></label>
-        <div className="chat-picker-list">{sorted.map(b => { const th = threads.data?.[b.id]; return <button type="button" key={b.id} className={`chat-picker-item ${b.id === babyId ? 'is-on' : ''}`} onClick={() => pick(b.id)}><span className="converse-avatar">{b.baby_name.charAt(0)}</span><span className="chat-picker-meta"><strong>{b.baby_name}</strong><small>{b.caregiver_name}{th?.last ? ` · ${th.last.slice(0, 40)}` : ''}</small></span>{th?.unread ? <i className="chat-badge">{th.unread} new</i> : null}</button>; })}</div>
-        <Button variant="outline" className="chat-picker-plans" onClick={() => go('care-plan')}><ClipboardList />Care Plans</Button>
-      </aside>
-    </>}
+        <div className="chat-picker-list">{sorted.map(b => { const th = threads.data?.[b.id]; return <button type="button" key={b.id} className={`chat-picker-item ${b.id === activeId ? 'is-on' : ''}`} onClick={() => pick(b.id)}><span className="converse-avatar">{b.baby_name.charAt(0)}</span><span className="chat-picker-meta"><strong>{b.baby_name}</strong><small>{b.caregiver_name}{th?.last ? ` · ${th.last.slice(0, 40)}` : ''}</small></span>{th?.unread ? <i className="chat-badge">{th.unread} new</i> : null}</button>; })}</div>
+      </> : <div className="chat-picker-list"><p className="chat-picker-label">Emergency contacts</p>{contacts.length ? contacts.map(([k, l]) => <a key={k} className="chat-picker-item" href={'tel:' + (data.settings as Record<string, string>)[k]!.replace(/[^\d+]/g, '')}><span className="converse-avatar"><Phone size={15} /></span><span className="chat-picker-meta"><strong>{l}</strong><small>{(data.settings as Record<string, string>)[k]}</small></span></a>) : <p className="chat-picker-label">Contacts not configured yet.</p>}</div>}
+      <div className="chat-picker-foot">
+        {role === 'care-team' && <Button variant="ghost" onClick={() => go('care-plan')}><ClipboardList />Care Plans</Button>}
+        <Button variant="ghost" onClick={() => go('settings')}><Settings />Settings</Button>
+        <Button variant="ghost" asChild><Link to="/"><ArrowLeft />Back to website</Link></Button>
+      </div>
+    </aside>
     <div className="chat-dash-body">
-      <div hidden={view !== 'converse'} className="chat-pane">{babyId && <Converse key={babyId} data={data} role={role} babyId={babyId} onRead={() => void threads.refetch()} />}</div>
-      <div hidden={view !== 'sutra'} className="chat-pane chat-pane-sutra">{role === 'caregiver' && <SvaraBanner data={data} />}{role === 'care-team' && baby && <p className="chat-sutra-for">Sutra AI for <strong>{baby.baby_name}</strong> · {baby.caregiver_name}</p>}{babyId && <SutraWorkspace key={babyId} data={data} role={role} babyId={babyId} />}</div>
+      <div hidden={view !== 'converse'} className="chat-pane">{activeId ? <Converse key={activeId} data={data} role={role} babyId={activeId} onRead={() => void threads.refetch()} /> : <div className="converse-empty"><p>{role === 'care-team' ? 'Create a Care Plan to start a conversation.' : 'Loading your conversation…'}</p></div>}</div>
+      <div hidden={view !== 'sutra'} className="chat-pane chat-pane-sutra">{role === 'caregiver' && <SvaraBanner data={data} />}{role === 'care-team' && baby && <p className="chat-sutra-for">Sutra AI for <strong>{baby.baby_name}</strong> · {baby.caregiver_name}</p>}{activeId && <SutraWorkspace key={activeId} data={data} role={role} babyId={activeId} />}</div>
     </div>
   </div>;
 }
