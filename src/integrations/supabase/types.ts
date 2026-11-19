@@ -126,6 +126,95 @@ export type Database = {
           },
         ]
       }
+      care_chat_files: {
+        Row: {
+          baby_id: string
+          created_at: string
+          data: string
+          id: string
+          mime: string
+          name: string
+        }
+        Insert: {
+          baby_id: string
+          created_at?: string
+          data: string
+          id?: string
+          mime?: string
+          name?: string
+        }
+        Update: {
+          baby_id?: string
+          created_at?: string
+          data?: string
+          id?: string
+          mime?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_chat_files_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      care_chat_messages: {
+        Row: {
+          baby_id: string
+          body: string
+          created_at: string
+          file_id: string | null
+          id: string
+          kind: string
+          read_by_caregiver_at: string | null
+          read_by_team_at: string | null
+          ref_id: string | null
+          sender: string
+        }
+        Insert: {
+          baby_id: string
+          body?: string
+          created_at?: string
+          file_id?: string | null
+          id?: string
+          kind?: string
+          read_by_caregiver_at?: string | null
+          read_by_team_at?: string | null
+          ref_id?: string | null
+          sender: string
+        }
+        Update: {
+          baby_id?: string
+          body?: string
+          created_at?: string
+          file_id?: string | null
+          id?: string
+          kind?: string
+          read_by_caregiver_at?: string | null
+          read_by_team_at?: string | null
+          ref_id?: string | null
+          sender?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "care_chat_messages_baby_id_fkey"
+            columns: ["baby_id"]
+            isOneToOne: false
+            referencedRelation: "care_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "care_chat_messages_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "care_chat_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       care_events: {
         Row: {
           baby_id: string

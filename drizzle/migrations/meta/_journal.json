@@ -71,6 +71,13 @@
       "when": 1792484079439,
       "tag": "0009_lekha_live_documentation",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1795094100816,
+      "tag": "0010_care_chat",
+      "breakpoints": true
     }
   ]
 }

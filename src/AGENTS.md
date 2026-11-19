@@ -9,3 +9,6 @@
 - Below 768px the dashboard sidebar becomes a slide-out drawer opened from a menu button and closed on navigation; desktop sidebar rules stay untouched.
 - Deleting a Care Plan is care-team only and removes every baby-linked row child-first in one server action, so no orphaned card, visit, Lekha or Sutra record survives.
 - Sutra may cite only document records (Svara check-in cards and appointment summaries), enforced server-side; a card is one row, so reviewed and unreviewed states never duplicate.
+- Dashboards are chat-first: two views (Converse, Sutra AI) with no feature sidebar; Lekha, Taal, Milan, Updates and Home routes redirect to the default view. Care Team picks a baby from a slide-in caregiver picker that scopes both views.
+- Converse stores every message in locked `care_chat_messages` (server is the record, so automatic appointment and Svara-card messages can be posted from server actions); NextCon Chat SDK DirectChannels only carry live "new message" signals, with polling as fallback. Tokens are issued server-side from the App Key/Secret.
+- Sutra books appointments only through the interactive card and `sutraSchedule` (deterministic intent detection adds the card; the model never books), reusing the same appointment insert as manual scheduling.
