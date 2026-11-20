@@ -69,22 +69,3 @@ export function sutraSpeechLanguage(text: string) {
   const ranges: [RegExp, string][] = [[/[\u0980-\u09FF]/, 'bn-IN'], [/[\u0A00-\u0A7F]/, 'pa-IN'], [/[\u0A80-\u0AFF]/, 'gu-IN'], [/[\u0B00-\u0B7F]/, 'od-IN'], [/[\u0B80-\u0BFF]/, 'ta-IN'], [/[\u0C00-\u0C7F]/, 'te-IN'], [/[\u0C80-\u0CFF]/, 'kn-IN'], [/[\u0D00-\u0D7F]/, 'ml-IN'], [/[\u0900-\u097F]/, /(आहे|आहेत|नाही|मला)/.test(text) ? 'mr-IN' : 'hi-IN']];
   return (ranges.find(([r]) => r.test(text))?.[1] ?? 'en-IN') as 'en-IN';
 }
-
-/** Deterministic scheduling intent (English, Hindi and common Indian-language words); the card, not the model, books. */
-export function sutraScheduleIntent(q:string){return /\b(schedul\w*|book\w*|appointment|follow[- ]?up visit|reschedul\w*)\b|अपॉइंटमेंट|अपॉइंटमेंट|मुलाकात|ಅಪಾಯಿಂಟ್|அப்பாயிண்ட்|అపాయింట్/i.test(q);}
-
-const MONTHS=['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-/** Deterministic date/time hints from the clinician's words so the scheduling card can be pre-filled. */
-export function sutraScheduleHints(q:string,now=new Date()):{date?:string;time?:string;mode?:'online'|'offline'}{
- const t=q.toLowerCase();const pad=(n:number)=>String(n).padStart(2,'0');const iso=(d:Date)=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;const out:{date?:string;time?:string;mode?:'online'|'offline'}={};
- const isoM=/(\d{4})-(\d{2})-(\d{2})/.exec(t);
- if(isoM)out.date=isoM[0];
- else if(/\btomorrow\b/.test(t)){const d=new Date(now);d.setDate(d.getDate()+1);out.date=iso(d);}
- else if(/\btoday\b/.test(t))out.date=iso(now);
- else{const m=new RegExp(`\\b(\\d{1,2})(?:st|nd|rd|th)?\\s*(?:of\\s*)?(${MONTHS.join('|')})[a-z]*|\\b(${MONTHS.join('|')})[a-z]*\\s*(\\d{1,2})(?:st|nd|rd|th)?\\b`).exec(t);
-  if(m){const day=Number(m[1]??m[4]);const mon=MONTHS.indexOf((m[2]??m[3])!);let d=new Date(now.getFullYear(),mon,day);if(d<new Date(now.getFullYear(),now.getMonth(),now.getDate()))d=new Date(now.getFullYear()+1,mon,day);if(d.getDate()===day)out.date=iso(d);}}
- const tm=/\b(\d{1,2})(?::(\d{2}))?\s*(am|pm|a\.m\.|p\.m\.)/.exec(t)??/\b([01]?\d|2[0-3]):([0-5]\d)\b/.exec(t);
- if(tm){let h=Number(tm[1]);const mi=Number(tm[2]??0);const ap=tm[3];if(ap?.startsWith('p')&&h<12)h+=12;if(ap?.startsWith('a')&&h===12)h=0;if(h<24&&mi<60)out.time=`${pad(h)}:${pad(mi)}`;}
- if(/\b(online|video|virtual)\b/.test(t))out.mode='online';else if(/\b(in[- ]?person|offline|clinic|visit the)\b/.test(t))out.mode='offline';
- return out;
-}

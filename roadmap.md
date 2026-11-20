@@ -1,13 +1,5 @@
 # Roadmap
 
-## Current request: Chat-first dashboard redesign
-- [x] Two-view dashboards (Converse / Sutra AI), single tutorial button per role, Lekha/Taal removed
-- [x] Converse via NextCon Chat SDK with text, voice notes, documents, pinned appointment (join/cancel/reschedule)
-- [x] Care Team caregiver picker with search and unread counts
-- [x] Sutra scheduling card with approve, automatic message and pinned appointment
-- [x] Caregiver Svara banner above Sutra; approved Health Cards posted into Converse
-- [ ] Real two-person live chat and a full online visit from the new pinned card — needs two people on two devices
-
 ## Current request: Phone completion timing
 - [x] Show writing as soon as the completed-call status arrives; check immediately and every second without overlapping requests
 - [x] Open the caregiver draft as soon as it is ready, with no extra phone-only animation delay

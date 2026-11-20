@@ -25,8 +25,6 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
   const navigate = useNavigate();
   const [stage, setStage] = useState<Stage>('choose');
   const [open, setOpen] = useState<'web' | 'phone' | null>(null);
-  // The Sutra AI banner preselects the caregiver's chosen channel; the rest of the flow is unchanged.
-  useEffect(() => { const c = sessionStorage.getItem('svara-channel'); sessionStorage.removeItem('svara-channel'); if (c === 'web' || c === 'phone') setOpen(c); }, []);
   const [session, setSession] = useState<Session | null>(null);
   const [digits, setDigits] = useState(''), [consent, setConsent] = useState(false), [busy, setBusy] = useState(false), [error, setError] = useState('');
   const [summary, setSummary] = useState(''), [approved, setApproved] = useState(false), [call, setCall] = useState<string | null>(null);
