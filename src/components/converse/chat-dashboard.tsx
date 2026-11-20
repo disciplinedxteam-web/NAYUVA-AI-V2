@@ -40,7 +40,7 @@ export function ChatDashboard({ data, role, view }: { data: Data; role: DemoRole
   const navigate = useNavigate(); const threadsFn = useServerFn(getChatThreads);
   const threads = useQuery({ queryKey: ['chat-threads'], queryFn: () => threadsFn(), refetchInterval: 6000 });
   const team = role === 'care-team';
-  const [babyId, setBabyId] = useState(''); const [open, setOpen] = useState(team); const [q, setQ] = useState('');
+  const [babyId, setBabyId] = useState(''); const [open, setOpen] = useState(team); const [q, setQ] = useState(''); const [histOpen, setHistOpen] = useState(false);
   useEffect(() => { if (!team) { setBabyId(data.babies[0]?.id ?? ''); return; } const saved = sessionStorage.getItem('nv-chat-baby'); setBabyId(data.babies.some(b => b.id === saved) ? saved! : data.babies[0]?.id ?? ''); if (sessionStorage.getItem('nv-panel') === 'closed') setOpen(false); if (window.matchMedia('(max-width:860px)').matches) setOpen(false); }, [role, data.babies.length]);
   const setPanel = (v: boolean) => { setOpen(v); if (team) sessionStorage.setItem('nv-panel', v ? 'open' : 'closed'); };
   const pick = (id: string) => { setBabyId(id); sessionStorage.setItem('nv-chat-baby', id); if (!team || window.matchMedia('(max-width:860px)').matches) setOpen(false); };
@@ -70,11 +70,11 @@ export function ChatDashboard({ data, role, view }: { data: Data; role: DemoRole
             : <Button variant="ghost" size="icon" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)} className="chat-dash-menu"><Menu /></Button>}
           {(!team || !open) && <Link to="/" className="chat-dash-brand"><img src={logo.url} alt="Nayuva AI logo" /><BrandWordmark /></Link>}
         </div>
-        <GlassToggle label="Dashboard view" value={view} onChange={v => go(v)} options={[{ key: 'converse', label: team ? 'Converse with Caregiver' : 'Converse with Care Team', ...(!team && unreadTotal ? { count: unreadTotal } : {}) }, { key: 'sutra', label: 'Sutra AI' }]} />
+        {histOpen && view === 'converse' ? <span /> : <GlassToggle label="Dashboard view" value={view} onChange={v => go(v)} options={[{ key: 'converse', label: team ? 'Converse with Caregiver' : 'Converse with Care Team', ...(!team && unreadTotal ? { count: unreadTotal } : {}) }, { key: 'sutra', label: 'Sutra AI' }]} />}
         <div className="chat-dash-right"><GlassmorphismCta className="tutorial-tile" href={t.url} target="_blank" rel="noopener noreferrer" aria-label={`${t.label} (opens YouTube)`} title={t.label} label="Tutorial" avatarSrc={logo.url} /></div>
       </header>
       <div className="chat-dash-body">
-        <div hidden={view !== 'converse'} className="chat-pane">{activeId ? <Converse key={activeId} data={data} role={role} babyId={activeId} onRead={() => void threads.refetch()} onAskSutra={askSutra} /> : <div className="converse-empty"><p>{team ? 'Create a Care Plan to start a conversation.' : 'Loading your conversation…'}</p></div>}</div>
+        <div hidden={view !== 'converse'} className="chat-pane">{activeId ? <Converse key={activeId} data={data} role={role} babyId={activeId} onRead={() => void threads.refetch()} onAskSutra={askSutra} onHistoryChange={setHistOpen} /> : <div className="converse-empty"><p>{team ? 'Create a Care Plan to start a conversation.' : 'Loading your conversation…'}</p></div>}</div>
         <div hidden={view !== 'sutra'} className="chat-pane chat-pane-sutra">{!team && <SvaraBanner data={data} />}{team && baby && <p className="chat-sutra-for">Sutra AI for <strong>{baby.baby_name}</strong> · {baby.caregiver_name}</p>}{activeId && <SutraWorkspace key={activeId} data={data} role={role} babyId={activeId} />}</div>
       </div>
     </div>

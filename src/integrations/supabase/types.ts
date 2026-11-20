@@ -172,6 +172,7 @@ export type Database = {
           read_by_caregiver_at: string | null
           read_by_team_at: string | null
           ref_id: string | null
+          reply_to: string | null
           sender: string
         }
         Insert: {
@@ -184,6 +185,7 @@ export type Database = {
           read_by_caregiver_at?: string | null
           read_by_team_at?: string | null
           ref_id?: string | null
+          reply_to?: string | null
           sender: string
         }
         Update: {
@@ -196,6 +198,7 @@ export type Database = {
           read_by_caregiver_at?: string | null
           read_by_team_at?: string | null
           ref_id?: string | null
+          reply_to?: string | null
           sender?: string
         }
         Relationships: [

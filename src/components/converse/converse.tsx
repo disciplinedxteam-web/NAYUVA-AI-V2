@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowUp, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, FileText, Mic, Paperclip, Pin, Square, Video, X, MapPin, Activity, Clock, Phone, Copy, Pencil, Trash2, Smile, History, Plus, Download, ZoomIn, ZoomOut, SmilePlus } from 'lucide-react';
+import { ArrowUp, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, FileText, Mic, Paperclip, Pin, Square, Video, X, MapPin, Activity, Clock, Phone, Copy, Pencil, Trash2, Smile, History, Plus, Download, ZoomIn, ZoomOut, SmilePlus, Reply, Camera, Image as ImageIcon, Headphones } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSutraDictation } from '@/components/sutra/use-dictation';
 import { Button } from '@/components/ui/button';
@@ -75,7 +75,7 @@ function ImageViewer({ src, name, onClose }: { src: string; name: string; onClos
   </div>;
 }
 
-export function Converse({ data, role, babyId, onRead, onAskSutra }: { data: Data; role: DemoRole; babyId: string; onRead: () => void; onAskSutra?: (d: AskSutraDoc) => void }) {
+export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChange }: { data: Data; role: DemoRole; babyId: string; onRead: () => void; onAskSutra?: (d: AskSutraDoc) => void; onHistoryChange?: (open: boolean) => void }) {
   const editFn = useServerFn(editChat), delFn = useServerFn(deleteChat), reactFn = useServerFn(reactChat);
   const fetchChat = useServerFn(getChat), send = useServerFn(sendChat), file = useServerFn(getChatFile), change = useServerFn(updateAppointment);
   const qc = useQueryClient();
@@ -86,13 +86,22 @@ export function Converse({ data, role, babyId, onRead, onAskSutra }: { data: Dat
   const [audio, setAudio] = useState<Record<string, string>>({}), [images, setImages] = useState<Record<string, string>>({});
   const [pending, setPending] = useState<File | null>(null), [pendingUrl, setPendingUrl] = useState(''), [editing, setEditing] = useState<string | null>(null), [menu, setMenu] = useState<string | null>(null);
   const [sending, setSending] = useState<{ id: string; body: string }[]>([]), [viewer, setViewer] = useState<{ src: string; name: string } | null>(null), [history, setHistory] = useState(false), [pinIndex, setPinIndex] = useState(0), [moreFor, setMoreFor] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<string | null>(null), [flash, setFlash] = useState<string | null>(null), [divider, setDivider] = useState<string | null | undefined>(undefined), [attachOpen, setAttachOpen] = useState(false);
+  const docInput = useRef<HTMLInputElement>(null), mediaInput = useRef<HTMLInputElement>(null), audioInput = useRef<HTMLInputElement>(null), camInput = useRef<HTMLInputElement>(null);
   const speech = useSutraDictation(draft, setDraft, 'en-IN');
-  const list = useRef<HTMLDivElement>(null), fileInput = useRef<HTMLInputElement>(null), textRef = useRef<HTMLTextAreaElement>(null);
+  const list = useRef<HTMLDivElement>(null), textRef = useRef<HTMLTextAreaElement>(null);
   const all = chat.data?.messages ?? [];
   const msgs = all.filter(m => m.kind !== 'reaction');
   const reactions = useMemo(() => { const r: Record<string, { emoji: string; mine: boolean; n: number }[]> = {}; for (const m of all) if (m.kind === 'reaction' && m.ref_id) { const l = r[m.ref_id] ??= []; const e = l.find(x => x.emoji === m.body); const mine = m.sender === (role === 'care-team' ? 'care-team' : 'caregiver'); if (e) { e.n++; e.mine ||= mine; } else l.push({ emoji: m.body, mine, n: 1 }); } return r; }, [all, role]);
-  useEffect(() => { list.current?.scrollTo({ top: list.current.scrollHeight }); }, [msgs.length, sending.length, babyId, history]);
+  useEffect(() => { if (divider) return; list.current?.scrollTo({ top: list.current.scrollHeight }); }, [msgs.length, sending.length, babyId, history]);
   useEffect(() => { if (chat.dataUpdatedAt) onRead(); }, [chat.dataUpdatedAt]);
+  useEffect(() => { onHistoryChange?.(history); }, [history]);
+  useEffect(() => () => onHistoryChange?.(false), []);
+  // "New messages" divider: taken from the first load only, then fades a few seconds after being seen.
+  useEffect(() => { if (divider !== undefined || !chat.data) return; const id = chat.data.firstUnread ?? null; setDivider(id); if (id) { requestAnimationFrame(() => list.current?.querySelector(`[data-mid="${id}"]`)?.scrollIntoView({ block: 'center' })); setTimeout(() => setDivider(null), 6000); } }, [chat.data]);
+  function jumpTo(id: string) { const el = list.current?.querySelector(`[data-mid="${id}"]`); if (!el) { setNotice('That message is no longer available.'); return; } el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setFlash(null); requestAnimationFrame(() => setFlash(id)); setTimeout(() => setFlash(f => f === id ? null : f), 1700); }
+  const preview = (m: { kind: string; body: string; file?: { name: string } | null }) => m.kind === 'text' ? m.body : m.kind === 'voice' ? 'Voice message' : m.kind === 'svara_card' ? 'Svara Health Card' : m.file?.name ?? m.body ?? 'Attachment';
+  const who = (sender: string) => sender === me ? 'You' : sender === 'caregiver' ? (baby?.caregiver_name ?? 'Caregiver') : 'Care Team';
   useEffect(() => { if (!pending || !pending.type.startsWith('image/')) { setPendingUrl(''); return; } const u = URL.createObjectURL(pending); setPendingUrl(u); return () => URL.revokeObjectURL(u); }, [pending]);
   // Images preview inline: load each image file once.
   useEffect(() => { for (const m of msgs) if (m.kind === 'file' && m.file_id && m.file?.mime?.startsWith('image/') && !images[m.file_id]) { const id = m.file_id; setImages(x => ({ ...x, [id]: '' })); void file({ data: { id } }).then(f => setImages(x => ({ ...x, [id]: `data:${f.mime};base64,${f.data}` }))).catch(() => undefined); } }, [msgs]);
@@ -104,8 +113,8 @@ export function Converse({ data, role, babyId, onRead, onAskSutra }: { data: Dat
     if (busy) return false; setBusy(true);
     const tmp = { id: crypto.randomUUID(), body: kind === 'text' ? body : f?.name ?? body };
     setSending(s => [...s, tmp]);
-    try { await send({ data: { babyId, kind, body, ...(f ? { file: f } : {}) } }); await chat.refetch(); if (chat.data?.peer) void signal(chat.data.peer, JSON.stringify({ nv: 'msg', babyId })); return true; }
-    catch (e) { setNotice(e instanceof Error ? e.message : 'Message not sent.'); return false; } finally { setSending(s => s.filter(x => x.id !== tmp.id)); setBusy(false); }
+    const rt = replyTo; setReplyTo(null); try { await send({ data: { babyId, kind, body, ...(f ? { file: f } : {}), ...(rt ? { replyTo: rt } : {}) } }); await chat.refetch(); if (chat.data?.peer) void signal(chat.data.peer, JSON.stringify({ nv: 'msg', babyId })); return true; }
+    catch (e) { if (rt) setReplyTo(rt); setNotice(e instanceof Error ? e.message : 'Message not sent.'); return false; } finally { setSending(s => s.filter(x => x.id !== tmp.id)); setBusy(false); }
   }
   function choose(f: File) { if (f.size > 4_000_000) { setNotice('Files up to 4 MB can be shared.'); return; } setPending(f); }
   async function submit() {
@@ -151,14 +160,16 @@ export function Converse({ data, role, babyId, onRead, onAskSutra }: { data: Dat
         const read = (role === 'care-team' ? m.read_by_caregiver_at : m.read_by_team_at);
         const rx = reactions[m.id];
         const reactable = ['text', 'voice', 'file', 'svara_card'].includes(m.kind);
-        return <div key={m.id}>{sep && <div className="converse-day"><span>{sep}</span></div>}
+        const quoted = m.reply_to ? msgs.find(x => x.id === m.reply_to) : undefined;
+        return <div key={m.id} data-mid={m.id} className={flash === m.id ? 'is-flash' : ''}>{sep && <div className="converse-day"><span>{sep}</span></div>}{divider === m.id && <div className="converse-new" role="status"><span>New messages</span></div>}
           {m.kind === 'appointment' ? <div className="converse-system"><span><CalendarDays size={13} />{m.body}</span>{appt && m.sender === 'system' && apptCard(appt)}</div>
             : <div className={`converse-row ${mine ? 'is-mine' : 'is-theirs'}`}><div className={`converse-bubble ${mine ? 'is-mine' : 'is-theirs'} ${menu === m.id ? 'is-menu' : ''} ${isImg ? 'is-image' : ''} ${rx?.length ? 'has-rx' : ''}`} onClick={() => { if (reactable) setMenu(v => v === m.id ? null : m.id); }}>
               {menu === m.id && <div className="converse-actions" onClick={e => e.stopPropagation()}>
                 <div className="converse-react-bar">{QUICK_REACTIONS.map(e => <button key={e} type="button" aria-label={`React ${e}`} className={rx?.some(x => x.emoji === e && x.mine) ? 'is-on' : ''} onClick={() => void react(m.id, e)}>{e}</button>)}
                   <Popover open={moreFor === m.id} onOpenChange={o => setMoreFor(o ? m.id : null)}><PopoverTrigger asChild><button type="button" aria-label="More reactions" className="converse-react-more"><Plus size={14} /></button></PopoverTrigger><PopoverContent className="converse-emoji-pop" align="center"><EmojiGrid onPick={e => void react(m.id, e)} /></PopoverContent></Popover></div>
-                <div className="converse-action-row">{m.kind === 'text' && <button type="button" onClick={() => { void navigator.clipboard.writeText(m.body); setMenu(null); setNotice('Message copied.'); }}><Copy size={13} />Copy</button>}{isImg && img && <button type="button" onClick={() => { const a = document.createElement('a'); a.href = img; a.download = m.file?.name ?? 'image'; a.click(); setMenu(null); }}><Download size={13} />Download</button>}{mine && m.kind === 'text' && <button type="button" onClick={() => { setEditing(m.id); setDraft(m.body); setMenu(null); }}><Pencil size={13} />Edit</button>}{mine && m.kind !== 'svara_card' && <button type="button" className="is-danger" disabled={busy} onClick={() => void remove(m.id)}><Trash2 size={13} />Delete</button>}</div>
+                <div className="converse-action-row"><button type="button" onClick={() => { setReplyTo(m.id); setEditing(null); setMenu(null); textRef.current?.focus(); }}><Reply size={13} />Reply</button>{m.kind === 'text' && <button type="button" onClick={() => { void navigator.clipboard.writeText(m.body); setMenu(null); setNotice('Message copied.'); }}><Copy size={13} />Copy</button>}{isImg && img && <button type="button" onClick={() => { const a = document.createElement('a'); a.href = img; a.download = m.file?.name ?? 'image'; a.click(); setMenu(null); }}><Download size={13} />Download</button>}{mine && m.kind === 'text' && <button type="button" onClick={() => { setEditing(m.id); setDraft(m.body); setMenu(null); }}><Pencil size={13} />Edit</button>}{mine && m.kind !== 'svara_card' && <button type="button" className="is-danger" disabled={busy} onClick={() => void remove(m.id)}><Trash2 size={13} />Delete</button>}</div>
               </div>}
+              {m.reply_to && <button type="button" className="converse-quote" onClick={e => { e.stopPropagation(); jumpTo(m.reply_to!); }}><strong>{quoted ? who(quoted.sender) : 'Message'}</strong><span>{quoted ? preview(quoted) : 'Original message was deleted'}</span></button>}
               {m.kind === 'svara_card' ? <button type="button" className="converse-doc" onClick={e => { e.stopPropagation(); setDoc(m.ref_id); }}><Activity /><span><strong>Svara Health Card</strong><small>{m.body}</small></span><FileText /></button>
                 : m.kind === 'voice' && m.file_id ? (audio[m.file_id] ? <audio controls autoPlay src={audio[m.file_id]} onClick={e => e.stopPropagation()} /> : <button type="button" className="converse-voice" onClick={e => { e.stopPropagation(); void openFile(m.file_id!, true); }}><Mic size={14} />Play voice message</button>)
                   : isImg ? <div className="converse-image">{img ? <button type="button" className="converse-image-open" aria-label={`Open ${m.file?.name ?? 'image'}`} onClick={e => { e.stopPropagation(); setViewer({ src: img, name: m.file?.name ?? 'image' }); }}><img src={img} alt={m.file?.name ?? 'Shared photo'} /></button> : <div className="converse-image-loading">Loading photo…</div>}{img && <Button type="button" size="icon-xs" variant="secondary" className="converse-image-dl" aria-label="Download image" onClick={e => { e.stopPropagation(); const a = document.createElement('a'); a.href = img; a.download = m.file?.name ?? 'image'; a.click(); }}><Download /></Button>}</div>
@@ -166,18 +177,20 @@ export function Converse({ data, role, babyId, onRead, onAskSutra }: { data: Dat
                     : <p>{m.body}</p>}
               <time>{time(m.created_at)}{mine && <CheckCheck size={14} aria-label={read ? 'Read' : 'Delivered'} className={`converse-tick ${read ? 'is-read' : 'is-delivered'}`} />}</time>
               {!!rx?.length && <div className="converse-rx" onClick={e => e.stopPropagation()}>{rx.map(r => <button key={r.emoji} type="button" className={r.mine ? 'is-mine' : ''} aria-label={`${r.emoji} ${r.n}${r.mine ? ', tap to remove yours' : ''}`} onClick={() => r.mine && void react(m.id, r.emoji)}>{r.emoji}{r.n > 1 && <small>{r.n}</small>}</button>)}</div>}
-            </div>{reactable && <button type="button" className="converse-react-hint" aria-label="React" onClick={() => setMenu(m.id)}><SmilePlus size={15} /></button>}</div>}
+            </div>{reactable && <span className="converse-hover-tools"><button type="button" className="converse-react-hint" aria-label="Reply" title="Reply" onClick={() => { setReplyTo(m.id); setEditing(null); textRef.current?.focus(); }}><Reply size={15} /></button><button type="button" className="converse-react-hint" aria-label="React" title="React" onClick={() => setMenu(m.id)}><SmilePlus size={15} /></button></span>}</div>}
         </div>;
       })}
       {sending.map(s => <div key={s.id} className="converse-row is-mine"><div className="converse-bubble is-mine is-sending"><p>{s.body}</p><time>Sending<Check size={14} aria-label="Sent, not delivered" className="converse-tick is-pending" /></time></div></div>)}
     </div>
     <form className="converse-composer" onSubmit={e => { e.preventDefault(); void submit(); }}>
+      {replyTo && !editing && (() => { const q = msgs.find(x => x.id === replyTo); return q ? <div className="converse-reply-draft"><Reply size={15} /><button type="button" onClick={() => jumpTo(q.id)}><strong>Replying to {who(q.sender)}</strong><span>{preview(q)}</span></button><Button type="button" variant="ghost" size="icon-xs" aria-label="Cancel reply" onClick={() => setReplyTo(null)}><X /></Button></div> : null; })()}
       {editing && <div className="converse-chip"><Pencil size={13} /><span>Editing message</span><Button type="button" variant="ghost" size="icon-xs" aria-label="Cancel edit" onClick={() => { setEditing(null); setDraft(''); }}><X /></Button></div>}
       {pending && (pendingUrl ? <div className="converse-draft-image"><button type="button" aria-label="Preview photo" onClick={() => setViewer({ src: pendingUrl, name: pending.name })}><img src={pendingUrl} alt={pending.name} /></button><span>{pending.name}</span><Button type="button" variant="ghost" size="icon-xs" aria-label="Remove photo" onClick={() => setPending(null)}><X /></Button></div>
         : <div className="converse-chip"><FileText size={13} /><span>{pending.name}</span><Button type="button" variant="ghost" size="icon-xs" aria-label="Remove attachment" onClick={() => setPending(null)}><X /></Button></div>)}
       <div className="converse-bar">
-        <input ref={fileInput} type="file" hidden accept="image/*,.pdf,.doc,.docx,.txt" onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) choose(f); }} />
-        <Button type="button" variant="ghost" size="icon-sm" aria-label="Attach photo or document" disabled={busy || !!editing} onClick={() => fileInput.current?.click()}><Paperclip /></Button>
+        {([[docInput, '.pdf,.doc,.docx,.txt,.xls,.xlsx,.ppt,.pptx', false], [mediaInput, 'image/*,video/*', false], [audioInput, 'audio/*', false], [camInput, 'image/*', true]] as const).map(([r, accept, cam], i) => <input key={i} ref={r} type="file" hidden accept={accept} {...(cam ? { capture: 'environment' as const } : {})} onChange={e => { const f = e.target.files?.[0]; e.target.value = ''; if (f) choose(f); }} />)}
+        <Popover open={attachOpen} onOpenChange={setAttachOpen}><PopoverTrigger asChild><Button type="button" variant="ghost" size="icon-sm" aria-label="Attach" disabled={busy || !!editing}><Paperclip /></Button></PopoverTrigger>
+          <PopoverContent side="top" align="start" className="converse-attach-menu">{([[docInput, FileText, 'Document', 'is-doc'], [mediaInput, ImageIcon, 'Photos & videos', 'is-media'], [camInput, Camera, 'Camera', 'is-cam'], [audioInput, Headphones, 'Audio', 'is-audio']] as const).map(([r, Icon, label, cls]) => <button key={label} type="button" className={cls} onClick={() => { setAttachOpen(false); r.current?.click(); }}><span><Icon /></span>{label}</button>)}</PopoverContent></Popover>
         <Popover><PopoverTrigger asChild><Button type="button" variant="ghost" size="icon-sm" aria-label="Add emoji"><Smile /></Button></PopoverTrigger><PopoverContent side="top" align="start" className="converse-emoji-pop"><EmojiGrid onPick={insertEmoji} /></PopoverContent></Popover>
         <textarea ref={textRef} rows={1} value={draft} placeholder={speech.listening ? 'Listening… speak in any language' : 'Type a message'} aria-label="Message" onChange={e => setDraft(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void submit(); } }} />
         {(speech.listening || speech.processing) && <span className="sutra-capture-status" role="status">{speech.processing ? 'Transcribing…' : 'Listening…'}</span>}

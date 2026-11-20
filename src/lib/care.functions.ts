@@ -329,15 +329,16 @@ export const getChatThreads=createServerFn({method:'GET'}).handler(async()=>{
 });
 export const getChat=createServerFn({method:'POST'}).inputValidator(z.object({babyId:z.string().uuid()})).handler(async({data})=>{
  const s=await authorized();await babyAccess(s.db,data.babyId,s.role);
- const {data:rows,error}=await s.db.from('care_chat_messages').select('id,baby_id,sender,kind,body,ref_id,file_id,created_at,read_by_team_at,read_by_caregiver_at').eq('baby_id',data.babyId).order('created_at').limit(500);check(error);
+ const {data:rows,error}=await s.db.from('care_chat_messages').select('id,baby_id,sender,kind,body,ref_id,reply_to,file_id,created_at,read_by_team_at,read_by_caregiver_at').eq('baby_id',data.babyId).order('created_at').limit(500);check(error);
  const fileIds=(rows??[]).map(r=>r.file_id).filter((x):x is string=>!!x);const files=fileIds.length?(await s.db.from('care_chat_files').select('id,name,mime').in('id',fileIds)).data??[]:[];
+ const firstUnread=(rows??[]).find(r=>r.kind!=='reaction'&&(s.role==='care-team'?r.sender==='caregiver'&&!r.read_by_team_at:r.sender!=='caregiver'&&!r.read_by_caregiver_at))?.id??null;
  const now=new Date().toISOString();if(s.role==='care-team')await s.db.from('care_chat_messages').update({read_by_team_at:now}).eq('baby_id',data.babyId).eq('sender','caregiver').is('read_by_team_at',null);else await s.db.from('care_chat_messages').update({read_by_caregiver_at:now}).eq('baby_id',data.babyId).neq('sender','caregiver').is('read_by_caregiver_at',null);
- return {me:s.role,peer:s.role==='care-team'?chatPeer('caregiver',data.babyId):chatPeer('care-team'),messages:(rows??[]).map(r=>({...r,file:files.find(f=>f.id===r.file_id)??null}))};
+ return {firstUnread,me:s.role,peer:s.role==='care-team'?chatPeer('caregiver',data.babyId):chatPeer('care-team'),messages:(rows??[]).map(r=>({...r,file:files.find(f=>f.id===r.file_id)??null}))};
 });
-export const sendChat=createServerFn({method:'POST'}).inputValidator(z.object({babyId:z.string().uuid(),kind:z.enum(['text','voice','file']),body:z.string().max(4000).default(''),file:z.object({name:z.string().min(1).max(200),mime:z.string().max(100),data:z.string().max(6_000_000)}).optional()}).refine(v=>v.kind==='text'?!!v.body.trim():!!v.file,'Message is empty')).handler(async({data})=>{
+export const sendChat=createServerFn({method:'POST'}).inputValidator(z.object({babyId:z.string().uuid(),kind:z.enum(['text','voice','file']),body:z.string().max(4000).default(''),replyTo:z.string().uuid().optional(),file:z.object({name:z.string().min(1).max(200),mime:z.string().max(100),data:z.string().max(6_000_000)}).optional()}).refine(v=>v.kind==='text'?!!v.body.trim():!!v.file,'Message is empty')).handler(async({data})=>{
  const s=await authorized();await babyAccess(s.db,data.babyId,s.role);let fileId:string|null=null;
  if(data.file){const {data:f,error}=await s.db.from('care_chat_files').insert({baby_id:data.babyId,name:data.file.name,mime:data.file.mime||'application/octet-stream',data:data.file.data}).select('id').single();check(error);fileId=f?.id??null;}
- const {data:m,error}=await s.db.from('care_chat_messages').insert({baby_id:data.babyId,sender:s.role==='care-team'?'care-team':'caregiver',kind:data.kind,body:data.body.trim()||(data.file?.name??''),file_id:fileId}).select('id').single();check(error);return {id:m?.id};
+ const {data:m,error}=await s.db.from('care_chat_messages').insert({baby_id:data.babyId,sender:s.role==='care-team'?'care-team':'caregiver',kind:data.kind,body:data.body.trim()||(data.file?.name??''),file_id:fileId,reply_to:data.replyTo??null}).select('id').single();check(error);return {id:m?.id};
 });
 /** Toggle one emoji reaction per person per message; stored as a 'reaction' row so no schema change is needed. */
 export const reactChat=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid(),emoji:z.string().min(1).max(16)})).handler(async({data})=>{
@@ -356,14 +357,15 @@ export const deleteChat=createServerFn({method:'POST'}).inputValidator(z.object(
 export const getChatFile=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{
  const s=await authorized();const {data:f,error}=await s.db.from('care_chat_files').select('*').eq('id',data.id).single();check(error);if(!f)throw new Error('File unavailable');await babyAccess(s.db,f.baby_id,s.role);return {name:f.name,mime:f.mime,data:f.data};
 });
-export const sutraSchedule=createServerFn({method:'POST'}).inputValidator(z.object({babyId:z.string().uuid(),date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),time:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),reason:z.string().min(1).max(100),mode:z.enum(['offline','online']),conversationId:z.string().uuid().optional(),label:z.string().max(300)})).handler(async({data})=>{
+export const sutraSchedule=createServerFn({method:'POST'}).inputValidator(z.object({babyId:z.string().uuid(),date:z.string().regex(/^\d{4}-\d{2}-\d{2}$/),time:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),endTime:z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/).optional(),reason:z.string().min(1).max(100),mode:z.enum(['offline','online']),conversationId:z.string().uuid().optional(),label:z.string().max(300)})).handler(async({data})=>{
  const s=await authorized('care-team');const baby=await babyAccess(s.db,data.babyId,'care-team');
  if(new Date(indiaTimestamp(data.date,data.time)).getTime()<Date.now())throw new Error('Choose a future date and time.');
- const booked=await bookAppointment(s.db,{babyId:data.babyId,date:data.date,time:data.time,reason:data.reason,mode:data.mode});
+ if(data.endTime&&data.endTime<=data.time)throw new Error('End time must be after start time.');
+ const booked=await bookAppointment(s.db,{babyId:data.babyId,date:data.date,time:data.time,...(data.endTime?{endTime:data.endTime}:{}),reason:data.reason,mode:data.mode});
  let conversationId=data.conversationId;
  if(conversationId){const {data:c}=await s.db.from('sutra_conversations').select('*').eq('id',conversationId).single();if(!c||c.baby_id!==baby.id||c.audience!=='care-team')conversationId=undefined;}
  if(!conversationId){const created=await s.db.from('sutra_conversations').insert({baby_id:baby.id,workspace,audience:'care-team',title:`Schedule for ${baby.baby_name}`}).select('id').single();check(created.error);conversationId=created.data!.id;}
- const answer=`Done. ${baby.baby_name}'s ${data.mode==='online'?'online':'in-person'} appointment for **${data.reason}** is booked on ${data.date} at ${data.time} IST. I have shared it with ${baby.caregiver_name} and pinned it in your conversation.\n\n[[booked:${booked.id}]]`;
+ const answer=`Done. ${baby.baby_name}'s ${data.mode==='online'?'online':'in-person'} appointment for **${data.reason}** is booked on ${data.date} at ${data.time}${data.endTime?`–${data.endTime}`:''} IST. I have shared it with ${baby.caregiver_name} and pinned it in your conversation.\n\n[[booked:${booked.id}]]`;
  const now=Date.now();check((await s.db.from('sutra_messages').insert([{conversation_id:conversationId,role:'user',content:data.label,created_at:new Date(now).toISOString()},{conversation_id:conversationId,role:'assistant',content:answer,created_at:new Date(now+1).toISOString()}])).error);
  await s.db.from('sutra_conversations').update({updated_at:new Date(now+1).toISOString()}).eq('id',conversationId);
  return {answer,conversationId,appointmentId:booked.id};

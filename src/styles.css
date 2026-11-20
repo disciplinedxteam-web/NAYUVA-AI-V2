@@ -36,6 +36,7 @@
 }
 
 :root {
+  --highlight-flash: oklch(0.86 0.17 92);
   --nayuva-texture: url("/__l5e/assets-v1/360bfee1-3a1c-406b-9950-ef4fa32cc5a9/bg-nayuva.png");
   --radius: 1rem;
   --background: oklch(0.985 0.008 60);
@@ -2910,3 +2911,56 @@ a.chat-picker-item { text-decoration:none; color:inherit; }
 .converse-bar { width:100%; justify-content:flex-start; }
 .converse-bar textarea { flex:1 1 auto; width:auto; min-width:0; order:0; }
 .converse-bar > input[type=file] { display:none; }
+
+/* ---- Chat v3: spacious canvas, replies, new-message divider, attach menu ---- */
+.chat-pane, .chat-pane-sutra { max-width:none; }
+.chat-dash-body { padding:0 clamp(12px,2.5vw,36px) 14px; }
+.converse-head, .converse-pin, .converse-composer { width:min(100%,1120px); }
+.converse-list { padding:22px max(16px,calc((100% - 1120px)/2)); display:flex; flex-direction:column; gap:6px; }
+.converse-bubble { max-width:min(68%,640px); padding:10px 15px 7px; font-size:15.5px; line-height:1.55; letter-spacing:.005em; border-radius:20px; }
+.converse-bubble p { font-weight:450; }
+.converse-bubble time { font-size:11px; }
+.converse-row { margin:3px 0; }
+.converse-day span { font-size:12px; padding:4px 12px; }
+.converse-system { font-size:13px; }
+.converse-composer textarea { font-size:15.5px; }
+.converse-hover-tools { display:inline-flex; gap:2px; }
+.converse-row:hover .converse-hover-tools .converse-react-hint { opacity:1; }
+.converse-quote { display:flex; flex-direction:column; align-items:flex-start; gap:1px; width:100%; min-width:160px; margin:0 0 6px; padding:6px 10px; border:0; border-left:3px solid var(--primary); border-radius:10px; background:color-mix(in oklab,var(--foreground) 6%,transparent); color:inherit; text-align:left; cursor:pointer; font-size:12.5px; line-height:1.35; }
+.converse-bubble.is-mine .converse-quote { background:color-mix(in oklab,var(--primary-foreground) 16%,transparent); border-left-color:var(--primary-foreground); }
+.converse-quote strong { font-size:12px; font-weight:700; }
+.converse-quote span { opacity:.85; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.converse-reply-draft { display:flex; align-items:center; gap:10px; padding:8px 10px; border-left:3px solid var(--primary); border-radius:12px; background:var(--accent); color:var(--primary-deep); }
+.converse-reply-draft > button { flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; border:0; background:transparent; color:inherit; text-align:left; cursor:pointer; }
+.converse-reply-draft strong { font-size:12.5px; }
+.converse-reply-draft span { font-size:13px; color:var(--muted-foreground); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%; }
+.is-flash .converse-bubble { animation:nv-flash .8s ease-in-out 2; }
+@keyframes nv-flash { 0%,100% { box-shadow:0 0 0 0 transparent; } 50% { box-shadow:0 0 0 3px var(--highlight-flash); } }
+.converse-new { display:flex; justify-content:center; margin:14px 0 8px; animation:tray-in .3s ease both; }
+.converse-new span { padding:6px 18px; border-radius:999px; font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--primary-foreground); background:linear-gradient(135deg,var(--primary),var(--primary-deep)); box-shadow:0 10px 22px -14px var(--primary-deep); }
+.converse-attach-menu { width:220px; padding:8px; display:grid; gap:2px; border-radius:18px; }
+.converse-attach-menu button { display:flex; align-items:center; gap:12px; padding:9px 10px; border:0; border-radius:12px; background:transparent; color:var(--foreground); font-size:14px; font-weight:550; cursor:pointer; text-align:left; }
+.converse-attach-menu button:hover, .converse-attach-menu button:focus-visible { background:var(--accent); }
+.converse-attach-menu button > span { width:34px; height:34px; display:grid; place-items:center; border-radius:50%; color:var(--primary-foreground); }
+.converse-attach-menu button svg { width:17px; height:17px; }
+.converse-attach-menu .is-doc > span { background:color-mix(in oklab,var(--primary) 70%,var(--foreground)); }
+.converse-attach-menu .is-media > span { background:var(--primary); }
+.converse-attach-menu .is-cam > span { background:var(--primary-deep); }
+.converse-attach-menu .is-audio > span { background:color-mix(in oklab,var(--primary) 55%,var(--muted-foreground)); }
+/* Sutra: composer hugs the conversation, no dead space below */
+.sutra-studio.has-chat .sutra-studio-center { flex:none; min-height:0; padding-bottom:6px; }
+.sutra-studio.has-chat .sutra-composer-anchor { padding-bottom:4px; }
+.sutra-studio .sutra-messages { width:min(100%,1040px); margin:0 auto; gap:26px; }
+.sutra-bot-card .is-assistant, .sutra-turn.user p { font-size:15.5px; line-height:1.7; }
+.sutra-bot-card { padding:18px 22px 10px; }
+.sutra-schedule-pop { width:min(560px,calc(100vw - 24px)); padding:0; border-radius:20px; }
+.sutra-schedule-pop .sutra-schedule { margin:0; border:0; }
+.sutra-time-fields { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.sutra-time-fields label { display:grid; gap:4px; }
+@media (prefers-reduced-motion: reduce) { .is-flash .converse-bubble { animation:none; box-shadow:0 0 0 3px var(--highlight-flash); } }
+@media (max-width:640px) { .converse-bubble { max-width:86%; font-size:15px; } }
+
+/* Wordmark rhythm: Λ carries the same trailing tracking as the letters so every gap matches. */
+.brand-wordmark .brand-lambda { margin-inline:.02em .2em; }
+.brand-wordmark .brand-gap { width:.3em; }
+.converse-reply-draft { align-self:stretch; width:100%; }
