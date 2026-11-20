@@ -324,7 +324,7 @@ export const getNexconnToken=createServerFn({method:'POST'}).handler(async()=>{
 export const getChatThreads=createServerFn({method:'GET'}).handler(async()=>{
  const s=await authorized();let q=s.db.from('care_chat_messages').select('id,baby_id,sender,kind,body,created_at,read_by_team_at,read_by_caregiver_at').order('created_at',{ascending:false}).limit(2000);if(s.role==='caregiver')q=q.eq('baby_id',s.caregiverProfileId??'00000000-0000-0000-0000-000000000000');const {data,error}=await q;check(error);
  const out:Record<string,{unread:number;last:string;at:string}>={};
- for(const m of data??[]){const t=out[m.baby_id]??={unread:0,last:m.kind==='text'?m.body:m.kind==='voice'?'Voice message':m.body||'Attachment',at:m.created_at};const mine=s.role==='care-team'?m.sender!=='caregiver':m.sender==='caregiver';if(!mine&&!(s.role==='care-team'?m.read_by_team_at:m.read_by_caregiver_at))t.unread++;}
+ for(const m of data??[]){if(m.kind==='reaction')continue;const t=out[m.baby_id]??={unread:0,last:m.kind==='text'?m.body:m.kind==='voice'?'Voice message':m.body||'Attachment',at:m.created_at};const mine=s.role==='care-team'?m.sender!=='caregiver':m.sender==='caregiver';if(!mine&&!(s.role==='care-team'?m.read_by_team_at:m.read_by_caregiver_at))t.unread++;}
  return out;
 });
 export const getChat=createServerFn({method:'POST'}).inputValidator(z.object({babyId:z.string().uuid()})).handler(async({data})=>{
@@ -339,11 +339,19 @@ export const sendChat=createServerFn({method:'POST'}).inputValidator(z.object({b
  if(data.file){const {data:f,error}=await s.db.from('care_chat_files').insert({baby_id:data.babyId,name:data.file.name,mime:data.file.mime||'application/octet-stream',data:data.file.data}).select('id').single();check(error);fileId=f?.id??null;}
  const {data:m,error}=await s.db.from('care_chat_messages').insert({baby_id:data.babyId,sender:s.role==='care-team'?'care-team':'caregiver',kind:data.kind,body:data.body.trim()||(data.file?.name??''),file_id:fileId}).select('id').single();check(error);return {id:m?.id};
 });
+/** Toggle one emoji reaction per person per message; stored as a 'reaction' row so no schema change is needed. */
+export const reactChat=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid(),emoji:z.string().min(1).max(16)})).handler(async({data})=>{
+ const s=await authorized();const {data:m}=await s.db.from('care_chat_messages').select('*').eq('id',data.id).single();if(!m||m.kind==='reaction')throw new Error('Message unavailable');await babyAccess(s.db,m.baby_id,s.role);const sender=s.role==='care-team'?'care-team':'caregiver';
+ const {data:old}=await s.db.from('care_chat_messages').select('id,body').eq('baby_id',m.baby_id).eq('kind','reaction').eq('ref_id',m.id).eq('sender',sender);
+ if(old?.length)check((await s.db.from('care_chat_messages').delete().in('id',old.map(o=>o.id))).error);
+ if(!old?.some(o=>o.body===data.emoji)){const now=new Date().toISOString();check((await s.db.from('care_chat_messages').insert({baby_id:m.baby_id,sender,kind:'reaction',ref_id:m.id,body:data.emoji,read_by_team_at:now,read_by_caregiver_at:now})).error);}
+ return {ok:true};
+});
 export const editChat=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid(),body:z.string().trim().min(1).max(4000)})).handler(async({data})=>{
  const s=await authorized();const {data:m}=await s.db.from('care_chat_messages').select('*').eq('id',data.id).single();if(!m)throw new Error('Message unavailable');await babyAccess(s.db,m.baby_id,s.role);if(m.sender!==s.role||m.kind!=='text')throw new Error('Only your own text messages can be edited.');check((await s.db.from('care_chat_messages').update({body:data.body}).eq('id',data.id)).error);return {ok:true};
 });
 export const deleteChat=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{
- const s=await authorized();const {data:m}=await s.db.from('care_chat_messages').select('*').eq('id',data.id).single();if(!m)throw new Error('Message unavailable');await babyAccess(s.db,m.baby_id,s.role);if(m.sender!==s.role||!['text','voice','file'].includes(m.kind))throw new Error('Only your own messages can be deleted.');check((await s.db.from('care_chat_messages').delete().eq('id',data.id)).error);if(m.file_id)await s.db.from('care_chat_files').delete().eq('id',m.file_id);return {ok:true};
+ const s=await authorized();const {data:m}=await s.db.from('care_chat_messages').select('*').eq('id',data.id).single();if(!m)throw new Error('Message unavailable');await babyAccess(s.db,m.baby_id,s.role);if(m.sender!==s.role||!['text','voice','file'].includes(m.kind))throw new Error('Only your own messages can be deleted.');await s.db.from('care_chat_messages').delete().eq('kind','reaction').eq('ref_id',data.id);check((await s.db.from('care_chat_messages').delete().eq('id',data.id)).error);if(m.file_id)await s.db.from('care_chat_files').delete().eq('id',m.file_id);return {ok:true};
 });
 export const getChatFile=createServerFn({method:'POST'}).inputValidator(z.object({id:z.string().uuid()})).handler(async({data})=>{
  const s=await authorized();const {data:f,error}=await s.db.from('care_chat_files').select('*').eq('id',data.id).single();check(error);if(!f)throw new Error('File unavailable');await babyAccess(s.db,f.baby_id,s.role);return {name:f.name,mime:f.mime,data:f.data};
