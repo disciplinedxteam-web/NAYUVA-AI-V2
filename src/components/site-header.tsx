@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { MusicToggle } from "@/components/music-toggle";
 
 export function SiteHeader({ logo }: { logo: ReactNode }) {
   const [scrolled, setScrolled] = useState(false);
@@ -24,6 +25,7 @@ export function SiteHeader({ logo }: { logo: ReactNode }) {
       <nav aria-label="Main navigation" className="header-links">
         {[["Solution","solution"], ["Platform","platform"], ["Impact","impact"], ["Team","team"]].map(([label,id]) => <a key={id} href={`#${id}`}>{label}</a>)}
       </nav>
+      <MusicToggle />
     </header>
   </div>;
 }

@@ -16,7 +16,7 @@ function CaregiverEntry(){
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[selected,setSelected]=useState(''),[search,setSearch]=useState('');
  const profile=query.data?.find(p=>p.id===selected);
  const profiles=query.data?.filter(p=>(p.caregiver_name+' '+p.baby_name).toLowerCase().includes(search.toLowerCase()))??[];
- async function proceed(){if(!profile||busy)return;setBusy(true);setError('');try{await enter({data:{role:'caregiver',profileId:profile.id}});await navigate({to:'/caregiver/$section',params:{section:'home'}});}catch{setError('Unable to open this profile. Please try again.');setBusy(false);}}
+ async function proceed(){if(!profile||busy)return;setBusy(true);setError('');try{await enter({data:{role:'caregiver',profileId:profile.id}});await navigate({to:'/caregiver-guide'});}catch{setError('Unable to open this profile. Please try again.');setBusy(false);}}
  return <main className="caregiver-entry page-shell">
   <Button asChild variant="ghost" className="entry-back"><Link to="/"><ArrowLeft/>Back to Nayuva AI</Link></Button>
   <section className="entry-access-card" aria-label="Caregiver demo access">

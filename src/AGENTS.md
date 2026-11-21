@@ -16,3 +16,5 @@
 - Chat reactions are `care_chat_messages` rows of kind `reaction` (ref_id = target, one per sender), so they need no schema change and are excluded from unread counts and previews.
 - "Ask Sutra" from chat history hands the record to Sutra as a draft attachment through a window event; nothing is sent until the user submits a question.
 - Chat replies store the quoted message id in `care_chat_messages.reply_to` (not `ref_id`, which belongs to appointments, cards and reactions); the "New messages" divider uses `firstUnread` computed by getChat before it marks messages read.
+- Profile photos are shared presentation only, stored in facility settings (team photo plus one per caregiver profile) and filtered per role on read, so each side sees only the photos relevant to them.
+- Hero CTAs always pass through a judge guide (Care Team directly, Caregiver after profile selection); the guide is shown on every entry and stores nothing.

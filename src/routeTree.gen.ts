@@ -10,8 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CareTeamGuideRouteImport } from './routes/care-team-guide'
 import { Route as CaregiverEntryRouteImport } from './routes/caregiver-entry'
-import { Route as PerspectivesRouteImport } from './routes/perspectives'
+import { Route as CaregiverGuideRouteImport } from './routes/caregiver-guide'
 import { Route as CareTeamSectionRouteImport } from './routes/care-team.$section'
 import { Route as CaregiverSectionRouteImport } from './routes/caregiver.$section'
 import { Route as ApiPublicSarvamObservationsRouteImport } from './routes/api/public/sarvam-observations'
@@ -24,14 +25,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CareTeamGuideRoute = CareTeamGuideRouteImport.update({
+  id: '/care-team-guide',
+  path: '/care-team-guide',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CaregiverEntryRoute = CaregiverEntryRouteImport.update({
   id: '/caregiver-entry',
   path: '/caregiver-entry',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PerspectivesRoute = PerspectivesRouteImport.update({
-  id: '/perspectives',
-  path: '/perspectives',
+const CaregiverGuideRoute = CaregiverGuideRouteImport.update({
+  id: '/caregiver-guide',
+  path: '/caregiver-guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CareTeamSectionRoute = CareTeamSectionRouteImport.update({
@@ -69,8 +75,9 @@ const ApiSarvamSplatRoute = ApiSarvamSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/care-team-guide': typeof CareTeamGuideRoute
   '/caregiver-entry': typeof CaregiverEntryRoute
-  '/perspectives': typeof PerspectivesRoute
+  '/caregiver-guide': typeof CaregiverGuideRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
   '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
@@ -80,8 +87,9 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/care-team-guide': typeof CareTeamGuideRoute
   '/caregiver-entry': typeof CaregiverEntryRoute
-  '/perspectives': typeof PerspectivesRoute
+  '/caregiver-guide': typeof CaregiverGuideRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
   '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
@@ -92,8 +100,9 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/care-team-guide': typeof CareTeamGuideRoute
   '/caregiver-entry': typeof CaregiverEntryRoute
-  '/perspectives': typeof PerspectivesRoute
+  '/caregiver-guide': typeof CaregiverGuideRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
   '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
@@ -105,8 +114,9 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/care-team-guide'
     | '/caregiver-entry'
-    | '/perspectives'
+    | '/caregiver-guide'
     | '/care-team/$section'
     | '/caregiver/$section'
     | '/api/public/sarvam-observations'
@@ -116,8 +126,9 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/care-team-guide'
     | '/caregiver-entry'
-    | '/perspectives'
+    | '/caregiver-guide'
     | '/care-team/$section'
     | '/caregiver/$section'
     | '/api/public/sarvam-observations'
@@ -127,8 +138,9 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/care-team-guide'
     | '/caregiver-entry'
-    | '/perspectives'
+    | '/caregiver-guide'
     | '/care-team/$section'
     | '/caregiver/$section'
     | '/api/public/sarvam-observations'
@@ -139,8 +151,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CareTeamGuideRoute: typeof CareTeamGuideRoute
   CaregiverEntryRoute: typeof CaregiverEntryRoute
-  PerspectivesRoute: typeof PerspectivesRoute
+  CaregiverGuideRoute: typeof CaregiverGuideRoute
   CareTeamSectionRoute: typeof CareTeamSectionRoute
   CaregiverSectionRoute: typeof CaregiverSectionRoute
   ApiPublicSarvamObservationsRoute: typeof ApiPublicSarvamObservationsRoute
@@ -158,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/care-team-guide': {
+      id: '/care-team-guide'
+      path: '/care-team-guide'
+      fullPath: '/care-team-guide'
+      preLoaderRoute: typeof CareTeamGuideRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/caregiver-entry': {
       id: '/caregiver-entry'
       path: '/caregiver-entry'
@@ -165,11 +185,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CaregiverEntryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/perspectives': {
-      id: '/perspectives'
-      path: '/perspectives'
-      fullPath: '/perspectives'
-      preLoaderRoute: typeof PerspectivesRouteImport
+    '/caregiver-guide': {
+      id: '/caregiver-guide'
+      path: '/caregiver-guide'
+      fullPath: '/caregiver-guide'
+      preLoaderRoute: typeof CaregiverGuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/care-team/$section': {
@@ -219,8 +239,9 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CareTeamGuideRoute: CareTeamGuideRoute,
   CaregiverEntryRoute: CaregiverEntryRoute,
-  PerspectivesRoute: PerspectivesRoute,
+  CaregiverGuideRoute: CaregiverGuideRoute,
   CareTeamSectionRoute: CareTeamSectionRoute,
   CaregiverSectionRoute: CaregiverSectionRoute,
   ApiPublicSarvamObservationsRoute: ApiPublicSarvamObservationsRoute,

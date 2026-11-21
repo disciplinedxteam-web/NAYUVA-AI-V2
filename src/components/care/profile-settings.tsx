@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { Camera, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { GlassToggle } from '@/components/ui/glass-toggle';
+import { useServerFn } from '@tanstack/react-start';
+import { useQueryClient } from '@tanstack/react-query';
+import { saveProfilePhoto } from '@/lib/care.functions';
 
 // Profile presentation preferences are saved in this browser only; they never change care records.
 type Prefs = { photo: string; name: string; relationship: string; designation: string; registration: string; reminders: string };
@@ -18,8 +21,8 @@ export function useProfilePhoto(role: string) {
 function resize(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image(); const url = URL.createObjectURL(file);
-    img.onload = () => { const c = document.createElement('canvas'); const s = 256; c.width = c.height = s; const r = Math.min(img.width, img.height);
-      c.getContext('2d')!.drawImage(img, (img.width - r) / 2, (img.height - r) / 2, r, r, 0, 0, s, s); URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.85)); };
+    img.onload = () => { const c = document.createElement('canvas'); const s = 192; c.width = c.height = s; const r = Math.min(img.width, img.height);
+      c.getContext('2d')!.drawImage(img, (img.width - r) / 2, (img.height - r) / 2, r, r, 0, 0, s, s); URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.8)); };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Unable to read this image.')); };
     img.src = url;
   });
@@ -31,7 +34,8 @@ export function ProfileSettings({ role, defaultName, relationship }: { role: str
   const [saved, setSaved] = useState(false); const [error, setError] = useState('');
   useEffect(() => { setP(v => ({ ...v, ...read(role) })); }, [role]);
   const set = (k: keyof Prefs, v: string) => { setSaved(false); setP(x => ({ ...x, [k]: v })); };
-  const save = () => { localStorage.setItem(key(role), JSON.stringify(p)); window.dispatchEvent(new Event(EVENT)); setSaved(true); };
+  const pushPhoto = useServerFn(saveProfilePhoto); const qc = useQueryClient();
+  const save = async () => { localStorage.setItem(key(role), JSON.stringify(p)); window.dispatchEvent(new Event(EVENT)); try { setError(''); await pushPhoto({ data: { photo: p.photo } }); await qc.invalidateQueries(); setSaved(true); } catch { setError('Saved on this device, but the photo could not be shared. Please try again.'); } };
   const initials = p.name.split(' ').filter(w => !w.endsWith('.')).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return <section className="profile-settings">
@@ -51,6 +55,6 @@ export function ProfileSettings({ role, defaultName, relationship }: { role: str
       </> : <div className="care-field"><span>Relationship to baby</span><GlassToggle value={p.relationship} onChange={v => set('relationship', v)} options={['Mother', 'Father', 'Guardian', 'Other'].map(k => ({ key: k, label: k }))} /></div>}
       {!team && <div className="care-field"><span>Check-in reminders</span><GlassToggle value={p.reminders} onChange={v => set('reminders', v)} options={['WhatsApp', 'SMS', 'Off'].map(k => ({ key: k, label: k }))} /></div>}
     </div>
-    <div className="ps-footer"><small>Photo and display preferences are saved on this device and do not change care records.</small><Button onClick={save}>{saved ? <><Check />Saved</> : 'Save profile'}</Button></div>
+    <div className="ps-footer"><small>Your photo is shown to the people you chat with. It never changes care records.</small><Button onClick={() => void save()}>{saved ? <><Check />Saved</> : 'Save profile'}</Button></div>
   </section>;
 }

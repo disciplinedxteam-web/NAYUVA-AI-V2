@@ -68,11 +68,13 @@ function Nav() { return <SiteHeader logo={<Logo />} />; }
 
 function CTAs() {
   return (
-    <div className="flex flex-wrap items-center gap-6">
-      <Button asChild className="home-primary-cta group inline-flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:bg-primary-deep">
-        <Link to="/perspectives">Experience Connected Care <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
+    <div className="flex flex-wrap items-center gap-4">
+      <Button asChild className="home-primary-cta group inline-flex items-center gap-3 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:bg-primary-deep">
+        <Link to="/care-team-guide">Continue as Care Team <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
       </Button>
-      <span className="text-xs font-medium text-foreground/55">Live demo · No sign-up needed</span>
+      <Button asChild variant="outline" className="home-secondary-cta group inline-flex items-center gap-3 rounded-full px-7 py-4 text-sm font-semibold">
+        <Link to="/caregiver-entry">Continue as Caregiver <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
+      </Button>
     </div>
   );
 }
@@ -83,7 +85,7 @@ function Hero() {
       <Flower src={flowerA} className="flower-edge flower-right hero-flower-right" />
       <Flower src={flowerB} className="flower-edge flower-left hero-flower-left" />
       <div className="hero-badge relative z-10 flex w-full justify-center px-6">
-        <a href="https://reskilll.com/hack/nexconn" target="_blank" rel="noreferrer" aria-label="NexConn Build Challenge — Team Bhavishya"><AwardBadge eyebrow="TEAM BHAVISHYA" title="NexConn Build Challenge" /></a>
+        <a href="https://reskilll.com/hack/nexconn" target="_blank" rel="noreferrer" aria-label="NextConn Build Challenge — Team Bhavishya"><AwardBadge eyebrow="TEAM BHAVISHYA" title="NextConn Build Challenge" /></a>
       </div>
       <div className="mx-auto grid max-w-7xl items-center hero-layout gap-10 px-6 lg:grid-cols-[1.1fr_1fr] lg:px-10">
         <div className="hero-copy relative z-10">
@@ -100,8 +102,7 @@ function Hero() {
             families stay guided and helping clinicians stay informed between visits.
           </p>
           <p className="max-w-md text-sm font-medium text-foreground/60">
-            The weeks after discharge are when families have the most questions and care teams
-            have the least visibility. Nayuva keeps both in one continuous, clinician-directed conversation.
+            One continuous conversation for families and care teams, from the first night home.
           </p>
           <CTAs />
         </div>
@@ -248,6 +249,7 @@ function Products() {
         <div className="pillar-grid">
           {pillars.map((p) => (
             <article key={p.key} className={`pillar glass pillar-${p.key}`}>
+              <div className="pillar-text">
               <div className="pillar-copy">
                 <div className="flex items-center gap-3">
                   <span className="pillar-icon"><p.Icon className="size-5" /></span>
@@ -256,12 +258,13 @@ function Products() {
                 <h3 className="mt-5 text-3xl font-bold tracking-tight md:text-4xl">{p.title}</h3>
                 <p className="mt-3 leading-relaxed text-muted-foreground">{p.body}</p>
               </div>
-              <p.Demo />
               <ul className="pillar-points">
                 {p.points.map((pt) => (
                   <li key={pt.text}><pt.Icon className="size-4" />{pt.text}</li>
                 ))}
               </ul>
+              </div>
+              <p.Demo />
             </article>
           ))}
         </div>
