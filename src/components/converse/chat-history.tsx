@@ -9,7 +9,8 @@ import type { getCareData } from '@/lib/care.functions';
 import type { DemoRole } from '@/lib/care-domain';
 
 type Data = Awaited<ReturnType<typeof getCareData>>;
-export type AskSutraDoc = { name: string; text: string };
+/** A record handed to Sutra; with `question` Sutra asks it straight away, otherwise it waits as a draft attachment. */
+export type AskSutraDoc = { name: string; text: string; question?: string };
 const day = (v: string) => new Date(v).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
 
 /** Full-pane history for one baby: past appointments and past Svara check-ins, each with view/download/share and Ask Sutra. */

@@ -2,8 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
-  ArrowUpRight,
-  Check,
   CheckCheck,
   MessagesSquare,
   Sparkles,
@@ -19,10 +17,9 @@ import { BrandWordmark } from "@/components/brand-wordmark";
 import flowerA from "@/assets/flower-pink-right.png";
 import flowerB from "@/assets/flower-pink-left.png";
 import flowerLavender from "@/assets/flower-lavender.png";
-import flowerYellow from "@/assets/flower-yellow.png";
-import { CareGraphic } from "@/components/care-graphic";
 import { SiteHeader } from "@/components/site-header";
 import { VideoShowcase } from "@/components/video-showcase";
+import { ConverseDemo, SutraDemo } from "@/components/platform-demos";
 import { AwardBadge } from "@/components/ui/award-badge";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
 import rajeev from "@/assets/rajeev-portrait.png.asset.json";
@@ -31,7 +28,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Nayuva AI — Connected newborn care between hospital and home" },
-      { name: "description", content: "Nayuva AI keeps families and newborn care teams in one continuous, real-time conversation after discharge, with record-grounded guidance and follow-ups booked in moments." },
+      { name: "description", content: "After a baby goes home, Nayuva AI keeps parents and the care team in one simple chat, with daily check-ins and quick answers from the baby's records." },
       { property: "og:title", content: "Nayuva AI — Newborn care that stays connected after discharge" },
       { property: "og:description", content: "One continuous conversation between families and care teams, from the hospital door through the first six weeks at home." },
       { property: "og:type", content: "website" },
@@ -97,12 +94,9 @@ function Hero() {
             Continuous care for newborns,{" "}
             <span className="font-light italic text-primary">beyond discharge.</span>
           </h1>
-          <p className="max-w-xl text-lg leading-relaxed text-muted-foreground">
-            Nayuva AI connects newborns, caregivers and care teams after discharge, helping
-            families stay guided and helping clinicians stay informed between visits.
-          </p>
-          <p className="max-w-md text-sm font-medium text-foreground/60">
-            One continuous conversation for families and care teams, from the first night home.
+          <p className="max-w-lg text-lg leading-relaxed text-muted-foreground">
+            After a baby goes home, Nayuva AI keeps parents and the care team in one simple chat,
+            with daily check-ins and quick answers from the baby's records.
           </p>
           <CTAs />
         </div>
@@ -146,93 +140,34 @@ function SectionHead({
   );
 }
 
-function Solution() {
-  return (
-    <section id="solution" className="section-band relative py-14 md:py-20">
-      <Flower src={flowerLavender} className="flower-edge flower-left solution-flower" />
-      <div className="mx-auto max-w-5xl px-6">
-        <SectionHead
-          eyebrow="The Solution"
-          title="Discharge shouldn't be the moment the conversation stops."
-          body="Today, families leave with a printed sheet and a phone number, and care teams wait weeks to learn what happened at home. Nayuva replaces that silence with one living line of communication around every newborn."
-        />
-        <div className="solution-grid grid grid-cols-6 gap-4">
-          {[
-            { kind: "home", title: "Guidance from day one", body: "Before the family leaves, the care team sets the baby's care plan. Every day at home is guided by it, in the family's own language." },
-            { kind: "updates", title: "Every voice, kept in context", body: "Messages, photos, voice notes and daily check-ins arrive in one thread, with each parent's own words kept beside every structured update." },
-            { kind: "visibility", title: "Clinicians see change early", body: "Read receipts, unread signals and review states show care teams what is new, so nothing at home is silently marked as routine." },
-            { kind: "followup", title: "From concern to visit in moments", body: "When something needs a closer look, a follow-up is proposed, approved and shared in the same conversation, in person or online." },
-            { kind: "record", title: "One continuous story", body: "Conversations, check-ins and visit summaries build a single journey, so every answer can be traced back to the record it came from." },
-          ].map((item, i) => (
-            <div key={item.kind} className={`care-card glass col-span-full rounded-2xl p-6 text-left ${i < 3 ? "md:col-span-2" : "md:col-span-3"}`}>
-              <CareGraphic kind={item.kind as "home" | "updates" | "visibility" | "followup" | "record"} />
-              <h3 className="mt-6 text-lg font-semibold">{item.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
-            </div>
-          ))}
-        </div>
-        <p className="solution-note mx-auto mt-8 flex w-fit items-center justify-center gap-3 text-center text-sm font-medium text-primary-deep">
-          <ShieldCheck className="size-5 shrink-0" />
-          AI supports communication and documentation. Clinical decisions remain with the care team.
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function ConverseDemo() {
-  return (
-    <div className="pillar-demo" aria-hidden="true">
-      <div className="pd-head"><span className="pd-avatar">CT</span><span><strong>Care Team</strong><small><i className="pd-live" />online</small></span></div>
-      <div className="pd-msg pd-in" style={{ animationDelay: "0.2s" }}>Feeding well today? Share a photo of the latch if you can.</div>
-      <div className="pd-msg pd-out" style={{ animationDelay: "1.2s" }}><span className="pd-quote">Feeding well today?</span>Yes, every 3 hours. Photo attached. <CheckCheck className="pd-tick" /></div>
-      <div className="pd-msg pd-in pd-card" style={{ animationDelay: "2.2s" }}><CalendarClock className="size-4" /> Follow-up · Thu 10:30 · In person</div>
-      <div className="pd-typing" style={{ animationDelay: "3.2s" }}><i /><i /><i /></div>
-    </div>
-  );
-}
-
-function SutraDemo() {
-  return (
-    <div className="pillar-demo" aria-hidden="true">
-      <div className="pd-msg pd-out" style={{ animationDelay: "0.2s" }}>बच्ची का वज़न पिछले हफ़्ते कैसा था?</div>
-      <div className="pd-msg pd-in pd-answer" style={{ animationDelay: "1.3s" }}>
-        <span className="pd-lines"><i /><i /><i style={{ width: "62%" }} /></span>
-        <span className="pd-sources"><b>Day 7 check-in</b><b>Visit summary</b></span>
-      </div>
-      <div className="pd-msg pd-in pd-card" style={{ animationDelay: "2.4s" }}><CalendarClock className="size-4" /> Proposed visit · Approve</div>
-    </div>
-  );
-}
-
 const pillars = [
   {
     key: "converse",
-    eyebrow: "Real-time care conversation",
+    eyebrow: "Chat",
     title: "Converse",
     Icon: MessagesSquare,
-    body: "A private, always-open line between each family and their newborn's care team, built for the first six weeks at home.",
+    body: "A private chat between the family and their baby's care team.",
     points: [
-      { Icon: CheckCheck, text: "Live delivery and read receipts" },
-      { Icon: Paperclip, text: "Photos, documents, voice and camera" },
-      { Icon: CalendarClock, text: "Appointments and daily check-ins in the thread" },
-      { Icon: MessagesSquare, text: "Replies, reactions and full visit history" },
+      { Icon: CheckCheck, text: "See when a message is delivered and read" },
+      { Icon: Paperclip, text: "Send photos, files and voice notes" },
+      { Icon: CalendarClock, text: "Visits and daily check-ins show up in the chat" },
+      { Icon: MessagesSquare, text: "Reply to or react to any message" },
     ],
-    Demo: ConverseDemo,
+    Demo: () => <ConverseDemo />,
   },
   {
     key: "sutra",
-    eyebrow: "Record-grounded care assistant",
+    eyebrow: "AI helper",
     title: "Sutra AI",
     Icon: Sparkles,
-    body: "Answers questions about one baby's journey, only from reviewed records, and helps the care team arrange follow-ups.",
+    body: "Ask a question about the baby's records and get a short, clear answer.",
     points: [
-      { Icon: Languages, text: "Replies in the language and script you write in" },
-      { Icon: ShieldCheck, text: "Every answer linked to its source record" },
-      { Icon: CalendarClock, text: "Follow-ups proposed, booked only on approval" },
-      { Icon: Sparkles, text: "Never diagnoses or gives clinical advice" },
+      { Icon: Languages, text: "Answers in the language you type in" },
+      { Icon: ShieldCheck, text: "Shows the record each answer comes from" },
+      { Icon: CalendarClock, text: "Helps the care team book a visit" },
+      { Icon: Sparkles, text: "Never gives medical advice" },
     ],
-    Demo: SutraDemo,
+    Demo: () => <SutraDemo />,
   },
 ];
 
@@ -243,8 +178,8 @@ function Products() {
       <div className="mx-auto max-w-6xl px-6">
         <SectionHead
           eyebrow="The Platform"
-          title="Two ways to stay connected. One shared record."
-          body="Families and care teams talk in real time. Sutra AI makes sense of everything they've shared. Both draw from the same reviewed journey."
+          title="Two simple tools for every baby."
+          body="Chat with each other, and ask questions about the baby's records."
         />
         <div className="pillar-grid">
           {pillars.map((p) => (
@@ -269,48 +204,8 @@ function Products() {
           ))}
         </div>
         <p className="mt-12 text-center text-xl font-semibold text-primary-deep">
-          One connected platform, from the first night home to the six-week visit.
+          From the first night home to the six-week visit.
         </p>
-      </div>
-    </section>
-  );
-}
-
-function Impact() {
-  return (
-    <section id="impact" className="section-band relative py-14 md:py-20">
-      <Flower src={flowerYellow} className="flower-edge flower-left impact-flower" />
-      <div className="mx-auto max-w-5xl px-6">
-        <SectionHead eyebrow="Impact" title="Continuity you can see, not just hope for." body="Every message, check-in and visit is captured in one place, so the weeks after discharge become visible to everyone caring for the baby." />
-        <div className="impact-grid grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="care-card impact-feature rounded-2xl p-7 md:col-span-2 md:row-span-2 md:p-9">
-            <p className="eyebrow">Continuity</p>
-            <CareGraphic kind="continuity" large />
-            <h3 className="text-3xl font-bold leading-tight md:text-4xl">No more silence<br />after discharge.</h3>
-            <p className="mt-4 max-w-md leading-relaxed text-muted-foreground">Families can reach their care team any day, and are checked in with on schedule, so small changes are heard while they are still small.</p>
-          </div>
-          <div className="care-card impact-visibility rounded-2xl p-6">
-            <CareGraphic kind="impact-visibility" />
-            <h3 className="mt-5 text-lg font-semibold">Visibility</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Unread signals and read receipts show care teams exactly what is new, in the family's own words.</p>
-          </div>
-          <div className="care-card impact-followup rounded-2xl p-6">
-            <CareGraphic kind="impact-followup" />
-            <h3 className="mt-5 text-lg font-semibold">Follow-up</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">A concern raised in chat becomes an approved visit in the same thread, with no phone tag.</p>
-          </div>
-          <div className="care-card impact-efficiency rounded-2xl p-6">
-            <CareGraphic kind="efficiency" />
-            <h3 className="mt-5 text-lg font-semibold">Efficiency</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Record-grounded answers and drafted summaries give clinicians time back for care.</p>
-          </div>
-          <a href="#cta" className="care-card impact-outcome relative rounded-2xl p-7 md:col-span-2">
-            <p className="eyebrow">Outcome</p>
-            <CareGraphic kind="support" />
-            <h3 className="max-w-lg text-xl font-semibold leading-relaxed">Families feel accompanied through the first six weeks, and care teams stay informed without extra calls or paperwork.</h3>
-            <ArrowUpRight className="absolute right-6 top-6 size-5 text-primary" />
-          </a>
-        </div>
       </div>
     </section>
   );
@@ -326,7 +221,7 @@ function Team() {
     <section id="team" className="section-band relative py-14 md:py-20">
       <Flower src={flowerLavender} className="flower-edge flower-right team-flower" />
       <div className="mx-auto max-w-6xl px-6">
-        <SectionHead eyebrow="Our Team" title="Building the connection between discharge and home." body="We're building technology that helps newborn care continue beyond the hospital — keeping families connected to their care teams when continuity matters most." />
+        <SectionHead eyebrow="Our Team" title="The people behind Nayuva AI." body="We build simple tools that help newborn care continue after the hospital." />
         <div className="flex flex-wrap justify-center gap-6">
           {team.map((m) => (
             <div key={m.name} className="glass team-member group relative flex w-full flex-col sm:w-[calc((100%-1.5rem)/2)] lg:w-[calc((100%-4.5rem)/4)] items-center rounded-lg px-6 py-8 text-center">
@@ -356,7 +251,7 @@ function FinalCTA() {
           Keep newborn care <span className="font-light italic text-primary">connected.</span>
         </h2>
         <p className="relative mx-auto mt-6 max-w-lg text-lg text-muted-foreground">
-          Step into the platform as a care team or a family, and see continuity in action.
+          Try it as the care team or as a parent.
         </p>
         <div className="relative mt-12 flex justify-center">
           <CTAs />
@@ -390,9 +285,7 @@ function Index() {
       <Nav />
       <Hero />
       <VideoShowcase />
-      <Solution />
       <Products />
-      <Impact />
       <Team />
       <FinalCTA />
       <Footer />

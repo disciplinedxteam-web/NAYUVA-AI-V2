@@ -16,28 +16,25 @@ export const Route = createFileRoute("/care-team-guide")({
 });
 
 const content: GuideContent = {
-  eyebrow: "Note for judges · Care Team",
-  title: "You are the hospital care team.",
-  intro: "Continue as the care team. Choose a family, chat with their caregiver, and keep up with their baby's care.",
+  description: "A quick look at what you can do as the hospital care team.",
+  variant: "care-team",
+  converseLine: "Chat with each family",
+  sutraLine: "Ask about a baby's records",
+  points: [
+    "Pick a family on the left to open their chat.",
+    "Send messages, photos, files or voice notes.",
+    "Open a family's Svara check-in and approve it in the chat.",
+    "Ask Sutra AI about a baby's records, in any language.",
+    "Book a visit from Sutra AI with a date and time.",
+    "Every medical decision stays with you.",
+  ],
+  tutorialLine: "To understand the workflow better and see how everything works, watch the short tutorial.",
   tutorialLabel: "Watch Care Team Tutorial",
   tutorialUrl: "https://www.youtube.com/watch?v=YaOMywsSfH4",
-  converse: { title: "Converse", tagline: "Real-time chat with each family", points: [
-    "Choose a family on the left and send a message or voice note.",
-    "Share photos and open past visits or Svara check-ins in History.",
-  ] },
-  sutra: { title: "Sutra AI", tagline: "Answers from the baby's reviewed records", points: [
-    "Ask about the baby's records in your own language; open the linked sources.",
-    "Use the calendar to approve a visit. Medical decisions stay with you.",
-  ] },
-  steps: [
-    "Choose a family",
-    "Send or reply to a message",
-    "Open a document in History",
-    "Ask Sutra about the last visit",
-  ],
+  continueLabel: "Enter Care Team Dashboard",
 };
 
 function CareTeamGuide() {
   const navigate = useNavigate();
-  return <JudgeGuide content={content} backTo="/" onContinue={() => void navigate({ to: "/care-team/$section", params: { section: "converse" } })} />;
+  return <JudgeGuide content={content} onContinue={() => void navigate({ to: "/care-team/$section", params: { section: "converse" } })} />;
 }

@@ -14,12 +14,13 @@
 - Sutra books appointments only through the interactive card and `sutraSchedule` (deterministic intent detection adds the card; the model never books), reusing the same appointment insert as manual scheduling.
 
 - Chat reactions are `care_chat_messages` rows of kind `reaction` (ref_id = target, one per sender), so they need no schema change and are excluded from unread counts and previews.
-- "Ask Sutra" from chat history hands the record to Sutra as a draft attachment through a window event; nothing is sent until the user submits a question.
+- "Ask Sutra" hands a record to Sutra through a window event: from History it waits as a draft attachment; from a Svara card in chat (Care Team) it carries a fixed question that Sutra sends once it is idle.
+- A Svara card message stores the caregiver's short note in its body; Care Team approval goes through `approveSvaraCard`, which marks the card reviewed once and posts the clinician reply quoting the card, so double clicks never duplicate it. Automatic wording lives in `chat-messages.ts`.
 - Chat replies store the quoted message id in `care_chat_messages.reply_to` (not `ref_id`, which belongs to appointments, cards and reactions); the "New messages" divider uses `firstUnread` computed by getChat before it marks messages read.
 - Profile photos are shared presentation only, stored in facility settings (team photo plus one per caregiver profile) and filtered per role on read, so each side sees only the photos relevant to them.
 - Hero CTAs always pass through a judge guide (Care Team directly, Caregiver after profile selection); the guide is shown on every entry and stores nothing.
 
 - Converse uses a browser MediaRecorder voice-note hook with preview and explicit send; Sutra alone retains dictation, so human chat audio is never transcribed.
-- Guide steps cycle locally with reduced-motion fallback; all four steps remain visible so animation never gates entry.
+- Judge guides reuse the homepage Platform chat animations (`platform-demos.tsx`, role variants) and store nothing; the tutorial button sits in the content, the continue button bottom-right.
 
 - Reset care-data and thread caches before displaying a newly opened demo session, preventing the previous caregiver’s cached settings from flashing.

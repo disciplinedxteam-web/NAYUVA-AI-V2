@@ -168,6 +168,6 @@ export function SvaraWorkspace({ due, onSaved }: { due: boolean; onSaved: () => 
       {!card && <div className="svara-review-actions"><Button variant="outline" size="lg" disabled={busy} onClick={() => void redo()}><RotateCcw />Converse with Svara again</Button></div>}
     </div>}
 
-    {stage === 'success' && <CompletionScreen character={<div className="svara-hero-orb"><SvaraAnimation state="completion" /></div>} eyebrow="Check-in recorded" title="Health Card Sent" rows={[{ label: 'Baby', value: session?.babyName ?? 'Baby' }, { label: 'Day of life', value: String(session?.context['day_of_life'] ?? '—') }, { label: 'Triage', value: card?.priority ?? 'Awaiting review' }, { label: 'Status', value: 'Sent to care team' }]} note="Your care team will review it shortly" onDone={() => void navigate({ to: '/caregiver/$section', params: { section: 'home' } })} />}
+    {stage === 'success' && <CompletionScreen character={<div className="svara-hero-orb"><SvaraAnimation state="completion" /></div>} eyebrow="Check-in recorded" title="Health Card Sent" rows={[{ label: 'Baby', value: session?.babyName ?? 'Baby' }, { label: 'Day of life', value: String(session?.context['day_of_life'] ?? '—') }, { label: 'Triage', value: card?.priority ?? 'Awaiting review' }, { label: 'Status', value: 'Sent to care team' }]} note="Your care team will review it shortly" onDone={() => void navigate({ to: '/caregiver/$section', params: { section: 'converse' } })} />}
   </div>;
 }

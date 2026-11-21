@@ -17,28 +17,25 @@ export const Route = createFileRoute("/caregiver-guide")({
 });
 
 const content: GuideContent = {
-  eyebrow: "Note for judges · Caregiver",
-  title: "You are a parent, at home with a newborn.",
-  intro: "Continue as the caregiver you selected. Your own baby's chat and records are ready for you.",
+  description: "A quick look at what you can do as a parent at home with a newborn.",
+  variant: "caregiver",
+  converseLine: "Chat with your care team",
+  sutraLine: "Ask about your baby",
+  points: [
+    "Chat with your baby's care team at any time.",
+    "Send photos, files or voice notes.",
+    "Do a daily check-in with Svara on the website or by phone.",
+    "Check your Health Card, then send it to the care team.",
+    "Ask Sutra AI about your baby's visits and check-ins.",
+    "Sutra AI never gives medical advice.",
+  ],
+  tutorialLine: "To understand the workflow better and see how everything works, watch the short tutorial.",
   tutorialLabel: "Watch Caregiver Tutorial",
   tutorialUrl: "https://www.youtube.com/watch?v=TpY-vBkjNAc&list=PLdVklvLc6Jsk&index=5",
-  converse: { title: "Converse", tagline: "A direct line to the care team", points: [
-    "Send the care team a message, voice note or photo in your own language.",
-    "View past documents in History and use the phone button to call.",
-  ] },
-  sutra: { title: "Sutra AI", tagline: "Answers about your own baby", points: [
-    "Ask about your baby's visits and check-ins; open the linked sources.",
-    "Talk to Svara, review your health card, then send it. AI gives no medical advice.",
-  ] },
-  steps: [
-    "Message your care team",
-    "Ask Sutra about the next visit",
-    "Talk to Svara on the website",
-    "Review and send your card",
-  ],
+  continueLabel: "Enter Caregiver Dashboard",
 };
 
 function CaregiverGuide() {
   const navigate = useNavigate();
-  return <JudgeGuide content={content} backTo="/caregiver-entry" onContinue={() => void navigate({ to: "/caregiver/$section", params: { section: "home" } })} />;
+  return <JudgeGuide content={content} onContinue={() => void navigate({ to: "/caregiver/$section", params: { section: "home" } })} />;
 }

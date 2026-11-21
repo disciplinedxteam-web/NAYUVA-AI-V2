@@ -3,8 +3,8 @@ import { Play } from "lucide-react";
 import { GlassToggle } from "@/components/ui/glass-toggle";
 
 const VIDEOS = [
-  { key: "how", label: "How Nayuva Works", id: "YaOMywsSfH4", title: "How Nayuva Works", body: "A walkthrough of the care journey, from Care Plan to daily check-ins, reviews and follow-up." },
-  { key: "film", label: "Nayuva Film", id: "JEhJAyNnMWo", title: "Nayuva Film", body: "The story behind Nayuva and the families it is built to accompany after discharge." },
+  { key: "how", label: "How Nayuva Works", id: "YaOMywsSfH4", title: "How Nayuva Works", body: "A quick tour of how parents and care teams use Nayuva." },
+  { key: "film", label: "Nayuva Film", id: "JEhJAyNnMWo", title: "Nayuva Film", body: "The story of why we built Nayuva." },
 ];
 
 /** Homepage video section: YouTube thumbnail cards that play inline on click. */
@@ -16,9 +16,9 @@ export function VideoShowcase() {
     <section id="videos" className="section-band relative py-14 md:py-20">
       <div className="mx-auto max-w-5xl px-6">
         <div className="mx-auto mb-8 max-w-2xl text-center">
-          <p className="eyebrow mb-3">See it in action</p>
-          <h2 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">Watch care continue, beyond discharge.</h2>
-          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">See how Nayuva keeps families guided and care teams informed, then watch the story that inspired it.</p>
+          <p className="eyebrow mb-3">Tutorial for judges</p>
+          <h2 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">See how Nayuva AI works.</h2>
+          <p className="mt-4 text-lg leading-relaxed text-muted-foreground">Watch a quick tour, then the story behind it.</p>
         </div>
         <div className="mb-6 flex justify-center">
           <GlassToggle label="Choose video" value={tab} onChange={(k) => { setTab(k); setPlaying(null); }} options={VIDEOS.map((x) => ({ key: x.key, label: x.label }))} />

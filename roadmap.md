@@ -1,5 +1,14 @@
 # Roadmap
 
+## Current request: Simpler homepage, judge guides and Svara-to-chat flow
+- [x] Homepage: one short hero paragraph; remove Solution and Impact; nav gets "Tutorial for Judges"; simpler Platform, Team and video wording
+- [x] Both guides: no logo, "Guide for Judges" heading, Converse + Sutra animations, easy list, tutorial line with highlighted centered button, back-to-website and renamed continue button
+- [x] Caregiver profile picker shows each profile's photo
+- [x] After "Approve & Send", caregiver lands in Converse; the card arrives with a short note and view/download icons
+- [x] Care Team sees Approve and Ask Sutra under each Svara card; Approve replies automatically, Ask Sutra asks about that check-in
+- [x] Tests and browser checks — 126 tests pass; Approve and Ask Sutra tested on a real card, then undone. Fixed a chat photo-loading loop found along the way
+- [ ] Watch a brand-new caregiver check-in arrive with its note — needs a real Svara conversation
+
 ## Current request: Profile isolation and quick guides
 - [x] Scope caregiver settings and photos to the selected profile; preserve shared team photo
 - [x] Fit both guides on laptop/tablet screens with a looping test flow and top tutorial

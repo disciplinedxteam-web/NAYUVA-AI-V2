@@ -23,7 +23,7 @@ export function SiteHeader({ logo }: { logo: ReactNode }) {
     <header className="site-header" data-scrolled={scrolled} data-hidden={hidden} inert={hidden}>
       {logo}
       <nav aria-label="Main navigation" className="header-links">
-        {[["Solution","solution"], ["Platform","platform"], ["Impact","impact"], ["Team","team"]].map(([label,id]) => <a key={id} href={`#${id}`}>{label}</a>)}
+        {[["Tutorial for Judges","videos"], ["Platform","platform"], ["Team","team"]].map(([label,id]) => <a key={id} href={`#${id}`}>{label}</a>)}
       </nav>
       <MusicToggle />
     </header>

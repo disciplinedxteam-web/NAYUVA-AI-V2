@@ -1,15 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useServerFn } from '@tanstack/react-start';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowUp, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, FileText, Mic, Paperclip, Pin, Square, Video, X, MapPin, Activity, Clock, Phone, Copy, Pencil, Trash2, Smile, History, Plus, Download, ZoomIn, ZoomOut, SmilePlus, Reply, Camera, Image as ImageIcon, Headphones } from 'lucide-react';
+import { ArrowUp, CalendarDays, Check, CheckCheck, ChevronLeft, ChevronRight, FileText, Mic, Paperclip, Pin, Square, Video, X, MapPin, Activity, Clock, Phone, Copy, Pencil, Trash2, Smile, History, Plus, Download, ZoomIn, ZoomOut, SmilePlus, Reply, Camera, Image as ImageIcon, Headphones, Sparkles } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useVoiceNote } from './use-voice-note';
 import { AvatarPreview, type AvatarPhoto } from './avatar-preview';
 import { Button } from '@/components/ui/button';
-import { getCareData, getChat, sendChat, getChatFile, updateAppointment, editChat, deleteChat, reactChat } from '@/lib/care.functions';
-import { parseCard } from '@/lib/care-card';
-import { DocumentViewer } from '@/components/care/document-viewer';
-import { LekhaDocument } from '@/components/care/lekha-document';
+import { getCareData, getChat, sendChat, getChatFile, updateAppointment, editChat, deleteChat, reactChat, approveSvaraCard } from '@/lib/care.functions';
+import { parseCard, cardText } from '@/lib/care-card';
+import { DocumentActions } from '@/components/care/document-actions';
+import { CARE_TEAM_DOCTOR, isLegacySvaraBody, svaraAskSutraQuestion } from '@/lib/chat-messages';
 import { OnlineMeeting } from '@/components/care/online-meeting';
 import { HaloNotification } from '@/components/care/halo-notification';
 import type { DemoRole } from '@/lib/care-domain';
@@ -77,13 +77,13 @@ function ImageViewer({ src, name, onClose }: { src: string; name: string; onClos
 }
 
 export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChange }: { data: Data; role: DemoRole; babyId: string; onRead: () => void; onAskSutra?: (d: AskSutraDoc) => void; onHistoryChange?: (open: boolean) => void }) {
-  const editFn = useServerFn(editChat), delFn = useServerFn(deleteChat), reactFn = useServerFn(reactChat);
+  const editFn = useServerFn(editChat), delFn = useServerFn(deleteChat), reactFn = useServerFn(reactChat), approveFn = useServerFn(approveSvaraCard);
   const fetchChat = useServerFn(getChat), send = useServerFn(sendChat), file = useServerFn(getChatFile), change = useServerFn(updateAppointment);
   const qc = useQueryClient();
   const baby = data.babies.find(b => b.id === babyId);
   const chat = useQuery({ queryKey: ['chat', babyId], queryFn: () => fetchChat({ data: { babyId } }), refetchInterval: 5000, enabled: !!babyId });
   const { status, signal } = useNexconn(() => { void chat.refetch(); onRead(); });
-  const [draft, setDraft] = useState(''), [busy, setBusy] = useState(false), [notice, setNotice] = useState(''), [meeting, setMeeting] = useState<string | null>(null), [doc, setDoc] = useState<string | null>(null);
+  const [draft, setDraft] = useState(''), [busy, setBusy] = useState(false), [notice, setNotice] = useState(''), [meeting, setMeeting] = useState<string | null>(null);
   const [audio, setAudio] = useState<Record<string, string>>({}), [images, setImages] = useState<Record<string, string>>({});
   const [pending, setPending] = useState<File | null>(null), [pendingUrl, setPendingUrl] = useState(''), [editing, setEditing] = useState<string | null>(null), [menu, setMenu] = useState<string | null>(null);
   const [sending, setSending] = useState<{ id: string; body: string }[]>([]), [viewer, setViewer] = useState<{ src: string; name: string } | null>(null), [history, setHistory] = useState(false), [pinIndex, setPinIndex] = useState(0), [moreFor, setMoreFor] = useState<string | null>(null);
@@ -93,8 +93,8 @@ export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChan
   const voice = useVoiceNote(f => choose(f), setNotice);
   const list = useRef<HTMLDivElement>(null), textRef = useRef<HTMLTextAreaElement>(null);
   useEffect(() => { const el = textRef.current; if (!el) return; el.style.height = '0px'; const css = getComputedStyle(el); const max = parseFloat(css.lineHeight) * 3 + parseFloat(css.paddingTop) + parseFloat(css.paddingBottom); el.style.height = `${Math.min(el.scrollHeight, max)}px`; }, [draft]);
-  const all = chat.data?.messages ?? [];
-  const msgs = all.filter(m => m.kind !== 'reaction');
+  const all = useMemo(() => chat.data?.messages ?? [], [chat.data]);
+  const msgs = useMemo(() => all.filter(m => m.kind !== 'reaction'), [all]);
   const reactions = useMemo(() => { const r: Record<string, { emoji: string; mine: boolean; n: number }[]> = {}; for (const m of all) if (m.kind === 'reaction' && m.ref_id) { const l = r[m.ref_id] ??= []; const e = l.find(x => x.emoji === m.body); const mine = m.sender === (role === 'care-team' ? 'care-team' : 'caregiver'); if (e) { e.n++; e.mine ||= mine; } else l.push({ emoji: m.body, mine, n: 1 }); } return r; }, [all, role]);
   useEffect(() => { if (divider) return; list.current?.scrollTo({ top: list.current.scrollHeight }); }, [msgs.length, sending.length, babyId, history]);
   useEffect(() => { if (chat.dataUpdatedAt) onRead(); }, [chat.dataUpdatedAt]);
@@ -103,11 +103,14 @@ export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChan
   // "New messages" divider: taken from the first load only, then fades a few seconds after being seen.
   useEffect(() => { if (divider !== undefined || !chat.data) return; const id = chat.data.firstUnread ?? null; setDivider(id); if (id) { requestAnimationFrame(() => list.current?.querySelector(`[data-mid="${id}"]`)?.scrollIntoView({ block: 'center' })); setTimeout(() => setDivider(null), 6000); } }, [chat.data]);
   function jumpTo(id: string) { const el = list.current?.querySelector(`[data-mid="${id}"]`); if (!el) { setNotice('That message is no longer available.'); return; } el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setFlash(null); requestAnimationFrame(() => setFlash(id)); setTimeout(() => setFlash(f => f === id ? null : f), 1700); }
-  const preview = (m: { kind: string; body: string; file?: { name: string } | null }) => m.kind === 'text' ? m.body : m.kind === 'voice' ? 'Voice message' : m.kind === 'svara_card' ? 'Svara Health Card' : m.file?.name ?? m.body ?? 'Attachment';
+  const preview = (m: { kind: string; body: string; file?: { name: string } | null }) => m.kind === 'text' ? m.body : m.kind === 'voice' ? 'Voice message' : m.kind === 'svara_card' ? 'Svara check-in' : m.file?.name ?? m.body ?? 'Attachment';
   const who = (sender: string) => sender === me ? 'You' : sender === 'caregiver' ? (baby?.caregiver_name ?? 'Caregiver') : 'Care Team';
   useEffect(() => { if (!pending || !(pending.type.startsWith('image/') || pending.type.startsWith('audio/'))) { setPendingUrl(''); return; } const u = URL.createObjectURL(pending); setPendingUrl(u); return () => URL.revokeObjectURL(u); }, [pending]);
   // Images preview inline: load each image file once.
-  useEffect(() => { for (const m of msgs) if (m.kind === 'file' && m.file_id && m.file?.mime?.startsWith('image/') && !images[m.file_id]) { const id = m.file_id; setImages(x => ({ ...x, [id]: '' })); void file({ data: { id } }).then(f => setImages(x => ({ ...x, [id]: `data:${f.mime};base64,${f.data}` }))).catch(() => undefined); } }, [msgs]);
+  useEffect(() => { for (const m of msgs) if (m.kind === 'file' && m.file_id && m.file?.mime?.startsWith('image/') && !(m.file_id in images)) { const id = m.file_id; setImages(x => ({ ...x, [id]: '' })); void file({ data: { id } }).then(f => setImages(x => ({ ...x, [id]: `data:${f.mime};base64,${f.data}` }))).catch(() => undefined); } }, [msgs]);
+  // A Svara card can arrive by chat before care data knows it: refresh care data once for each unknown card.
+  const askedCards = useRef(new Set<string>());
+  useEffect(() => { const missing = msgs.filter(m => m.kind === 'svara_card' && m.ref_id && !data.cards.some(c => c.id === m.ref_id) && !askedCards.current.has(m.ref_id)); if (!missing.length) return; missing.forEach(m => m.ref_id && askedCards.current.add(m.ref_id)); void qc.invalidateQueries({ queryKey: ['care-data'] }); }, [msgs, data.cards]);
   const pins = useMemo(() => pinnedAppointments(data.appointments, babyId), [data.appointments, babyId]);
   const pin = pins[Math.min(pinIndex, Math.max(0, pins.length - 1))];
   const me = role === 'care-team' ? 'care-team' : 'caregiver';
@@ -127,6 +130,7 @@ export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChan
     if (pending) { const f = pending; const ok = await post(f.type.startsWith('audio/') ? 'voice' : 'file', f.type.startsWith('audio/') ? 'Voice message' : f.name, { name: f.name, mime: f.type, data: await toBase64(f) }); if (!ok) return; setPending(null); }
     if (text) { setDraft(''); if (!await post('text', text)) setDraft(text); }
   }
+  async function approveCard(id: string) { if (busy) return; setBusy(true); try { await approveFn({ data: { id } }); await qc.invalidateQueries({ queryKey: ['care-data'] }); await chat.refetch(); if (chat.data?.peer) void signal(chat.data.peer, JSON.stringify({ nv: 'msg', babyId })); } catch (e) { setNotice(e instanceof Error ? e.message : 'Could not approve this check-in.'); } finally { setBusy(false); } }
   async function react(id: string, emoji: string) { setMenu(null); setMoreFor(null); try { await reactFn({ data: { id, emoji } }); await chat.refetch(); if (chat.data?.peer) void signal(chat.data.peer, JSON.stringify({ nv: 'msg', babyId })); } catch (e) { setNotice(e instanceof Error ? e.message : 'Could not react.'); } }
   function insertEmoji(e: string) { const el = textRef.current; const at = el?.selectionStart ?? draft.length; setDraft(d => d.slice(0, at) + e + d.slice(at)); requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(at + e.length, at + e.length); }); }
   async function remove(id: string) { setMenu(null); setBusy(true); try { await delFn({ data: { id } }); await chat.refetch(); } catch (e) { setNotice(e instanceof Error ? e.message : 'Could not delete.'); } finally { setBusy(false); } }
@@ -137,7 +141,6 @@ export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChan
     setBusy(true); try { await change({ data: { id, status: s, ...extra } }); await qc.invalidateQueries({ queryKey: ['care-data'] }); await chat.refetch(); if (chat.data?.peer) void signal(chat.data.peer, JSON.stringify({ nv: 'appt', babyId })); } catch (e) { setNotice(e instanceof Error ? e.message : 'Please try again.'); } finally { setBusy(false); }
   }
   const apptCard = (a: Appt) => <MiniAppointment appt={a} role={role} busy={busy} onJoin={() => setMeeting(a.id)} onCancel={() => void act(a.id, 'Cancelled')} onDecide={ok => void act(a.id, ok ? 'Reschedule approved' : 'Reschedule declined')} onRequest={(d, t) => void act(a.id, 'Reschedule requested', { preferredDate: d, preferredTime: t })} />;
-  const card = doc ? data.cards.find(c => c.id === doc) : undefined; const parsed = card ? parseCard(card.summary_text) : null;
   if (!baby) return <div className="converse-empty"><p>Select a caregiver to start conversing.</p></div>;
   if (history) return <ChatHistory data={data} role={role} babyId={babyId} onBack={() => setHistory(false)} onAsk={d => { setHistory(false); onAskSutra?.(d); }} />;
   let lastDay = '';
@@ -173,7 +176,15 @@ export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChan
                 <div className="converse-action-row"><button type="button" onClick={() => { setReplyTo(m.id); setEditing(null); setMenu(null); textRef.current?.focus(); }}><Reply size={13} />Reply</button>{m.kind === 'text' && <button type="button" onClick={() => { void navigator.clipboard.writeText(m.body); setMenu(null); setNotice('Message copied.'); }}><Copy size={13} />Copy</button>}{isImg && img && <button type="button" onClick={() => { const a = document.createElement('a'); a.href = img; a.download = m.file?.name ?? 'image'; a.click(); setMenu(null); }}><Download size={13} />Download</button>}{mine && m.kind === 'text' && <button type="button" onClick={() => { setEditing(m.id); setDraft(m.body); setMenu(null); }}><Pencil size={13} />Edit</button>}{mine && m.kind !== 'svara_card' && <button type="button" className="is-danger" disabled={busy} onClick={() => void remove(m.id)}><Trash2 size={13} />Delete</button>}</div>
               </div>}
               {m.reply_to && <button type="button" className="converse-quote" onClick={e => { e.stopPropagation(); if (m.reply_to) jumpTo(m.reply_to); }}><strong>{quoted ? who(quoted.sender) : 'Message'}</strong><span>{quoted ? preview(quoted) : 'Original message was deleted'}</span></button>}
-              {m.kind === 'svara_card' ? <button type="button" className="converse-doc" onClick={e => { e.stopPropagation(); setDoc(m.ref_id); }}><Activity /><span><strong>Svara Health Card</strong><small>{m.body}</small></span><FileText /></button>
+              {m.kind === 'svara_card' ? (() => {
+                const c = data.cards.find(x => x.id === m.ref_id); const pc = c ? parseCard(c.summary_text) : null; const when = day(c?.created_at ?? m.created_at);
+                return <>{!isLegacySvaraBody(m.body) && <p>{m.body}</p>}
+                  <div className="converse-svara" onClick={e => e.stopPropagation()}>
+                    <div className="converse-svara-head"><span className="converse-svara-icon"><Activity /></span><span><strong>Svara check-in</strong><small>{when}{c ? ` · ${c.priority}` : ''}</small></span></div>
+                    <DocumentActions meta={{ kind: 'svara', babyName: baby.baby_name, caregiverName: baby.caregiver_name, reason: 'Svara voice check-in', when, clinician: CARE_TEAM_DOCTOR }} card={pc} label={c?.reviewed ? 'Approved' : 'Awaiting review'} approved={!!c?.reviewed} />
+                    {role === 'care-team' && c && <div className="converse-svara-actions">{!c.reviewed && <Button type="button" size="sm" disabled={busy} onClick={() => void approveCard(c.id)}><Check />Approve</Button>}<Button type="button" size="sm" variant="outline" disabled={!pc} onClick={() => pc && onAskSutra?.({ name: `Svara check-in · ${when}`, text: `Svara check-in for ${baby.baby_name} on ${when}\n${cardText(pc)}`, question: svaraAskSutraQuestion(when) })}><Sparkles />Ask Sutra</Button></div>}
+                  </div></>;
+              })()
                 : m.kind === 'voice' && m.file_id ? (audio[m.file_id] ? <audio controls autoPlay src={audio[m.file_id]} onClick={e => e.stopPropagation()} /> : <button type="button" className="converse-voice" onClick={e => { e.stopPropagation(); if (m.file_id) void openFile(m.file_id, true); }}><Mic size={14} />Play voice message</button>)
                   : isImg ? <div className="converse-image">{img ? <button type="button" className="converse-image-open" aria-label={`Open ${m.file?.name ?? 'image'}`} onClick={e => { e.stopPropagation(); setViewer({ src: img, name: m.file?.name ?? 'image' }); }}><img src={img} alt={m.file?.name ?? 'Shared photo'} /></button> : <div className="converse-image-loading">Loading photo…</div>}{img && <Button type="button" size="icon-xs" variant="secondary" className="converse-image-dl" aria-label="Download image" onClick={e => { e.stopPropagation(); const a = document.createElement('a'); a.href = img; a.download = m.file?.name ?? 'image'; a.click(); }}><Download /></Button>}</div>
                   : m.kind === 'file' && m.file_id ? <button type="button" className="converse-doc" onClick={e => { e.stopPropagation(); if (m.file_id) void openFile(m.file_id, false); }}><FileText /><span><strong>{m.file?.name ?? m.body}</strong><small>Tap to download</small></span><Download size={16} /></button>
@@ -205,6 +216,5 @@ export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChan
     {notice && <HaloNotification message={notice} onClose={() => setNotice('')} />}
     {viewer && <ImageViewer src={viewer.src} name={viewer.name} onClose={() => setViewer(null)} />}
     {meeting && <OnlineMeeting id={meeting} onClose={() => { setMeeting(null); void qc.invalidateQueries(); }} />}
-    {card && <DocumentViewer title="Svara Health Card" onClose={() => setDoc(null)}>{parsed ? <LekhaDocument meta={{ kind: 'svara', babyName: baby.baby_name, caregiverName: baby.caregiver_name, reason: 'Svara voice check-in', when: day(card.created_at), clinician: 'Dr. Ananya Rao' }} card={parsed} approved={card.reviewed} /> : <p className="p-6">{card.quote}</p>}</DocumentViewer>}
   </section>;
 }
