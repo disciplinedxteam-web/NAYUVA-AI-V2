@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as CaregiverEntryRouteImport } from './routes/caregiver-entry'
+import { Route as PerspectivesRouteImport } from './routes/perspectives'
 import { Route as CareTeamSectionRouteImport } from './routes/care-team.$section'
 import { Route as CaregiverSectionRouteImport } from './routes/caregiver.$section'
 import { Route as ApiPublicSarvamObservationsRouteImport } from './routes/api/public/sarvam-observations'
@@ -26,6 +27,11 @@ const IndexRoute = IndexRouteImport.update({
 const CaregiverEntryRoute = CaregiverEntryRouteImport.update({
   id: '/caregiver-entry',
   path: '/caregiver-entry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PerspectivesRoute = PerspectivesRouteImport.update({
+  id: '/perspectives',
+  path: '/perspectives',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CareTeamSectionRoute = CareTeamSectionRouteImport.update({
@@ -64,6 +70,7 @@ const ApiSarvamSplatRoute = ApiSarvamSplatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/caregiver-entry': typeof CaregiverEntryRoute
+  '/perspectives': typeof PerspectivesRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
   '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/caregiver-entry': typeof CaregiverEntryRoute
+  '/perspectives': typeof PerspectivesRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
   '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/caregiver-entry': typeof CaregiverEntryRoute
+  '/perspectives': typeof PerspectivesRoute
   '/care-team/$section': typeof CareTeamSectionRoute
   '/caregiver/$section': typeof CaregiverSectionRoute
   '/api/public/sarvam-observations': typeof ApiPublicSarvamObservationsRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/caregiver-entry'
+    | '/perspectives'
     | '/care-team/$section'
     | '/caregiver/$section'
     | '/api/public/sarvam-observations'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/caregiver-entry'
+    | '/perspectives'
     | '/care-team/$section'
     | '/caregiver/$section'
     | '/api/public/sarvam-observations'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/caregiver-entry'
+    | '/perspectives'
     | '/care-team/$section'
     | '/caregiver/$section'
     | '/api/public/sarvam-observations'
@@ -128,6 +140,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CaregiverEntryRoute: typeof CaregiverEntryRoute
+  PerspectivesRoute: typeof PerspectivesRoute
   CareTeamSectionRoute: typeof CareTeamSectionRoute
   CaregiverSectionRoute: typeof CaregiverSectionRoute
   ApiPublicSarvamObservationsRoute: typeof ApiPublicSarvamObservationsRoute
@@ -150,6 +163,13 @@ declare module '@tanstack/react-router' {
       path: '/caregiver-entry'
       fullPath: '/caregiver-entry'
       preLoaderRoute: typeof CaregiverEntryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/perspectives': {
+      id: '/perspectives'
+      path: '/perspectives'
+      fullPath: '/perspectives'
+      preLoaderRoute: typeof PerspectivesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/care-team/$section': {
@@ -200,6 +220,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CaregiverEntryRoute: CaregiverEntryRoute,
+  PerspectivesRoute: PerspectivesRoute,
   CareTeamSectionRoute: CareTeamSectionRoute,
   CaregiverSectionRoute: CaregiverSectionRoute,
   ApiPublicSarvamObservationsRoute: ApiPublicSarvamObservationsRoute,

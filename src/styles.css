@@ -2964,3 +2964,69 @@ a.chat-picker-item { text-decoration:none; color:inherit; }
 .brand-wordmark .brand-lambda { margin-inline:.02em .2em; }
 .brand-wordmark .brand-gap { width:.3em; }
 .converse-reply-draft { align-self:stretch; width:100%; }
+
+/* Platform pillars (homepage) */
+.pillar-grid { display:grid; gap:20px; grid-template-columns:1fr; }
+@media (min-width:860px){ .pillar-grid { grid-template-columns:1fr 1fr; } }
+.pillar { display:flex; flex-direction:column; gap:22px; padding:30px; border-radius:24px; border:1px solid var(--border); transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease; }
+.pillar:hover { transform:translateY(-4px); box-shadow:var(--shadow-card-hover); border-color:var(--ring); }
+.pillar-icon,.psp-icon { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:12px; background:var(--gradient-rose, var(--primary)); color:var(--primary-foreground); box-shadow:var(--shadow-control); }
+.pillar-points,.psp-points { display:grid; gap:10px; list-style:none; padding:0; margin:0; }
+.pillar-points li,.psp-points li { display:flex; align-items:center; gap:10px; font-size:14px; color:var(--foreground); }
+.pillar-points svg,.psp-points svg { color:var(--primary); flex-shrink:0; }
+.pillar-demo { position:relative; display:flex; flex-direction:column; gap:10px; min-height:236px; padding:18px; border-radius:18px; background:color-mix(in oklab, var(--card) 72%, transparent); border:1px solid color-mix(in oklab, var(--primary) 12%, transparent); overflow:hidden; }
+.pd-head { display:flex; align-items:center; gap:10px; padding-bottom:8px; border-bottom:1px solid var(--border); font-size:13px; }
+.pd-head small { display:flex; align-items:center; gap:5px; color:var(--muted-foreground); font-size:11px; }
+.pd-avatar { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:99px; background:var(--blush, var(--muted)); color:var(--primary-deep); font-size:11px; font-weight:700; }
+.pd-live { width:7px; height:7px; border-radius:99px; background:var(--primary); animation:pdPulse 1.6s ease-in-out infinite; }
+.pd-msg { max-width:84%; padding:9px 13px; border-radius:16px; font-size:13px; line-height:1.4; opacity:0; animation:pdIn 7s ease infinite; }
+.pd-in { align-self:flex-start; background:var(--card); border:1px solid var(--border); color:var(--foreground); border-bottom-left-radius:6px; }
+.pd-out { align-self:flex-end; background:var(--primary); color:var(--primary-foreground); border-bottom-right-radius:6px; }
+.pd-quote { display:block; margin-bottom:4px; padding-left:8px; border-left:2px solid color-mix(in oklab, var(--primary-foreground) 70%, transparent); font-size:11px; opacity:.85; }
+.pd-tick { display:inline; width:14px; height:14px; margin-left:4px; vertical-align:-3px; }
+.pd-card { display:flex; align-items:center; gap:8px; font-weight:600; color:var(--primary-deep); background:color-mix(in oklab, var(--primary) 8%, var(--card)); }
+.pd-answer { display:flex; flex-direction:column; gap:10px; width:84%; }
+.pd-lines { display:grid; gap:6px; }
+.pd-lines i { display:block; height:7px; border-radius:99px; background:color-mix(in oklab, var(--foreground) 14%, transparent); }
+.pd-sources { display:flex; flex-wrap:wrap; gap:6px; }
+.pd-sources b { font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:99px; background:color-mix(in oklab, var(--primary) 12%, transparent); color:var(--primary-deep); }
+.pd-typing { display:flex; gap:4px; align-self:flex-start; padding:10px 12px; border-radius:14px; background:var(--card); border:1px solid var(--border); opacity:0; animation:pdIn 7s ease infinite; }
+.pd-typing i { width:6px; height:6px; border-radius:99px; background:var(--muted-foreground); animation:pdPulse 1s ease-in-out infinite; }
+.pd-typing i:nth-child(2){animation-delay:.15s}.pd-typing i:nth-child(3){animation-delay:.3s}
+@keyframes pdIn { 0%{opacity:0;transform:translateY(8px)} 6%,88%{opacity:1;transform:none} 100%{opacity:0} }
+@keyframes pdPulse { 0%,100%{opacity:.35} 50%{opacity:1} }
+
+/* Perspective selector */
+.psp-page { min-height:100vh; padding:24px 24px 40px; }
+.psp-top { display:grid; grid-template-columns:1fr auto 1fr; align-items:center; max-width:1120px; margin:0 auto; }
+.psp-back { display:inline-flex; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--primary-deep); }
+.psp-intro { max-width:640px; margin:36px auto 30px; text-align:center; }
+.psp-intro h1 { font-size:clamp(2rem,4vw,3rem); font-weight:700; letter-spacing:-.02em; margin-top:8px; }
+.psp-intro p:last-child { margin-top:10px; font-size:17px; color:var(--muted-foreground); }
+.psp-grid { display:grid; gap:22px; max-width:1120px; margin:0 auto; grid-template-columns:1fr; }
+@media (min-width:860px){ .psp-grid { grid-template-columns:1fr 1fr; } }
+.psp-card { display:flex; flex-direction:column; gap:16px; padding:30px; border-radius:26px; border:1px solid var(--border); opacity:0; animation:pdRise .6s ease forwards; transition:transform .3s ease, box-shadow .3s ease, border-color .3s ease; }
+.psp-card:hover { transform:translateY(-5px); box-shadow:var(--shadow-card-hover); border-color:var(--ring); }
+.psp-card h2 { font-size:2rem; font-weight:700; letter-spacing:-.01em; }
+.psp-body { color:var(--muted-foreground); line-height:1.6; }
+.psp-art { display:grid; grid-template-columns:.9fr 1.1fr; gap:12px; min-height:168px; padding:16px; border-radius:18px; background:color-mix(in oklab, var(--card) 72%, transparent); border:1px solid color-mix(in oklab, var(--primary) 12%, transparent); }
+.psp-art-family { grid-template-columns:1fr; }
+.psp-list { display:grid; gap:8px; align-content:start; }
+.psp-row { display:flex; align-items:center; gap:8px; padding:8px; border-radius:12px; background:var(--card); border:1px solid var(--border); opacity:0; animation:pdRise .5s ease forwards; }
+.psp-dot { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:99px; background:var(--blush, var(--muted)); color:var(--primary-deep); font-size:11px; font-weight:700; }
+.psp-line { flex:1; height:6px; border-radius:99px; background:color-mix(in oklab, var(--foreground) 12%, transparent); }
+.psp-badge { min-width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; border-radius:99px; background:var(--primary); color:var(--primary-foreground); font-size:10px; animation:pdPulse 1.6s ease-in-out infinite; }
+.psp-chat { display:flex; flex-direction:column; gap:8px; justify-content:center; }
+.psp-bubble { display:inline-flex; align-items:center; gap:6px; max-width:92%; padding:7px 11px; border-radius:14px; font-size:12px; opacity:0; animation:pdIn 6s ease infinite; }
+.psp-bubble:nth-child(2){animation-delay:.9s}.psp-bubble:nth-child(3){animation-delay:1.8s}
+.psp-bubble.in { align-self:flex-start; background:var(--card); border:1px solid var(--border); }
+.psp-bubble.out { align-self:flex-end; background:var(--primary); color:var(--primary-foreground); }
+.psp-bubble.card { align-self:flex-start; font-weight:600; color:var(--primary-deep); background:color-mix(in oklab, var(--primary) 10%, var(--card)); }
+.psp-banner { display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:12px; font-size:12px; font-weight:600; color:var(--primary-deep); background:color-mix(in oklab, var(--primary) 10%, var(--card)); }
+.psp-cta { margin-top:auto; display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:14px 22px; border-radius:999px; background:var(--primary); color:var(--primary-foreground); font-weight:600; font-size:14px; box-shadow:var(--shadow-soft, var(--shadow-control)); transition:background .2s, transform .2s; }
+.psp-cta:hover { background:var(--primary-deep); transform:translateY(-1px); }
+.psp-cta svg { transition:transform .2s; } .psp-cta:hover svg { transform:translateX(3px); }
+.psp-note { margin-top:24px; text-align:center; font-size:12px; color:var(--muted-foreground); }
+@keyframes pdRise { from{opacity:0;transform:translateY(14px)} to{opacity:1;transform:none} }
+@media (max-width:560px){ .psp-top { grid-template-columns:1fr auto; } .psp-spacer{display:none} .psp-top > a:nth-child(2){justify-self:end} .psp-art{grid-template-columns:1fr} }
+@media (prefers-reduced-motion: reduce){ .pd-msg,.pd-typing,.psp-bubble,.psp-row,.psp-card { animation:none; opacity:1; } .pd-live,.psp-badge,.pd-typing i { animation:none; } }
