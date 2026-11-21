@@ -6,15 +6,14 @@ import { useServerFn } from '@tanstack/react-start';
 import { useQueryClient } from '@tanstack/react-query';
 import { saveProfilePhoto } from '@/lib/care.functions';
 
-// Profile presentation preferences are saved in this browser only; they never change care records.
-type Prefs = { photo: string; name: string; relationship: string; designation: string; registration: string; reminders: string };
-const key = (role: string) => `nayuva-profile-${role}`;
-const EVENT = 'nayuva-profile-change';
-function read(role: string): Partial<Prefs> { try { return JSON.parse(localStorage.getItem(key(role)) ?? '{}') as Partial<Prefs>; } catch { return {}; } }
+import { profileDefaults, profilePreferenceKey, readProfilePrefs, type ProfilePrefs } from '@/lib/profile-preferences';
 
-export function useProfilePhoto(role: string) {
+// Local display preferences are identity-scoped; shared photos come from the authorized care data.
+const EVENT = 'nayuva-profile-change';
+
+export function useProfilePhoto(role: string, profileId?: string) {
   const [photo, setPhoto] = useState('');
-  useEffect(() => { const sync = () => setPhoto(read(role).photo ?? ''); sync(); window.addEventListener(EVENT, sync); return () => window.removeEventListener(EVENT, sync); }, [role]);
+  useEffect(() => { const sync = () => setPhoto(readProfilePrefs(localStorage, role, profileId).photo ?? ''); sync(); window.addEventListener(EVENT, sync); return () => window.removeEventListener(EVENT, sync); }, [role, profileId]);
   return photo;
 }
 
@@ -22,20 +21,20 @@ function resize(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image(); const url = URL.createObjectURL(file);
     img.onload = () => { const c = document.createElement('canvas'); const s = 192; c.width = c.height = s; const r = Math.min(img.width, img.height);
-      c.getContext('2d')!.drawImage(img, (img.width - r) / 2, (img.height - r) / 2, r, r, 0, 0, s, s); URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.8)); };
+      const ctx = c.getContext('2d'); if (!ctx) { URL.revokeObjectURL(url); reject(new Error('Unable to prepare this image.')); return; } ctx.drawImage(img, (img.width - r) / 2, (img.height - r) / 2, r, r, 0, 0, s, s); URL.revokeObjectURL(url); resolve(c.toDataURL('image/jpeg', 0.8)); };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Unable to read this image.')); };
     img.src = url;
   });
 }
 
-export function ProfileSettings({ role, defaultName, relationship }: { role: string; defaultName: string; relationship?: string | undefined }) {
+export function ProfileSettings({ role, defaultName, relationship, profileId, sharedPhoto = '' }: { role: string; defaultName: string; relationship?: string | undefined; profileId?: string | undefined; sharedPhoto?: string | undefined }) {
   const team = role === 'care-team';
-  const [p, setP] = useState<Prefs>({ photo: '', name: defaultName, relationship: relationship ?? 'Mother', designation: 'Paediatrician', registration: '', reminders: 'WhatsApp' });
+  const [p, setP] = useState<ProfilePrefs>(() => profileDefaults(defaultName, relationship));
   const [saved, setSaved] = useState(false); const [error, setError] = useState('');
-  useEffect(() => { setP(v => ({ ...v, ...read(role) })); }, [role]);
-  const set = (k: keyof Prefs, v: string) => { setSaved(false); setP(x => ({ ...x, [k]: v })); };
+  useEffect(() => { setP({ ...profileDefaults(defaultName, relationship), ...readProfilePrefs(localStorage, role, profileId), photo: sharedPhoto }); setSaved(false); setError(''); }, [role, profileId, defaultName, relationship, sharedPhoto]);
+  const set = (k: keyof ProfilePrefs, v: string) => { setSaved(false); setP(x => ({ ...x, [k]: v })); };
   const pushPhoto = useServerFn(saveProfilePhoto); const qc = useQueryClient();
-  const save = async () => { localStorage.setItem(key(role), JSON.stringify(p)); window.dispatchEvent(new Event(EVENT)); try { setError(''); await pushPhoto({ data: { photo: p.photo } }); await qc.invalidateQueries(); setSaved(true); } catch { setError('Saved on this device, but the photo could not be shared. Please try again.'); } };
+  const save = async () => { const key = profilePreferenceKey(role, profileId); if (!key) { setError('Please open your caregiver profile again.'); return; } try { setError(''); await pushPhoto({ data: { photo: p.photo } }); localStorage.setItem(key, JSON.stringify(p)); window.dispatchEvent(new Event(EVENT)); await qc.invalidateQueries({ queryKey: ['care-data'] }); setSaved(true); } catch { setError('Your profile could not be saved. Please try again.'); } };
   const initials = p.name.split(' ').filter(w => !w.endsWith('.')).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
   return <section className="profile-settings">

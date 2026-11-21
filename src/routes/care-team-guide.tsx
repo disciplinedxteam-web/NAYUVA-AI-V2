@@ -18,27 +18,22 @@ export const Route = createFileRoute("/care-team-guide")({
 const content: GuideContent = {
   eyebrow: "Note for judges · Care Team",
   title: "You are the hospital care team.",
-  intro: "You follow every discharged newborn from one screen. Pick a family on the left, talk with them in real time, and ask Sutra AI about any baby's records.",
+  intro: "Continue as the care team. Choose a family, chat with their caregiver, and keep up with their baby's care.",
   tutorialLabel: "Watch Care Team Tutorial",
   tutorialUrl: "https://www.youtube.com/watch?v=YaOMywsSfH4",
   converse: { title: "Converse", tagline: "Real-time chat with each family", points: [
-    "Families listed on the left, with live unread counts",
-    "Reply to a message, react, edit or delete your own",
-    "Send photos, documents, audio or a camera picture",
-    "Delivered and read ticks, pinned upcoming visits",
-    "History of past visits and Svara check-ins",
+    "Choose a family on the left and send a message or voice note.",
+    "Share photos and open past visits or Svara check-ins in History.",
   ] },
   sutra: { title: "Sutra AI", tagline: "Answers from the baby's reviewed records", points: [
-    "Ask in any language; it replies in the same one",
-    "Every answer links to the record it came from",
-    "Schedule a visit with the calendar button",
-    "Never diagnoses or gives medical advice",
+    "Ask about the baby's records in your own language; open the linked sources.",
+    "Use the calendar to approve a visit. Medical decisions stay with you.",
   ] },
   steps: [
-    "Choose a family from the left panel.",
-    "Send a message, or reply to one of theirs.",
-    "Open History to view a past document.",
-    "Switch to Sutra AI and ask about the baby's last visit.",
+    "Choose a family",
+    "Send or reply to a message",
+    "Open a document in History",
+    "Ask Sutra about the last visit",
   ],
 };
 

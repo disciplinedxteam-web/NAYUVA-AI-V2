@@ -13,6 +13,7 @@ import { nextCheckin, type CarePlan, type DemoRole } from '@/lib/care-domain';
 import { BrandWordmark } from '@/components/brand-wordmark';
 import logo from '@/assets/nayuva-logo.png.asset.json';
 import { Converse } from './converse';
+import { AvatarPreview, type AvatarPhoto } from './avatar-preview';
 
 type Data = Awaited<ReturnType<typeof getCareData>>;
 export type ChatView = 'converse' | 'sutra';
@@ -40,6 +41,7 @@ export function ChatDashboard({ data, role, view }: { data: Data; role: DemoRole
   const navigate = useNavigate(); const threadsFn = useServerFn(getChatThreads);
   const threads = useQuery({ queryKey: ['chat-threads'], queryFn: () => threadsFn(), refetchInterval: 6000 });
   const team = role === 'care-team';
+  const [avatar, setAvatar] = useState<AvatarPhoto | null>(null);
   const [babyId, setBabyId] = useState(''); const [open, setOpen] = useState(team); const [q, setQ] = useState(''); const [histOpen, setHistOpen] = useState(false);
   useEffect(() => { if (!team) { setBabyId(data.babies[0]?.id ?? ''); return; } const saved = sessionStorage.getItem('nv-chat-baby'); setBabyId(data.babies.some(b => b.id === saved) ? saved! : data.babies[0]?.id ?? ''); if (sessionStorage.getItem('nv-panel') === 'closed') setOpen(false); if (window.matchMedia('(max-width:860px)').matches) setOpen(false); }, [role, data.babies.length]);
   const setPanel = (v: boolean) => { setOpen(v); if (team) sessionStorage.setItem('nv-panel', v ? 'open' : 'closed'); };
@@ -60,7 +62,7 @@ export function ChatDashboard({ data, role, view }: { data: Data; role: DemoRole
     {team && <aside className="chat-panel" aria-label="Caregiver profiles" aria-hidden={!open} inert={!open}>
       <div className="chat-panel-head"><Link to="/" className="chat-dash-brand"><img src={logo.url} alt="Nayuva AI logo" /><BrandWordmark /></Link><Button variant="ghost" size="icon" aria-label="Close profiles panel" title="Close panel" onClick={() => setPanel(false)}><PanelLeftClose /></Button></div>
       <label className="chat-picker-search"><Search size={15} /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search baby or caregiver" aria-label="Search caregiver profiles" /></label>
-      <div className="chat-picker-list">{sorted.map(b => { const th = threads.data?.[b.id]; return <button type="button" key={b.id} className={`chat-picker-item ${b.id === activeId ? 'is-on' : ''}`} onClick={() => pick(b.id)}>{(((data.settings as Record<string, unknown>)['caregiverPhotos'] as Record<string, string> | undefined)?.[b.id]) ? <img className="converse-avatar converse-avatar-img" src={((data.settings as Record<string, unknown>)['caregiverPhotos'] as Record<string, string>)[b.id]} alt="" /> : <span className="converse-avatar">{b.baby_name.charAt(0)}</span>}<span className="chat-picker-meta"><strong>{b.baby_name}</strong><small>{b.caregiver_name}{th?.last ? ` · ${th.last.slice(0, 40)}` : ''}</small></span>{th?.unread ? <i className="chat-badge">{th.unread}</i> : null}</button>; })}{!sorted.length && <p className="chat-picker-label">No profiles match.</p>}</div>
+      <div className="chat-picker-list">{sorted.map(b => { const th = threads.data?.[b.id]; return <button type="button" key={b.id} className={`chat-picker-item ${b.id === activeId ? 'is-on' : ''}`} onClick={() => pick(b.id)}>{(((data.settings as Record<string, unknown>)['caregiverPhotos'] as Record<string, string> | undefined)?.[b.id]) ? <span role="button" tabIndex={0} className="avatar-trigger" aria-label={`View ${b.caregiver_name}'s profile photo`} onClick={e => { e.stopPropagation(); const src = ((data.settings as Record<string, unknown>)['caregiverPhotos'] as Record<string, string>)[b.id]; if (src) setAvatar({ src, name: b.caregiver_name }); }} onKeyDown={e => { if (e.key !== 'Enter' && e.key !== ' ') return; e.preventDefault(); e.stopPropagation(); const src = ((data.settings as Record<string, unknown>)['caregiverPhotos'] as Record<string, string>)[b.id]; if (src) setAvatar({ src, name: b.caregiver_name }); }}><img className="converse-avatar converse-avatar-img" src={((data.settings as Record<string, unknown>)['caregiverPhotos'] as Record<string, string>)[b.id]} alt="" /></span> : <span className="converse-avatar">{b.baby_name.charAt(0)}</span>}<span className="chat-picker-meta"><strong>{b.baby_name}</strong><small>{b.caregiver_name}{th?.last ? ` · ${th.last.slice(0, 40)}` : ''}</small></span>{th?.unread ? <i className="chat-badge">{th.unread}</i> : null}</button>; })}{!sorted.length && <p className="chat-picker-label">No profiles match.</p>}</div>
       {foot}
     </aside>}
     <div className="chat-main">
@@ -86,6 +88,7 @@ export function ChatDashboard({ data, role, view }: { data: Data; role: DemoRole
         {foot}
       </aside>
     </>}
+    {avatar && <AvatarPreview photo={avatar} onClose={() => setAvatar(null)} />}
     {team && open && <button type="button" className="chat-panel-scrim" aria-label="Close profiles panel" onClick={() => setPanel(false)} />}
   </div>;
 }

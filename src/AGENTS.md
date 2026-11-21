@@ -18,3 +18,8 @@
 - Chat replies store the quoted message id in `care_chat_messages.reply_to` (not `ref_id`, which belongs to appointments, cards and reactions); the "New messages" divider uses `firstUnread` computed by getChat before it marks messages read.
 - Profile photos are shared presentation only, stored in facility settings (team photo plus one per caregiver profile) and filtered per role on read, so each side sees only the photos relevant to them.
 - Hero CTAs always pass through a judge guide (Care Team directly, Caregiver after profile selection); the guide is shown on every entry and stores nothing.
+
+- Converse uses a browser MediaRecorder voice-note hook with preview and explicit send; Sutra alone retains dictation, so human chat audio is never transcribed.
+- Guide steps cycle locally with reduced-motion fallback; all four steps remain visible so animation never gates entry.
+
+- Reset care-data and thread caches before displaying a newly opened demo session, preventing the previous caregiver’s cached settings from flashing.

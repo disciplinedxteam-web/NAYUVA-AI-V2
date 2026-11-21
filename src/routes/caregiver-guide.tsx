@@ -19,26 +19,22 @@ export const Route = createFileRoute("/caregiver-guide")({
 const content: GuideContent = {
   eyebrow: "Note for judges · Caregiver",
   title: "You are a parent, at home with a newborn.",
-  intro: "Your chat with the baby's care team opens straight away. Sutra AI answers questions from your baby's records, and Svara checks in with you every day.",
+  intro: "Continue as the caregiver you selected. Your own baby's chat and records are ready for you.",
   tutorialLabel: "Watch Caregiver Tutorial",
   tutorialUrl: "https://www.youtube.com/watch?v=TpY-vBkjNAc&list=PLdVklvLc6Jsk&index=5",
   converse: { title: "Converse", tagline: "A direct line to the care team", points: [
-    "Message the care team any day, in your language",
-    "Share photos, documents, audio or a camera picture",
-    "Approved check-in cards and visits appear in the chat",
-    "Call buttons for the care team and emergency numbers",
+    "Send the care team a message, voice note or photo in your own language.",
+    "View past documents in History and use the phone button to call.",
   ] },
   sutra: { title: "Sutra AI", tagline: "Answers about your own baby", points: [
-    "Ask anything about check-ins, visits and documents",
-    "Answers link back to the record they came from",
-    "Daily Svara check-in: talk on the website or get a call",
-    "Never diagnoses or gives medical advice",
+    "Ask about your baby's visits and check-ins; open the linked sources.",
+    "Talk to Svara, review your health card, then send it. AI gives no medical advice.",
   ] },
   steps: [
-    "Send a message to the care team.",
-    "Switch to Sutra AI and ask about the next visit.",
-    "Start today's Svara check-in on the website.",
-    "Review the health card and send it to the care team.",
+    "Message your care team",
+    "Ask Sutra about the next visit",
+    "Talk to Svara on the website",
+    "Review and send your card",
   ],
 };
 

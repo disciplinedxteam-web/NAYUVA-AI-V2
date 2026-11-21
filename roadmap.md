@@ -1,5 +1,12 @@
 # Roadmap
 
+## Current request: Profile isolation and quick guides
+- [x] Scope caregiver settings and photos to the selected profile; preserve shared team photo
+- [x] Fit both guides on laptop/tablet screens with a looping test flow and top tutorial
+- [x] Grow Converse composer through three lines, then scroll invisibly; preserve Sutra dictation
+- [x] Record, preview and explicitly send Converse voice messages; add circular avatar previews
+- [x] Run regression tests and verify both role journeys — 121 tests passed; existing photo saved/read back across roles, voice sent/played then QA data removed; guides fit 768×1024, 1024×600 and 820×620
+
 ## Current request: Chat-first dashboard redesign
 - [x] Two-view dashboards (Converse / Sutra AI), single tutorial button per role, Lekha/Taal removed
 - [x] Converse via NextCon Chat SDK with text, voice notes, documents, pinned appointment (join/cancel/reschedule)
