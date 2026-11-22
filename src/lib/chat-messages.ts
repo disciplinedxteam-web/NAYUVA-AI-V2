@@ -25,3 +25,14 @@ export function svaraAskSutraQuestion(date: string) {
 export function isLegacySvaraBody(body: string) {
   return !body.trim() || body.startsWith('Svara check-in Health Card');
 }
+
+/** Care-team message posted to Care Connect when an online consultation document is approved. */
+export function consultSummaryMessage(caregiverName: string, date: string) {
+  const word = caregiverName.trim().split(/\s+/)[0] ?? '';
+  const first = word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : 'there';
+  return `Hi ${first}, here is the consultation summary of our online appointment on ${date}.`;
+}
+
+export function consultAskSutraQuestion(date: string) {
+  return `Hey, can you summarise what was discussed in the online consultation on ${date}?`;
+}

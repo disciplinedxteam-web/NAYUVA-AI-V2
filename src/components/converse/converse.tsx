@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { getCareData, getChat, sendChat, getChatFile, updateAppointment, editChat, deleteChat, reactChat, approveSvaraCard } from '@/lib/care.functions';
 import { parseCard, cardText } from '@/lib/care-card';
 import { DocumentActions } from '@/components/care/document-actions';
-import { CARE_TEAM_DOCTOR, isLegacySvaraBody, svaraAskSutraQuestion } from '@/lib/chat-messages';
+import { CARE_TEAM_DOCTOR, isLegacySvaraBody, svaraAskSutraQuestion, consultAskSutraQuestion } from '@/lib/chat-messages';
 import { OnlineMeeting } from '@/components/care/online-meeting';
 import { HaloNotification } from '@/components/care/halo-notification';
 import type { DemoRole } from '@/lib/care-domain';
@@ -168,7 +168,15 @@ export function Converse({ data, role, babyId, onRead, onAskSutra, onHistoryChan
         const reactable = ['text', 'voice', 'file', 'svara_card'].includes(m.kind);
         const quoted = m.reply_to ? msgs.find(x => x.id === m.reply_to) : undefined;
         return <div key={m.id} data-mid={m.id} className={flash === m.id ? 'is-flash' : ''}>{sep && <div className="converse-day"><span>{sep}</span></div>}{divider === m.id && <div className="converse-new" role="status"><span>New messages</span></div>}
-          {m.kind === 'appointment' ? <div className="converse-system"><span><CalendarDays size={13} />{m.body}</span>{appt && m.sender === 'system' && apptCard(appt)}</div>
+          {m.kind === 'appointment' && m.sender === 'care-team' ? (() => {
+            const n = data.notes.find(x => x.appointment_id === m.ref_id); const pc = n ? parseCard(n.observations) : null; const when = day(appt?.starts_at ?? m.created_at);
+            return <div className={`converse-row ${mine ? 'is-mine' : 'is-theirs'}`}><div className={`converse-bubble ${mine ? 'is-mine' : 'is-theirs'}`}><p>{m.body}</p>
+              <div className="converse-svara"><div className="converse-svara-head"><span className="converse-svara-icon"><FileText /></span><span><strong>Online consultation summary</strong><small>{when}</small></span></div>
+                <DocumentActions meta={{ kind: 'online', babyName: baby.baby_name, caregiverName: baby.caregiver_name, reason: appt?.reason ?? 'Online consultation', when, clinician: CARE_TEAM_DOCTOR }} card={pc} label="Approved" approved />
+                <div className="converse-svara-actions"><Button type="button" size="sm" variant="outline" disabled={!pc} onClick={() => pc && onAskSutra?.({ name: `Consultation summary · ${when}`, text: `Online consultation for ${baby.baby_name} on ${when}\n${cardText(pc)}`, question: consultAskSutraQuestion(when) })}><Sparkles />Ask Sutra about this</Button></div></div>
+              <time>{time(m.created_at)}</time></div></div>;
+          })()
+          : m.kind === 'appointment' ? <div className="converse-system"><span><CalendarDays size={13} />{m.body}</span>{appt && m.sender === 'system' && apptCard(appt)}</div>
             : <div className={`converse-row ${mine ? 'is-mine' : 'is-theirs'}`}><div className={`converse-bubble ${mine ? 'is-mine' : 'is-theirs'} ${menu === m.id ? 'is-menu' : ''} ${isImg ? 'is-image' : ''} ${rx?.length ? 'has-rx' : ''}`} onClick={() => { if (reactable) setMenu(v => v === m.id ? null : m.id); }}>
               {menu === m.id && <div className="converse-actions" onClick={e => e.stopPropagation()}>
                 <div className="converse-react-bar">{QUICK_REACTIONS.map(e => <button key={e} type="button" aria-label={`React ${e}`} className={rx?.some(x => x.emoji === e && x.mine) ? 'is-on' : ''} onClick={() => void react(m.id, e)}>{e}</button>)}

@@ -82,7 +82,7 @@ function Hero() {
       <Flower src={flowerA} className="flower-edge flower-right hero-flower-right" />
       <Flower src={flowerB} className="flower-edge flower-left hero-flower-left" />
       <div className="hero-badge relative z-10 flex w-full justify-center px-6">
-        <a href="https://reskilll.com/hack/nexconn" target="_blank" rel="noreferrer" aria-label="NextConn Build Challenge — Team Bhavishya"><AwardBadge eyebrow="TEAM BHAVISHYA" title="NextConn Build Challenge" /></a>
+        <a href="https://reskilll.com/hack/nexconn" target="_blank" rel="noreferrer" aria-label="Nexconn Build Challenge — Team Bhavishya"><AwardBadge eyebrow="TEAM BHAVISHYA" title="Nexconn Build Challenge" /></a>
       </div>
       <div className="mx-auto grid max-w-7xl items-center hero-layout gap-10 px-6 lg:grid-cols-[1.1fr_1fr] lg:px-10">
         <div className="hero-copy relative z-10">

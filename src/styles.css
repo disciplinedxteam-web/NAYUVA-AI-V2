@@ -3130,3 +3130,7 @@ a.chat-picker-item { text-decoration:none; color:inherit; }
 .converse-svara .doc-icons button { width:32px; height:32px; }
 .converse-svara-actions { display:flex; gap:8px; flex-wrap:wrap; padding-top:8px; border-top:1px solid var(--border); }
 .converse-svara-actions button { flex:1; border-radius:999px; }
+
+/* Online appointment lobby and document review take the whole screen. */
+.vroom-screen { position:fixed;inset:0;z-index:80;overflow:auto;padding:24px clamp(16px,4vw,48px);background:var(--background); }
+.vroom-screen.vroom-done .lekha-doc, .vroom-screen.vroom-done > * { max-width:1100px;width:100%;margin-inline:auto; }

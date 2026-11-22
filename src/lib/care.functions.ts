@@ -296,7 +296,10 @@ export const generateLekhaDraft=createServerFn({method:'POST'}).inputValidator(z
 });
 export const approveLekhaDraft=createServerFn({method:'POST'}).inputValidator(z.object({appointmentId:z.string().uuid(),card:careCardSchema,approved:z.literal(true)})).handler(async({data})=>{
  const s=await lekhaAccess(data.appointmentId);const r=await s.db.from('lekha_captures').select('id').eq('appointment_id',data.appointmentId).single();check(r.error);if(!r.data)throw new Error('Draft unavailable.');
- const result=await s.db.rpc('approve_lekha_capture',{p_capture:r.data.id,p_card:data.card as Json,p_decision:cardText(data.card),p_followup:data.card.topics.find(t=>/follow/i.test(t.title))?.finding??''});check(result.error);return {noteId:result.data};
+ const result=await s.db.rpc('approve_lekha_capture',{p_capture:r.data.id,p_card:data.card as Json,p_decision:cardText(data.card),p_followup:data.card.topics.find(t=>/follow/i.test(t.title))?.finding??''});check(result.error);
+ const {data:ap}=await s.db.from('care_appointments').select('baby_id,starts_at,location').eq('id',data.appointmentId).single();
+ if(ap&&(ap.location as Record<string,unknown>|null)?.['mode']==='online'){const {data:already}=await s.db.from('care_chat_messages').select('id').eq('kind','appointment').eq('sender','care-team').eq('ref_id',data.appointmentId).limit(1);if(!already?.length){const {data:b}=await s.db.from('care_profiles').select('caregiver_name').eq('id',ap.baby_id).single();const {consultSummaryMessage,indiaDate}=await import('./chat-messages');check((await s.db.from('care_chat_messages').insert({baby_id:ap.baby_id,sender:'care-team',kind:'appointment',ref_id:data.appointmentId,body:consultSummaryMessage(b?.caregiver_name??'',indiaDate(ap.starts_at))})).error);}}
+ return {noteId:result.data};
 });
 
 /** Care team only: removes a Care Plan and every record linked to that baby (cards, check-ins, visits, Lekha, Sutra, Taal). Children are deleted before parents. */

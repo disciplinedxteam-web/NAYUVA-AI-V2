@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { CharacterVideo } from './character-video';
 import { DemoGuide, SecureNote } from './demo-guide';
@@ -128,19 +129,20 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
   async function runTool(action: () => Promise<unknown>, _message: string) { setToolBusy(true); setError(''); try { await action(); if (info) setCareData(await loadData()); } catch (e) { setError(e instanceof Error ? e.message : 'That action could not be completed.'); } finally { setToolBusy(false); } }
   function openTool(k: ConsultPanel) { setTool(k); setDrawer(false); if (!careData) void loadData().then(setCareData).catch(() => setError('Care details could not be loaded.')); }
 
-  if (ended) return <section className="vroom vroom-done">
-    <header className="vroom-top"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button><h2><FileText />Consultation document</h2></header>
+  const portal = (n: React.ReactElement) => typeof document === 'undefined' ? n : createPortal(n, document.body);
+  if (ended) return portal(<section className="vroom vroom-done vroom-screen" aria-label="Consultation document">
+    <header className="vroom-top"><Button variant="ghost" onClick={onClose}><ArrowLeft />Back to Care Connect</Button><h2><FileText />Consultation document</h2></header>
     {ending ? <div className="vroom-wait"><CharacterVideo clip="milan-writing" /><p>Lekha is working out who said what and organising it into your A4 consultation document…</p></div>
-      : approved ? <div className="vroom-wait"><CharacterVideo clip="milan-done" /><h3>Document approved</h3><ul className="done-checks"><li><Check />Saved securely</li><li><Check />Added to {info?.babyName}’s journey in Sutra</li><li><Check />Sent to caregiver {info?.caregiverName}</li></ul><Button onClick={onClose}>Back to appointments</Button></div>
+      : approved ? <div className="vroom-wait"><CharacterVideo clip="milan-done" /><h3>Document approved</h3><ul className="done-checks"><li><Check />Saved securely</li><li><Check />Added to {info?.babyName}’s journey in Sutra</li><li><Check />Sent to {info?.caregiverName} in Care Connect</li><li><Check />Saved in History under past appointments</li></ul><Button onClick={onClose}>Back to Care Connect</Button></div>
       : card && info ? <LekhaDocument meta={{ babyName: info.babyName, caregiverName: info.caregiverName, dob: info.dob, gestation: info.gestation, reason: `${info.reason} · Online`, when: new Date(info.startsAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }), clinician: 'Dr. Ananya Rao' }} card={card} approved={false} busy={toolBusy}
           onEdit={(i, v) => setCard(c => c ? { ...c, topics: c.topics.map((t, j) => j === i ? { ...t, finding: v } : t) } : c)}
           onApprove={() => { setToolBusy(true); setError(''); void approve({ data: { appointmentId: id, card, approved: true } }).then(() => setApproved(true)).catch(e => setError(e instanceof Error ? e.message : 'Approval failed.')).finally(() => setToolBusy(false)); }} />
-      : <p className="vroom-note">{error ? '' : 'Consultation ended.'}</p>}
+      : <div className="vroom-wait"><p className="vroom-note">{error ? '' : 'Consultation ended.'}</p><Button variant="outline" onClick={onClose}>Back to Care Connect</Button></div>}
     {error && <p role="alert" className="svara-error">{error}</p>}
-  </section>;
+  </section>);
 
-  if (!info) return <section className="vroom">
-    <header className="vroom-top"><Button variant="ghost" onClick={onClose}><ArrowLeft />Appointments</Button></header>
+  if (!info) return portal(<section className="vroom vroom-screen" aria-label="Join online appointment">
+    <header className="vroom-top"><Button variant="ghost" onClick={onClose}><ArrowLeft />Back to Care Connect</Button></header>
     <div className="vroom-lobby">
       <span className="vroom-badge"><ShieldCheck />Private 1-on-1 consultation</span>
       <h3>Join your online appointment</h3>
@@ -151,7 +153,7 @@ export function OnlineMeeting({ id, onClose }: { id: string; onClose: () => void
       <Button disabled={!consent || busy} onClick={() => void start()}>{busy ? <Loader2 className="spin" /> : <Video />}Join appointment</Button>
       {error && <p role="alert" className="svara-error">{error}</p>}
     </div>
-  </section>;
+  </section>);
 
   const team = info.role === 'care-team';
   const room = <section className="vroom-full" aria-label="Online appointment">
