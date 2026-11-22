@@ -3134,3 +3134,5 @@ a.chat-picker-item { text-decoration:none; color:inherit; }
 /* Online appointment lobby and document review take the whole screen. */
 .vroom-screen { position:fixed;inset:0;z-index:80;overflow:auto;padding:24px clamp(16px,4vw,48px);background:var(--background); }
 .vroom-screen.vroom-done .lekha-doc, .vroom-screen.vroom-done > * { max-width:1100px;width:100%;margin-inline:auto; }
+
+.converse-video{position:relative;max-width:280px}.converse-video video{display:block;width:100%;max-height:360px;border-radius:12px;background:var(--foreground)}.converse-draft-video video{width:72px;height:56px;object-fit:cover;border-radius:8px}

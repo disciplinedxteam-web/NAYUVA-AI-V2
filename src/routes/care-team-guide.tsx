@@ -30,7 +30,7 @@ const content: GuideContent = {
   ],
   tutorialLine: "To understand the workflow better and see how everything works, watch the short tutorial.",
   tutorialLabel: "Watch Care Team Tutorial",
-  tutorialUrl: "https://www.youtube.com/watch?v=YaOMywsSfH4",
+  tutorialUrl: "https://youtu.be/yXrBt4SVWv4",
   continueLabel: "Enter Care Team Dashboard",
 };
 

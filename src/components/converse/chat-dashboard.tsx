@@ -18,8 +18,8 @@ import { AvatarPreview, type AvatarPhoto } from './avatar-preview';
 type Data = Awaited<ReturnType<typeof getCareData>>;
 export type ChatView = 'converse' | 'sutra';
 export const DASHBOARD_TUTORIAL: Record<DemoRole, { label: string; url: string }> = {
-  'care-team': { label: 'Watch Care Team Tutorial', url: 'https://www.youtube.com/watch?v=YaOMywsSfH4' },
-  caregiver: { label: 'Watch Caregiver Tutorial', url: 'https://www.youtube.com/watch?v=TpY-vBkjNAc&list=PLdVklvLc6Jsk&index=5' },
+  'care-team': { label: 'Watch Care Team Tutorial', url: 'https://youtu.be/yXrBt4SVWv4' },
+  caregiver: { label: 'Watch Caregiver Tutorial', url: 'https://www.youtube.com/watch?v=zNij9MzwHjA' },
 };
 
 /** Always-visible caregiver reminder above Sutra; both buttons open the existing Svara screens. */

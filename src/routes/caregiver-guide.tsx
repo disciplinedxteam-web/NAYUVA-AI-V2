@@ -31,7 +31,7 @@ const content: GuideContent = {
   ],
   tutorialLine: "To understand the workflow better and see how everything works, watch the short tutorial.",
   tutorialLabel: "Watch Caregiver Tutorial",
-  tutorialUrl: "https://www.youtube.com/watch?v=TpY-vBkjNAc&list=PLdVklvLc6Jsk&index=5",
+  tutorialUrl: "https://www.youtube.com/watch?v=zNij9MzwHjA",
   continueLabel: "Enter Caregiver Dashboard",
 };
 
