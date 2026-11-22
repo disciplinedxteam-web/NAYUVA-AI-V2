@@ -5,7 +5,7 @@ export const Route = createFileRoute("/caregiver-guide")({
   head: () => ({
     meta: [
       { title: "Caregiver Guide for Judges — Nayuva AI" },
-      { name: "description", content: "A short guide to testing Nayuva AI as a parent at home: Converse with the care team, Sutra AI and Svara check-ins." },
+      { name: "description", content: "A short guide to testing Nayuva AI as a parent at home: Care Connect with the care team, Sutra AI and Svara check-ins." },
       { property: "og:title", content: "Caregiver Guide — Nayuva AI" },
       { property: "og:description", content: "What families can do in Nayuva AI and how to test it." },
       { property: "og:type", content: "website" },

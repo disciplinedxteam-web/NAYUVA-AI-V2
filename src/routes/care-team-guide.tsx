@@ -5,7 +5,7 @@ export const Route = createFileRoute("/care-team-guide")({
   head: () => ({
     meta: [
       { title: "Care Team Guide for Judges — Nayuva AI" },
-      { name: "description", content: "A short guide to testing Nayuva AI as a newborn care team: Converse with families and Sutra AI." },
+      { name: "description", content: "A short guide to testing Nayuva AI as a newborn care team: Care Connect with families and Sutra AI." },
       { property: "og:title", content: "Care Team Guide — Nayuva AI" },
       { property: "og:description", content: "What the care team can do in Nayuva AI and how to test it." },
       { property: "og:type", content: "website" },

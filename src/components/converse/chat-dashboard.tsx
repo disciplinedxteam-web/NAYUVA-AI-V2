@@ -72,7 +72,7 @@ export function ChatDashboard({ data, role, view }: { data: Data; role: DemoRole
             : <Button variant="ghost" size="icon" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)} className="chat-dash-menu"><Menu /></Button>}
           {(!team || !open) && <Link to="/" className="chat-dash-brand"><img src={logo.url} alt="Nayuva AI logo" /><BrandWordmark /></Link>}
         </div>
-        {histOpen && view === 'converse' ? <span /> : <GlassToggle label="Dashboard view" value={view} onChange={v => go(v)} options={[{ key: 'converse', label: team ? 'Converse with Caregiver' : 'Converse with Care Team', ...(!team && unreadTotal ? { count: unreadTotal } : {}) }, { key: 'sutra', label: 'Sutra AI' }]} />}
+        {histOpen && view === 'converse' ? <span /> : <GlassToggle label="Dashboard view" value={view} onChange={v => go(v)} options={[{ key: 'converse', label: 'Care Connect', ...(!team && unreadTotal ? { count: unreadTotal } : {}) }, { key: 'sutra', label: 'Sutra AI' }]} />}
         <div className="chat-dash-right"><GlassmorphismCta className="tutorial-tile" href={t.url} target="_blank" rel="noopener noreferrer" aria-label={`${t.label} (opens YouTube)`} title={t.label} label="Tutorial" avatarSrc={logo.url} /></div>
       </header>
       <div className="chat-dash-body">

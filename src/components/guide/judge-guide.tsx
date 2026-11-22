@@ -20,7 +20,7 @@ export function JudgeGuide({ content, onContinue }: { content: GuideContent; onC
         <WorkspaceHeading title="Guide for Judges" description={content.description} />
         <section className="jg-demos" aria-label="What it looks like">
           <article className="jg-demo">
-            <h2><span className="pillar-icon"><MessagesSquare className="size-4" /></span>Converse<small>{content.converseLine}</small></h2>
+            <h2><span className="pillar-icon"><MessagesSquare className="size-4" /></span>Care Connect<small>{content.converseLine}</small></h2>
             <ConverseDemo variant={content.variant} />
           </article>
           <article className="jg-demo">

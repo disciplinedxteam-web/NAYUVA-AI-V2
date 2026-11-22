@@ -3060,10 +3060,11 @@ a.chat-picker-item { text-decoration:none; color:inherit; }
 @media (prefers-reduced-motion:reduce){ .music-toggle *, .music-toggle::after { animation:none !important; } }
 
 /* Quick role guides: unframed overview and a repeating four-step path. */
-.jg-page { min-height:100dvh; padding:22px 28px 16px; display:flex; flex-direction:column; justify-content:space-between; gap:14px; }
+.jg-page { min-height:100dvh; padding:22px 28px 16px; display:flex; flex-direction:column; justify-content:center; gap:28px; }
 .jg-inner { width:min(100%,980px); margin:0 auto; display:flex; flex-direction:column; gap:14px; }
-.jg-inner .workspace-heading { margin:0; padding-right:0; }
-.jg-demos { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.jg-inner .workspace-heading { margin:0 0 14px; padding-right:0; }
+.jg-demos { display:grid; grid-template-columns:1fr 1fr; gap:20px 44px; }
+.jg-points ul { column-gap:44px !important; }
 .jg-demo h2 { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:700; margin-bottom:8px; }
 .jg-demo h2 .pillar-icon { width:30px; height:30px; }
 .jg-demo h2 small { font-size:13px; font-weight:400; color:var(--muted-foreground); }
@@ -3085,7 +3086,7 @@ a.chat-picker-item { text-decoration:none; color:inherit; }
 .jg-back:hover { background:var(--accent); }
 .jg-continue { justify-self:end; height:48px; padding-inline:26px; display:flex; gap:12px; border-radius:999px; font-size:15px; font-weight:600; box-shadow:var(--shadow-soft); }
 @media(min-width:700px) and (min-height:600px) { .jg-page { height:100dvh; min-height:0; } }
-@media(max-height:700px) and (min-width:700px) { .jg-page { padding-block:14px; gap:10px; } .jg-inner { gap:10px; } .jg-inner .workspace-heading h1 { font-size:24px; } .jg-demo .pillar-demo { min-height:170px; padding:12px; } .pd-msg { padding:7px 11px; font-size:12.5px; } .jg-points li { font-size:13px; } }
+@media(max-height:700px) and (min-width:700px) { .jg-page { padding-block:14px; gap:10px; } .jg-inner { gap:10px; } .jg-inner .workspace-heading h1 { font-size:24px; } .jg-inner .workspace-heading { margin-bottom:8px; } .jg-demo .pillar-demo { min-height:170px; padding:12px; } .pd-msg { padding:7px 11px; font-size:12.5px; } .jg-points li { font-size:13px; } }
 @media(max-width:699px) { .jg-page { padding:16px; gap:20px; } .jg-demos,.jg-points ul { grid-template-columns:1fr; } .jg-points ul { grid-template-rows:none; grid-auto-flow:row; } .jg-bottom { grid-template-columns:1fr; } .jg-back,.jg-continue { justify-self:stretch; justify-content:center; } .jg-bottom .psp-note { order:3; } }
 @media(prefers-reduced-motion:reduce) { .jg-page * , .jg-page *::before { animation:none !important; transition:none !important; } .jg-page .pd-msg,.jg-page .pd-typing { opacity:1; } }
 

@@ -144,7 +144,7 @@ const pillars = [
   {
     key: "converse",
     eyebrow: "Chat",
-    title: "Converse",
+    title: "Care Connect",
     Icon: MessagesSquare,
     body: "A private chat between the family and their baby's care team.",
     points: [
