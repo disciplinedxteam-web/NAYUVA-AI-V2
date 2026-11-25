@@ -2,13 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
-  CheckCheck,
-  MessagesSquare,
-  Sparkles,
+  Check,
+  MessageCircleHeart,
+  FileText,
+  Route as RouteIcon,
+  Activity,
   CalendarClock,
   ShieldCheck,
-  Paperclip,
-  Languages,
 } from "lucide-react";
 import baby from "@/assets/baby-hands.png.asset.json";
 import babyVideo from "@/assets/videos/hero-baby.mp4.asset.json";
@@ -19,7 +19,8 @@ import flowerB from "@/assets/flower-pink-left.png";
 import flowerLavender from "@/assets/flower-lavender.png";
 import { SiteHeader } from "@/components/site-header";
 import { VideoShowcase } from "@/components/video-showcase";
-import { ConverseDemo, SutraDemo } from "@/components/platform-demos";
+import { CharacterVideo } from "@/components/care/character-video";
+import { SvaraAnimation } from "@/components/care/svara-animation";
 import { AwardBadge } from "@/components/ui/award-badge";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
 import rajeev from "@/assets/rajeev-portrait.png.asset.json";
@@ -82,7 +83,7 @@ function Hero() {
       <Flower src={flowerA} className="flower-edge flower-right hero-flower-right" />
       <Flower src={flowerB} className="flower-edge flower-left hero-flower-left" />
       <div className="hero-badge relative z-10 flex w-full justify-center px-6">
-        <a href="https://reskilll.com/hack/nexconn" target="_blank" rel="noreferrer" aria-label="Nexconn Build Challenge — Team Bhavishya"><AwardBadge eyebrow="TEAM BHAVISHYA" title="Nexconn Build Challenge" /></a>
+        <AwardBadge eyebrow="TEAM BAALAK 2.0" title="HackwithAditya" />
       </div>
       <div className="mx-auto grid max-w-7xl items-center hero-layout gap-10 px-6 lg:grid-cols-[1.1fr_1fr] lg:px-10">
         <div className="hero-copy relative z-10">
@@ -140,34 +141,46 @@ function SectionHead({
   );
 }
 
-const pillars = [
+const products = [
   {
-    key: "converse",
-    eyebrow: "Chat",
-    title: "Care Connect",
-    Icon: MessagesSquare,
-    body: "A private chat between the family and their baby's care team.",
-    points: [
-      { Icon: CheckCheck, text: "See when a message is delivered and read" },
-      { Icon: Paperclip, text: "Send photos, files and voice notes" },
-      { Icon: CalendarClock, text: "Visits and daily check-ins show up in the chat" },
-      { Icon: MessagesSquare, text: "Reply to or react to any message" },
-    ],
-    Demo: () => <ConverseDemo />,
+    name: "SVARA",
+    tag: "Caregiver connection",
+    Icon: MessageCircleHeart,
+    body: 'A warm daily voice companion for families, on the phone or the website, in their own language.',
+    bullets: ["Asks only the questions in today's Care Plan", 'Follows up on concerns from earlier check-ins', 'Repeats back what it heard to confirm', 'Creates a Health Card the caregiver approves'],
+    state: "working",
   },
   {
-    key: "sutra",
-    eyebrow: "AI helper",
-    title: "Sutra AI",
-    Icon: Sparkles,
-    body: "Ask a question about the baby's records and get a short, clear answer.",
-    points: [
-      { Icon: Languages, text: "Answers in the language you type in" },
-      { Icon: ShieldCheck, text: "Shows the record each answer comes from" },
-      { Icon: CalendarClock, text: "Helps the care team book a visit" },
-      { Icon: Sparkles, text: "Never gives medical advice" },
-    ],
-    Demo: () => <SutraDemo />,
+    name: "MILAN",
+    tag: "Follow-up coordination",
+    Icon: CalendarClock,
+    body: 'Turns a concern into a booked follow-up visit, in person or online, in one step.',
+    bullets: ['Care team schedules date, time and visit type', 'Families see location or video join link instantly', 'Confirm or request a reschedule', 'Online visit summaries saved to past appointments'],
+    state: "searching",
+  },
+  {
+    name: "LEKHA",
+    tag: "Clinical documentation",
+    Icon: FileText,
+    body: 'Listens during the consultation and drafts the visit summary for the clinician.',
+    bullets: ['Records and separates who said what', 'Drafts an in-person consultation summary', 'Checklist of essential topics covered', "Nothing saved without the clinician's approval"],
+    state: "lighthouse",
+  },
+  {
+    name: "SUTRA",
+    tag: "Longitudinal care journey",
+    Icon: RouteIcon,
+    body: "The memory of the baby's whole care journey, answering questions in the language asked.",
+    bullets: ["Answers only from this baby's records", 'Summaries, lists and short clear replies', 'Links to the exact source documents', 'Listen to answers or ask by voice'],
+    state: "reasoning",
+  },
+  {
+    name: "TAAL",
+    tag: "Caregiver adherence",
+    Icon: Activity,
+    body: 'Shows how consistently each family completes scheduled check-ins and visits.',
+    bullets: ['7, 14, 28 and 42 day views', 'One-tap call or WhatsApp reminder', 'Spots families who may need a nudge', 'Measures activity, never clinical risk'],
+    state: "working",
   },
 ];
 
@@ -175,36 +188,46 @@ function Products() {
   return (
     <section id="platform" className="section-band relative py-14 md:py-20">
       <Flower src={flowerA} className="flower-edge flower-right product-flower" />
-      <div className="mx-auto max-w-6xl px-6">
+      <div className="mx-auto max-w-5xl px-6">
         <SectionHead
-          eyebrow="The Platform"
-          title="Two simple tools for every baby."
-          body="Chat with each other, and ask questions about the baby's records."
+          eyebrow="Products"
+          title="Purpose-built for continuous newborn care."
+          body="Five products, one story: Svara listens at home, the care team reviews, Milan books the follow-up, Lekha documents the visit, Sutra remembers it all, and Taal keeps the rhythm."
         />
-        <div className="pillar-grid">
-          {pillars.map((p) => (
-            <article key={p.key} className={`pillar glass pillar-${p.key}`}>
-              <div className="pillar-text">
-              <div className="pillar-copy">
-                <div className="flex items-center gap-3">
-                  <span className="pillar-icon"><p.Icon className="size-5" /></span>
-                  <span className="eyebrow">{p.eyebrow}</span>
+        <div>
+          {products.map((p, i) => (
+            <div key={p.name}>
+              <div className={`flex flex-col gap-10 py-10 md:items-center md:gap-14 ${i % 2 ? "md:flex-row-reverse" : "md:flex-row"}`}>
+                <div className="flex flex-1 flex-col gap-6">
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-8 items-center justify-center rounded-lg border border-primary/20 bg-blush/60">
+                      <p.Icon className="size-4 text-primary" />
+                    </span>
+                    <span className="eyebrow">{p.tag}</span>
+                  </div>
+                  <h3 className="text-4xl font-extrabold tracking-[0.12em]">{p.name}</h3>
+                  <p className="leading-relaxed text-muted-foreground">{p.body}</p>
+                  <ul className="flex flex-col gap-3">
+                    {p.bullets.map((b) => (
+                      <li key={b} className="flex items-center gap-3 text-sm">
+                        <span className="flex size-[18px] shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground">
+                          <Check className="size-2.5" />
+                        </span>
+                        {b}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="mt-5 text-3xl font-bold tracking-tight md:text-4xl">{p.title}</h3>
-                <p className="mt-3 leading-relaxed text-muted-foreground">{p.body}</p>
+                <div className="min-w-0 flex-1">
+                  {p.name === "SVARA" ? <div className="product-svara flex justify-center"><SvaraAnimation state="idle" /></div> : <div className="flex justify-center"><CharacterVideo clip={p.name === "TAAL" ? "taal" : p.name === "LEKHA" ? "lekha-writing" : p.name === "MILAN" ? "milan-writing" : "sutra-search"} size={360} /></div>}
+                </div>
               </div>
-              <ul className="pillar-points">
-                {p.points.map((pt) => (
-                  <li key={pt.text}><pt.Icon className="size-4" />{pt.text}</li>
-                ))}
-              </ul>
-              </div>
-              <p.Demo />
-            </article>
+              {i < products.length - 1 && <div className="h-px bg-primary/15" />}
+            </div>
           ))}
         </div>
-        <p className="mt-12 text-center text-xl font-semibold text-primary-deep">
-          From the first night home to the six-week visit.
+        <p className="mt-16 text-center text-xl font-semibold text-primary-deep">
+          One connected platform. From home updates to clinical follow-up.
         </p>
       </div>
     </section>

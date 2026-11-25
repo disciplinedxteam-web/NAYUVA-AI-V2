@@ -36,5 +36,5 @@ const content: GuideContent = {
 
 function CareTeamGuide() {
   const navigate = useNavigate();
-  return <JudgeGuide content={content} onContinue={() => void navigate({ to: "/care-team/$section", params: { section: "converse" } })} />;
+  return <JudgeGuide content={content} onContinue={() => void navigate({ to: "/care-team/$section", params: { section: "home" } })} />;
 }
