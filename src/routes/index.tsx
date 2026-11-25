@@ -68,7 +68,7 @@ function CTAs() {
   return (
     <div className="flex flex-wrap items-center gap-4">
       <Button asChild className="home-primary-cta group inline-flex items-center gap-3 rounded-full bg-primary px-7 py-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:bg-primary-deep">
-        <Link to="/care-team-guide">Continue as Care Team <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
+        <Link to="/care-team/$section" params={{ section: "home" }}>Continue as Care Team <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>
       </Button>
       <Button asChild variant="outline" className="home-secondary-cta group inline-flex items-center gap-3 rounded-full px-7 py-4 text-sm font-semibold">
         <Link to="/caregiver-entry">Continue as Caregiver <ArrowRight className="size-4 transition group-hover:translate-x-1" /></Link>

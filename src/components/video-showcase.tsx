@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Play } from "lucide-react";
 
-const VIDEO = { id: "bPyAk0mTIc8", title: "How Nayuva Works", body: "A quick tour of how parents and care teams use Nayuva." };
+const VIDEO = { id: "9MW1leHXK60", title: "How Nayuva Works", body: "A quick tour of how parents and care teams use Nayuva." };
 
 /** Homepage video section: YouTube thumbnail cards that play inline on click. */
 export function VideoShowcase() {
