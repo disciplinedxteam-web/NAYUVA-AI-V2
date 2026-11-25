@@ -24,6 +24,8 @@ import { SvaraAnimation } from "@/components/care/svara-animation";
 import { AwardBadge } from "@/components/ui/award-badge";
 import raksha from "@/assets/raksha-portrait.png.asset.json";
 import rajeev from "@/assets/rajeev-portrait.png.asset.json";
+import varun from "@/assets/varun-portrait.png.asset.json";
+import vivitha from "@/assets/vivitha-portrait.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -237,6 +239,8 @@ function Products() {
 const team = [
   { name: "Raksha H", role: "UI/UX Designer", photo: raksha, framing: "raksha" },
   { name: "Rajeev Shukla", role: "Developer", photo: rajeev, framing: "rajeev" },
+  { name: "Varun Viyas", role: "Developer", photo: varun, framing: "varun" },
+  { name: "Vivitha V", role: "Product Analyst", photo: vivitha, framing: "vivitha" },
 ];
 
 function Team() {
