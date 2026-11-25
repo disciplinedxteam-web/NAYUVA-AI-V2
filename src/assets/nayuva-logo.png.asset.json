@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "2bd14590-c6e7-49cd-9a14-1c43e9759416",
-  "project_id": "6e80569a-c160-4ac9-b8ed-35598f3ae67a",
-  "url": "/__l5e/assets-v1/2bd14590-c6e7-49cd-9a14-1c43e9759416/nayuva-logo.png",
-  "r2_key": "a/v1/6e80569a-c160-4ac9-b8ed-35598f3ae67a/2bd14590-c6e7-49cd-9a14-1c43e9759416/nayuva-logo.png",
-  "original_filename": "nayuva-logo.png",
-  "size": 656548,
   "content_type": "image/png",
-  "created_at": "2026-10-17T07:37:13Z"
+  "created_at": "2026-10-17T07:37:13Z",
+  "original_filename": "nayuva-logo.png",
+  "project_id": "86e81ce2-e442-496c-822f-efcea20e22a9",
+  "r2_key": "a/v1/86e81ce2-e442-496c-822f-efcea20e22a9/2bd14590-c6e7-49cd-9a14-1c43e9759416/nayuva-logo.png",
+  "size": 656548,
+  "url": "/__l5e/assets-v1/2bd14590-c6e7-49cd-9a14-1c43e9759416/nayuva-logo.png",
+  "version": 1
 }

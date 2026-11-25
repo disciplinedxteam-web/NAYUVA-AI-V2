@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "1cd00b10-e319-474e-981e-091892ad8cb0",
-  "project_id": "6e80569a-c160-4ac9-b8ed-35598f3ae67a",
-  "url": "/__l5e/assets-v1/1cd00b10-e319-474e-981e-091892ad8cb0/svara-completion-clean-poster.png",
-  "r2_key": "a/v1/6e80569a-c160-4ac9-b8ed-35598f3ae67a/1cd00b10-e319-474e-981e-091892ad8cb0/svara-completion-clean-poster.png",
-  "original_filename": "svara-completion-clean-poster.png",
-  "size": 213774,
   "content_type": "image/png",
-  "created_at": "2026-10-17T11:40:39Z"
+  "created_at": "2026-10-17T11:40:39Z",
+  "original_filename": "svara-completion-clean-poster.png",
+  "project_id": "86e81ce2-e442-496c-822f-efcea20e22a9",
+  "r2_key": "a/v1/86e81ce2-e442-496c-822f-efcea20e22a9/1cd00b10-e319-474e-981e-091892ad8cb0/svara-completion-clean-poster.png",
+  "size": 213774,
+  "url": "/__l5e/assets-v1/1cd00b10-e319-474e-981e-091892ad8cb0/svara-completion-clean-poster.png",
+  "version": 1
 }

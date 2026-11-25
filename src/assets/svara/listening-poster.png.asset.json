@@ -1,11 +1,11 @@
 {
-  "version": 1,
   "asset_id": "9787ed4f-17a6-4e95-848f-6bdda14be1ed",
-  "project_id": "6e80569a-c160-4ac9-b8ed-35598f3ae67a",
-  "url": "/__l5e/assets-v1/9787ed4f-17a6-4e95-848f-6bdda14be1ed/svara-listening-poster.png",
-  "r2_key": "a/v1/6e80569a-c160-4ac9-b8ed-35598f3ae67a/9787ed4f-17a6-4e95-848f-6bdda14be1ed/svara-listening-poster.png",
-  "original_filename": "svara-listening-poster.png",
-  "size": 196835,
   "content_type": "image/png",
-  "created_at": "2026-10-17T11:26:35Z"
+  "created_at": "2026-10-17T11:26:35Z",
+  "original_filename": "svara-listening-poster.png",
+  "project_id": "86e81ce2-e442-496c-822f-efcea20e22a9",
+  "r2_key": "a/v1/86e81ce2-e442-496c-822f-efcea20e22a9/9787ed4f-17a6-4e95-848f-6bdda14be1ed/svara-listening-poster.png",
+  "size": 196835,
+  "url": "/__l5e/assets-v1/9787ed4f-17a6-4e95-848f-6bdda14be1ed/svara-listening-poster.png",
+  "version": 1
 }
