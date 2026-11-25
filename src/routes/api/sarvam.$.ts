@@ -4,7 +4,8 @@ import { createFileRoute } from '@tanstack/react-router';
 // and only an active caregiver demo session (HttpOnly cookie) can open a Svara voice session.
 const ORG = '01a06c4c-1ad9-769a-9b30-14878bafef8a';
 const WORKSPACE = '01a06c4c-1ae1-7d6f-a195-f7c92c3f2058';
-const APP = 'Conversatio-1e149739-300e';
+// The voice agent App ID comes from the SARVAM_APP_ID secret so a cloned agent needs no code change.
+const appId = () => process.env['SARVAM_APP_ID'] || 'Conversatio-1e149739-300e';
 
 async function hash(value: string) {
   const bytes = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
@@ -33,7 +34,7 @@ export const Route = createFileRoute('/api/sarvam/$')({
         if(!checkin || !['in_progress','incomplete'].includes(checkin.status) || !checkin.scheduled_for || new Date(checkin.scheduled_for).getTime()>Date.now())return Response.json({error:'This scheduled check-in is unavailable.'},{status:403});
         const key = process.env['SARVAM_API_KEY'];
         if (!key) return Response.json({ error: 'Voice agent not configured' }, { status: 500 });
-        const upstream = new URL(`https://apps.sarvam.ai/api/app-runtime/orgs/${ORG}/workspaces/${WORKSPACE}/apps/${APP}/url`);
+        const upstream = new URL(`https://apps.sarvam.ai/api/app-runtime/orgs/${ORG}/workspaces/${WORKSPACE}/apps/${appId()}/url`);
         // Identity is always the authorized caregiver profile from the server session, never client input.
         upstream.searchParams.set('user_identifier', session.caregiver_profile_id);
         upstream.searchParams.set('user_identifier_type', 'custom');
